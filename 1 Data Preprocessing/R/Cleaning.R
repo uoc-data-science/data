@@ -12,16 +12,8 @@ file.copy(pathClicks, newPathClicks, overwrite = TRUE )
 file.copy(pathOrders, newPathOrders, overwrite = TRUE )
 pathOrders <- newPathOrders
 pathClicks <- newPathClicks
-# 2) Replace all ; with ,
-original <- readLines(pathOrders)
-replaceSeparator <- gsub(pattern = ";", replace = ",", x=original)
-writeLines(replaceSeparator, con=pathOrders)
 
-original <- readLines(pathClicks)
-replaceSeparator <- gsub(pattern = ";", replace = ",", x=original)
-writeLines(replaceSeparator, con=pathClicks)
-
-# 3) read files, select subset and set headers
+# 2) read files, set headers and replace ? with NA
 
 # Function to get headers from header.txt
 getHeaders = function(filepath) {
@@ -41,21 +33,17 @@ getHeaders = function(filepath) {
     return(headers)
 }
 
+# get headers in an array
 orderHeaders <- getHeaders(pathOrderHeaders)
 clickHeaders <- getHeaders(pathClicksHeaders)
 
-# read files, select subset and set headers
+# read files, set headers and replace ? with NA
 orders <- read.csv(file=pathOrders, header=FALSE)
-# Remove useless columns
-orders <- orders[,c(1:58)]
-orderHeaders <- orderHeaders[1:58]
+orders[orders=="?"]<-NA
 colnames(orders) <- orderHeaders
 # save as new csv
 write.table(orders, file = pathOrdersClean, sep=",", row.names=FALSE)
-# clicks <- read.csv(file=pathClicks, header=FALSE, fileEncoding="us-ascii")
 clicks <- read.csv(file=pathClicks, header=FALSE)
-# Remove useless columns
-clicks <- clicks[,c(1:106)]
-clickHeaders <- clickHeaders[1:106]
+clicks[clicks=="?"]<-NA
 colnames(clicks) <- clickHeaders
 write.table(clicks, file = pathClicksClean, sep=",", row.names=FALSE)
