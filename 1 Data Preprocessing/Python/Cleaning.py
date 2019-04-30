@@ -38,18 +38,18 @@ clicksHeaders = headers(pathClicksHeaders)
 ordersHeaders = headers(pathOrdersHeaders)
 
 # Read data
-clicks = pd.read_csv(pathClicks, sep=",", names=clicksHeaders, dtype=str)
+clicks = pd.read_csv(pathClicks, sep=",", names=clicksHeaders, dtype=str, encoding="ISO-8859-1")
 clicks = clicks.replace(to_replace="?", value=nan)
-orders = pd.read_csv(pathOrders, sep=",", names=ordersHeaders, dtype=str)
+orders = pd.read_csv(pathOrders, sep=",", names=ordersHeaders, dtype=str, encoding="utf-8")
 orders = orders.replace(to_replace="?", value=nan)
 
 # Save to CSV
-clicks.to_csv(path_or_buf=pathClicksClean, index = False)
-(clicks.head(200)).to_csv(path_or_buf=pathClicksSmall, index = False)
-print "Clickstream:" + str(clicks.shape)
-orders.to_csv(path_or_buf=pathOrdersClean, index = False)
-(orders.head(200)).to_csv(path_or_buf=pathOrdersSmall, index = False)
-print "Orders:" + str(orders.shape)
+clicks.to_csv(path_or_buf=pathClicksClean, index=False)
+(clicks.head(200)).to_csv(path_or_buf=pathClicksSmall, index=False)
+print ("Clickstream:" + str(clicks.shape))
+orders.to_csv(path_or_buf=pathOrdersClean, index=False)
+(orders.head(200)).to_csv(path_or_buf=pathOrdersSmall, index=False)
+print ("Orders:" + str(orders.shape))
 
 #Merging
 orders.rename(columns={"Order Line Session ID":"Session ID"}, inplace=True)
