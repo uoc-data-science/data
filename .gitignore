@@ -3,3 +3,5 @@ clickstream/clickstream_data.csv
 \.idea/
 
 0 Data/
+
+.DS_Store
