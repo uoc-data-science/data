@@ -6,8 +6,8 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-setwd("~/StudDocs/Master/SS2019/Programming Data Science/data")
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "~/StudDocs/Master/SS2019/Programming Data Science/data")
 ```
 
 ## Get the data 
@@ -15,7 +15,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 dataframe <- read_csv("./00_raw_data/order_data.csv", col_names = FALSE)
-columns <- read_csv("./01_data_understanding/order_columns.txt")
 dataframe
 ```
 
