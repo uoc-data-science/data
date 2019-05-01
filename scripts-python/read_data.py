@@ -7,7 +7,7 @@ import datetime
 
 
 def read_raw_data(filename,column_file,samplename,dataset_name):
-    filename = "../00_raw_data/"+filename
+    filename = "./00_raw_data/"+filename
     columns, dtypes = read_raw_columns(column_file)
     df = pd.read_csv(filename, names=columns,low_memory=False, encoding="ansi")
     df = recreate_dtypes(df, dtypes)
@@ -16,7 +16,7 @@ def read_raw_data(filename,column_file,samplename,dataset_name):
     print(df)
 
 def read_raw_columns(filename):
-    filename = "../01_data_unterstanding/"+filename
+    filename = "./01_data_unterstanding/"+filename
     textfull= open(filename,"r")
     line_list = textfull.readlines()
     column_list = []
@@ -74,22 +74,22 @@ def create_sampel_excel(dataframe,samplename):
     from pandas import ExcelWriter
     #create a Excelsheet with the heads and the first 100 lines for data unterstanding
     df = dataframe.iloc[:1000]
-    samplename = "../01_data_unterstanding/"+samplename
+    samplename = "./01_data_unterstanding/"+samplename
     xlsx_writer = ExcelWriter(samplename)
     df.to_excel(xlsx_writer,"Sheet1",index=False)
     xlsx_writer.save()
 
 def create_csv_from_dataframe(dataframe,filename):
-    filename = "../00_raw_data/"+filename
+    filename = "./00_raw_data/"+filename
     df = dataframe
     df.to_csv(path_or_buf=filename,index=False)
 
 def save_dataframe(dataframe,filename):
-    filename = "../00_raw_data/data_sets/"+filename
+    filename = "./00_raw_data/data_sets/"+filename
     dataframe.to_pickle(filename)
 
 def load_dataframe(filename):
-    filename = "../00_raw_data/data_sets/"+filename
+    filename = "./00_raw_data/data_sets/"+filename
     df= pd.read_pickle(filename)
     return df
 
