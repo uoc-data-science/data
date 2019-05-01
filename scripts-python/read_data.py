@@ -29,12 +29,13 @@ def read_raw_columns(filename):
     return column_list, dtype_list
 
 def recreate_dtypes(dataframe, dtypes):
-    for i in np.arange(0,len(dtypes),1):
+    i = 0
+    for column in dataframe:
         if(dtypes[i] == np.float64):
-            dataframe.T.iloc[i] = pd.to_numeric(dataframe.T.iloc[i], errors='coerce')
+            dataframe[column] = pd.to_numeric(dataframe[column], errors='coerce')
         else:
-            print(dtypes[i])
-            dataframe.T.iloc[i] = dataframe.T.iloc[i].astype(dtype=dtypes[i])
+            dataframe[column] = dataframe[column].astype(dtype=dtypes[i])
+        i = i + 1
     return dataframe
 
 def identify_column_type(type):
