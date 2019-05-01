@@ -15,5 +15,4 @@ f = open("../tmp_outputs/console.txt","w")
 
 f.write(tabulate(df.describe(include='all'), headers=[""]+df.T.index, tablefmt='psql'))
 f.write("\r\n")
-print(df.dtypes)
 f.write(str(df.dtypes))

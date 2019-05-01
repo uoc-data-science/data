@@ -97,8 +97,6 @@ def save_dataframe(dataframe,filename):
 def load_dataframe_mod(filename, column_file):
     filename = "../00_raw_data/data_sets/"+filename
     df= pd.read_pickle(filename)
-    columns, dtypes = read_raw_columns(column_file)
-    df = recreate_dtypes(df, dtypes)
     return df
 
 
