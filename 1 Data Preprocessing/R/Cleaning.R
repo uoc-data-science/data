@@ -49,12 +49,14 @@ clickHeaders <- getHeaders(pathClicksHeaders)
 orders <- read.csv(file=pathOrders, header=FALSE)
 
 orders[orders=="?"]<-NA
+orders[orders=="NULL"]<-NA
 colnames(orders) <- orderHeaders
 # save as new csv
 write.table(orders, file = pathOrdersClean, sep=",", row.names=FALSE)
 
 clicks <- read.csv(file=pathClicks, header=FALSE)
 clicks[clicks=="?"]<-NA
+clicks[clicks=="NULL"]<-NA
 colnames(clicks) <- clickHeaders
 write.table(clicks, file = pathClicksClean, sep=",", row.names=FALSE)
 
