@@ -3,9 +3,8 @@ from typing import List
 import os
 
 def read_order_data() -> pandas.DataFrame:
-"""
-Reads in the order data and returns it in a pandas.DataFrame
-"""
+    """ Reads in the order data and returns it in a pandas.DataFrame """
+    
     # get current directory and compute path to file
     dirname = os.path.dirname(__file__)
     orderColumnsFileName = os.path.join(dirname, r'../../data/raw/orders/order_columns.txt')
@@ -21,4 +20,5 @@ Reads in the order data and returns it in a pandas.DataFrame
     # transform csv into data frame with the column names
     orderDataFileName = os.path.join(dirname, r'../../data/raw/orders/order_data.csv')
     df = pandas.read_csv(orderDataFileName, names = columnNames)
+    
     return df
