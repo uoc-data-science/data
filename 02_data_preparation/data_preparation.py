@@ -18,7 +18,7 @@ def read_raw_data(filename,column_file,samplename,dataset_name):
 
 
 def read_raw_columns(filename):
-    filename = "./01_data_unterstanding/"+filename
+    filename = "./01_data_understanding/"+filename
     textfull= open(filename,"r")
     line_list = textfull.readlines()
     column_list = []
@@ -35,7 +35,7 @@ def create_sampel_excel(dataframe,samplename):
     from pandas import ExcelWriter
     #create a Excelsheet with the heads and the first 100 lines for data unterstanding
     df = dataframe.iloc[:1000]
-    samplename = "./01_data_unterstanding/"+samplename
+    samplename = "./01_data_understanding/"+samplename
     xlsx_writer = ExcelWriter(samplename)
     df.to_excel(xlsx_writer,"Sheet1",index=False)
     xlsx_writer.save()

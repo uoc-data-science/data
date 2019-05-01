@@ -16,7 +16,7 @@ def read_raw_data(filename,column_file,samplename,dataset_name):
     print(df)
 
 def read_raw_columns(filename):
-    filename = "../01_data_unterstanding/"+filename
+    filename = "../01_data_understanding/"+filename
     textfull= open(filename,"r")
     line_list = textfull.readlines()
     column_list = []
