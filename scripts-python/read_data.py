@@ -79,26 +79,14 @@ def create_sampel_excel(dataframe,samplename):
     df.to_excel(xlsx_writer,"Sheet1",index=False)
     xlsx_writer.save()
 
-
-
-
 def create_csv_from_dataframe(dataframe,filename):
     filename = "../00_raw_data/"+filename
     df = dataframe
     df.to_csv(path_or_buf=filename,index=False)
 
-
-
-
 def save_dataframe(dataframe,filename):
     filename = "../00_raw_data/data_sets/"+filename
     dataframe.to_pickle(filename)
-
-def load_dataframe_mod(filename, column_file):
-    filename = "../00_raw_data/data_sets/"+filename
-    df= pd.read_pickle(filename)
-    return df
-
 
 def load_dataframe(filename):
     filename = "../00_raw_data/data_sets/"+filename

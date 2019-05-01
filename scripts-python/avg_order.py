@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import plotnine
 from tabulate import tabulate 
-from read_data import load_dataframe_mod
+from read_data import load_dataframe
 
-df = load_dataframe_mod("order.pkl","order_columns.txt")
+df = load_dataframe("order.pkl")
 
 f = open("../tmp_outputs/console.txt","w")
 
