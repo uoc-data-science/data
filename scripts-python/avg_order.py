@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np
 import plotnine
 from tabulate import tabulate 
-from read_data import load_dataframe
+from read_data import load_dataframe_mod
 
-df = load_dataframe("order.pkl")
+df = load_dataframe_mod("order.pkl","order_columns.txt")
 
 f = open("../tmp_outputs/console.txt","w")
 
@@ -15,4 +15,5 @@ f = open("../tmp_outputs/console.txt","w")
 
 f.write(tabulate(df.describe(include='all'), headers=[""]+df.T.index, tablefmt='psql'))
 f.write("\r\n")
+print(df.dtypes)
 f.write(str(df.dtypes))

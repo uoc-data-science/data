@@ -30,7 +30,11 @@ def read_raw_columns(filename):
 
 def recreate_dtypes(dataframe, dtypes):
     for i in np.arange(0,len(dtypes),1):
-        dataframe.T.iloc[i] = pd.Series(dataframe.T.iloc[i], dtype=dtypes[i])
+        if(dtypes[i] == np.float64):
+            dataframe.T.iloc[i] = pd.to_numeric(dataframe.T.iloc[i], errors='coerce')
+        else:
+            print(dtypes[i])
+            dataframe.T.iloc[i] = dataframe.T.iloc[i].astype(dtype=dtypes[i])
     return dataframe
 
 def identify_column_type(type):
@@ -89,7 +93,12 @@ def save_dataframe(dataframe,filename):
     filename = "../00_raw_data/data_sets/"+filename
     dataframe.to_pickle(filename)
 
-
+def load_dataframe_mod(filename, column_file):
+    filename = "../00_raw_data/data_sets/"+filename
+    df= pd.read_pickle(filename)
+    columns, dtypes = read_raw_columns(column_file)
+    df = recreate_dtypes(df, dtypes)
+    return df
 
 
 def load_dataframe(filename):
