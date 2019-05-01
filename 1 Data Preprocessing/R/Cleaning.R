@@ -1,10 +1,18 @@
+# Path of original file
 pathOrders <- "../../orders/order_data.csv"
+# Path of original file to be pasted into the Data folder
 newPathOrders <- "../../0 Data/order_data_R.csv"
+# Path of the cleaned file
+pathOrdersClean <- "../../0 Data/order_data_cleaned_R.csv"
+# Path of the small version of the clean file
+pathOrdersSmall = "../../0 Data/order_data_small_R.csv"
+# Path of the headers
+pathOrderHeaders <- "../../orders/order_columns.txt"
+
 pathClicks <- "../../clickstream/clickstream_data.csv"
 newPathClicks <- "../../0 Data/clickstream_data_R.csv"
-pathOrdersClean <- "../../0 Data/order_data_cleaned_R.csv"
-pathOrderHeaders <- "../../orders/order_columns.txt"
 pathClicksClean  <- "../../0 Data/clickstream_data_cleaned_R.csv"
+pathClicksSmall = "../../0 Data/clickstream_data_small_R.csv"
 pathClicksHeaders <- "../../clickstream/clickstream_columns.txt"
 
 # 1) Copy csv to data folder
@@ -39,11 +47,22 @@ clickHeaders <- getHeaders(pathClicksHeaders)
 
 # read files, set headers and replace ? with NA
 orders <- read.csv(file=pathOrders, header=FALSE)
+
 orders[orders=="?"]<-NA
 colnames(orders) <- orderHeaders
 # save as new csv
 write.table(orders, file = pathOrdersClean, sep=",", row.names=FALSE)
+
 clicks <- read.csv(file=pathClicks, header=FALSE)
 clicks[clicks=="?"]<-NA
 colnames(clicks) <- clickHeaders
 write.table(clicks, file = pathClicksClean, sep=",", row.names=FALSE)
+
+# 3) Save smaller versions for readability and dev purposes
+small_size = min(10000,nrow(orders))
+orders_small = orders[1:small_size,]
+write.table(orders_small, file = pathOrdersSmall, sep=",", row.names=FALSE)
+
+small_size = min(10000,nrow(clicks))
+clicks_small = clicks[1:small_size,]
+write.table(clicks_small, file = pathClicksSmall, sep=",", row.names=FALSE)
