@@ -104,7 +104,7 @@ def create_sampel_excel(dataframe,samplename):
 
 def create_csv_from_dataframe(dataframe,filename):
     filename = "../00_raw_data/"+filename
-    path_to_file = relative_to_absolute(samplename)
+    path_to_file = relative_to_absolute(filename)
     df = dataframe
     df.to_csv(path_or_buf=path_to_file,index=False)
 
