@@ -5,3 +5,6 @@ clickstream/clickstream_data.csv
 .Rproj.user
 data.Rproj
 
+.RData
+.Rhistory
+.DS_Store
