@@ -5,16 +5,42 @@ date: "1 Mai 2019"
 output: html_document
 ---
 
+```{r "knitr config", cache = FALSE, include=FALSE}
+require("knitr")
+knitr::opts_knit$set(root.dir = "~/StudDocs/Master/SS2019/Programming Data Science/data")
+```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "~/StudDocs/Master/SS2019/Programming Data Science/data")
 ```
 
 ## Get the data 
 
 ```{r}
 library(tidyverse)
+
+# From Julius Braun (jbraun253)
+# get file paths
+curDir <- ""
+filePath <- paste(curDir, "01_data_understanding", sep="")
+dataPath <- file.path(filePath, "order_data.csv")
+headersPath <- "./01_data_understanding/order_data.csv"
+# prepare column name list
+headersFile = file(headersPath, "r")
+headerNames <- list()
+while(TRUE) {
+  line = readLines(headersFile, n = 1)
+  if(length(line) == 0){
+    break
+  }
+  headerNames <- append(headerNames, strsplit(line, ":")[[1]][1])
+}
+close(headersFile)
+# End cite
+
 dataframe <- read_csv("./00_raw_data/order_data.csv", col_names = FALSE)
+
+
+
 dataframe
 ```
 
