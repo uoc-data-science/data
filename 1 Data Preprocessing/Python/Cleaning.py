@@ -4,14 +4,16 @@ import pandas as pd
 #variables
 pathOrders = "../../orders/order_data.csv"
 newPathOrders = "../../0 Data/order_data_P.csv"
-pathClicks = "../../clickstream/clickstream_data.csv"
-newPathClicks = "../../0 Data/clickstream_data_P.csv"
 pathOrdersClean = "../../0 Data/order_data_cleaned_P.csv"
 pathOrdersSmall = "../../0 Data/order_data_small_P.csv"
 pathOrdersHeaders = "../../orders/order_columns.txt"
+
+pathClicks = "../../clickstream/clickstream_data.csv"
+newPathClicks = "../../0 Data/clickstream_data_P.csv"
 pathClicksClean = "../../0 Data/clickstream_data_cleaned_P.csv"
 pathClicksSmall = "../../0 Data/clickstream_data_small_P.csv"
 pathClicksHeaders = "../../clickstream/clickstream_columns.txt"
+
 pathMerge = "../../0 Data/merged_P.csv"
 pathMergeSmall = "../../0 Data/merged_small_P.csv"
 
@@ -40,8 +42,14 @@ ordersHeaders = headers(pathOrdersHeaders)
 # Read data
 clicks = pd.read_csv(pathClicks, sep=",", names=clicksHeaders, dtype=str, encoding="ISO-8859-1")
 clicks = clicks.replace(to_replace="?", value=nan)
+clicks = clicks.replace(to_replace="NULL", value=nan)
 orders = pd.read_csv(pathOrders, sep=",", names=ordersHeaders, dtype=str, encoding="utf-8")
 orders = orders.replace(to_replace="?", value=nan)
+orders = orders.replace(to_replace="NULL", value=nan)
+
+#Drop nan columns
+clicks=clicks.dropna(axis=1)
+order=orders.dropna(axis=1)
 
 # Save to CSV
 clicks.to_csv(path_or_buf=pathClicksClean, index=False)
