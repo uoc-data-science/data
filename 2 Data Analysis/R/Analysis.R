@@ -7,8 +7,8 @@ if (useSmallVersions){
     pathClicks <- "../../0 Data/clickstream_data_small_R.csv"
 }
 
-pathNULLAnalysisOrders <- "./NAorders.csv"
-pathNULLAnalysisClicks <- "./NAclicks.csv"
+pathNULLAnalysisOrders <- "./../NAorders.csv"
+pathNULLAnalysisClicks <- "./../NAclicks.csv"
 
 orders <- read.csv(file=pathOrders)
 clicks <- read.csv(file=pathClicks)
