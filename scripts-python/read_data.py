@@ -31,6 +31,26 @@ def read_raw_columns(filename):
         dtype_list.append(identify_column_type(string_list[1]))
     return column_list, dtype_list
 
+def load_dataframe_without_ignore(filename, column_file):
+    #Determine which columns should be ignored
+    column_file = "../01_data_understanding/"+column_file
+    path_to_file = relative_to_absolute(column_file)
+    textfull= open(path_to_file,"r")
+    line_list = textfull.readlines()
+    column_list = []
+    for line in line_list:
+        string = line
+        string_list = string.split(":")
+        if(string_list[1][1:len(string_list[1])-2] == "ignore"):
+            column_list.append(string_list[0])
+    
+    #loading the dataframe and dropping the ignore-columns
+    filename = "../00_raw_data/data_sets/"+filename
+    path_to_file = relative_to_absolute(filename)
+    df= pd.read_pickle(path_to_file)
+    df.drop(column_list, axis=1, inplace=True)
+    return df
+
 def recreate_dtypes(dataframe, dtypes):
     i = 0
     for column in dataframe:
@@ -62,7 +82,6 @@ def identify_column_type(type):
     category_list = type.split(',')
     if(len(category_list) > 1):
         return pd.CategoricalDtype(categories=category_list, ordered=False)
-    
     return np.object
 	
 def split_ordered_categories(categories):
