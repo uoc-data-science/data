@@ -4,12 +4,14 @@ import os.path
 import csv
 import pickle
 import datetime
+from absolute_data_paths import relative_to_absolute
 
 
 def read_raw_data(filename,column_file,samplename,dataset_name):
     filename = "../00_raw_data/"+filename
+    path_to_file = relative_to_absolute(filename)
     columns, dtypes = read_raw_columns(column_file)
-    df = pd.read_csv(filename, names=columns,low_memory=False, encoding="ansi")
+    df = pd.read_csv(path_to_file, names=columns,low_memory=False, encoding="ansi")
     df = recreate_dtypes(df, dtypes)
     create_sampel_excel(df,samplename)
     save_dataframe(df,dataset_name)
@@ -17,7 +19,8 @@ def read_raw_data(filename,column_file,samplename,dataset_name):
 
 def read_raw_columns(filename):
     filename = "../01_data_understanding/"+filename
-    textfull= open(filename,"r")
+    path_to_file = relative_to_absolute(filename)
+    textfull= open(path_to_file,"r")
     line_list = textfull.readlines()
     column_list = []
     dtype_list = []
@@ -74,23 +77,27 @@ def create_sampel_excel(dataframe,samplename):
     from pandas import ExcelWriter
     #create a Excelsheet with the heads and the first 100 lines for data unterstanding
     df = dataframe.iloc[:1000]
-    samplename = "../01_data_unterstanding/"+samplename
-    xlsx_writer = ExcelWriter(samplename)
+    samplename = "../01_data_understanding/"+samplename
+    path_to_file = relative_to_absolute(samplename)
+    xlsx_writer = ExcelWriter(path_to_file)
     df.to_excel(xlsx_writer,"Sheet1",index=False)
     xlsx_writer.save()
 
 def create_csv_from_dataframe(dataframe,filename):
     filename = "../00_raw_data/"+filename
+    path_to_file = relative_to_absolute(samplename)
     df = dataframe
-    df.to_csv(path_or_buf=filename,index=False)
+    df.to_csv(path_or_buf=path_to_file,index=False)
 
 def save_dataframe(dataframe,filename):
     filename = "../00_raw_data/data_sets/"+filename
-    dataframe.to_pickle(filename)
+    path_to_file = relative_to_absolute(filename)
+    dataframe.to_pickle(path_to_file)
 
 def load_dataframe(filename):
     filename = "../00_raw_data/data_sets/"+filename
-    df= pd.read_pickle(filename)
+    path_to_file = relative_to_absolute(filename)
+    df= pd.read_pickle(path_to_file)
     return df
 
 
