@@ -1,19 +1,19 @@
 # Path of original file
-pathOrders <- "../../orders/order_data.csv"
+pathOrders <- "orders/order_data.csv"
 # Path of original file to be pasted into the Data folder
-newPathOrders <- "../../0 Data/order_data_R.csv"
+newPathOrders <- "0 Data/order_data_R.csv"
 # Path of the cleaned file
-pathOrdersClean <- "../../0 Data/order_data_cleaned_R.csv"
+pathOrdersClean <- "0 Data/order_data_cleaned_R.csv"
 # Path of the small version of the clean file
-pathOrdersSmall = "../../0 Data/order_data_small_R.csv"
+pathOrdersSmall = "0 Data/order_data_small_R.csv"
 # Path of the headers
-pathOrderHeaders <- "../../orders/order_columns.txt"
+pathOrderHeaders <- "orders/order_columns.txt"
 
-pathClicks <- "../../clickstream/clickstream_data.csv"
-newPathClicks <- "../../0 Data/clickstream_data_R.csv"
-pathClicksClean  <- "../../0 Data/clickstream_data_cleaned_R.csv"
-pathClicksSmall = "../../0 Data/clickstream_data_small_R.csv"
-pathClicksHeaders <- "../../clickstream/clickstream_columns.txt"
+pathClicks <- "clickstream/clickstream_data.csv"
+newPathClicks <- "0 Data/clickstream_data_R.csv"
+pathClicksClean  <- "0 Data/clickstream_data_cleaned_R.csv"
+pathClicksSmall = "0 Data/clickstream_data_small_R.csv"
+pathClicksHeaders <- "clickstream/clickstream_columns.txt"
 
 # 1) Copy csv to data folder
 file.copy(pathClicks, newPathClicks, overwrite = TRUE )

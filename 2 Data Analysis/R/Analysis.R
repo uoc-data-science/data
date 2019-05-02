@@ -1,14 +1,14 @@
 useSmallVersions <- TRUE
 
-pathOrders <- "../../0 Data/order_data_cleaned_R.csv"
-pathClicks  <- "../../0 Data/clickstream_data_cleaned_R.csv"
+pathOrders <- "0 Data/order_data_cleaned_R.csv"
+pathClicks  <- "0 Data/clickstream_data_cleaned_R.csv"
 if (useSmallVersions){
-    pathOrders <- "../../0 Data/order_data_small_R.csv"
-    pathClicks <- "../../0 Data/clickstream_data_small_R.csv"
+    pathOrders <- "0 Data/order_data_small_R.csv"
+    pathClicks <- "0 Data/clickstream_data_small_R.csv"
 }
 
-pathNULLAnalysisOrders <- "./../NAorders.csv"
-pathNULLAnalysisClicks <- "./../NAclicks.csv"
+pathNULLAnalysisOrders <- "2 Data Analysis/NAorders.csv"
+pathNULLAnalysisClicks <- "2 Data Analysis/NAclicks.csv"
 
 orders <- read.csv(file=pathOrders)
 clicks <- read.csv(file=pathClicks)
