@@ -51,6 +51,8 @@ orders <- read.csv(file=pathOrders, header=FALSE)
 orders[orders=="?"]<-NA
 orders[orders=="NULL"]<-NA
 colnames(orders) <- orderHeaders
+# drop columns which have only NA values
+orders <- orders[,colSums(is.na(orders))<nrow(orders)]
 # save as new csv
 write.table(orders, file = pathOrdersClean, sep=",", row.names=FALSE)
 
@@ -58,6 +60,7 @@ clicks <- read.csv(file=pathClicks, header=FALSE)
 clicks[clicks=="?"]<-NA
 clicks[clicks=="NULL"]<-NA
 colnames(clicks) <- clickHeaders
+clicks <- clicks[,colSums(is.na(clicks))<nrow(clicks)]
 write.table(clicks, file = pathClicksClean, sep=",", row.names=FALSE)
 
 # 3) Save smaller versions for readability and dev purposes
