@@ -1,6 +1,6 @@
 library(ggplot2)
 library(gridExtra)
-print(getwd())
+
 useSmallVersions <- TRUE
 
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
@@ -10,13 +10,71 @@ if (useSmallVersions){
   pathClicks <- "0 Data/clickstream_data_small_R.csv"
 }
 
-pathPlotFolder <- "./4 Data Visualization/"
-pathDistributionPrefix <- "./4 Data Visualization/Distribution Plots/"
-# pathRankingPrefix 
+pathPlotFolder <- "./4 Data Overview/Plots/"
+pathTableFolder <- "./4 Data Overview/Tables/"
+
 
 orders <- read.csv(file=pathOrders)
 clicks <- read.csv(file=pathClicks)
 
+# Overview table of order data
+interestingColumns <- c("Order.Line.Quantity","Order.Line.Unit.List.Price",
+                        "Order.Line.Amount",
+                        "Spend.Over..12.Per.Order.On.Average",
+                        "Order.Line.Day.of.Week",
+                        "Order.Line.Hour.of.Day",
+                        "Order.Promotion.Code",
+                        "Order.Discount.Amount"
+)
+summary <- summary(orders[interestingColumns])
+summary[is.na(summary)]<-""
+write.table(summary, file = paste(pathTableFolder,"OrderData.csv"), sep=",", row.names=FALSE)
+# Overview table of payment method data
+interestingColumns <- c("Order.Credit.Card.Brand",
+                        "Bank.Card.Holder",
+                        "Gas.Card.Holder",
+                        "Upscale.Card.Holder",
+                        "Unknown.Card.Type",
+                        "TE.Card.Holder",
+                        "Premium.Card.Holder",
+                        "New.Bank.Card"
+)
+summary <- summary(orders[interestingColumns])
+summary[is.na(summary)]<-""
+write.table(summary, file = paste(pathTableFolder,"PaymentMethodData.csv"), sep=",", row.names=FALSE)
+# Overview table of product data
+interestingColumns <- c("StockType",
+                        "Manufacturer",
+                        "BrandName"
+)
+summary <- summary(orders[interestingColumns])
+summary[is.na(summary)]<-""
+write.table(summary, file = paste(pathTableFolder,"ProductData.csv"), sep=",", row.names=FALSE)
+# Overview table of customer data
+interestingColumns <- c("City",
+                        "Country",
+                        "US.State",
+                        "Age",
+                        "Marital.Status",
+                        "Gender",
+                        "Audience",
+                        "Truck.Owner",
+                        "RV.Owner",
+                        "Motorcycle.Owner",
+                        "Working.Woman",
+                        "Presence.Of.Children",
+                        "Speciality.Store.Retail",
+                        "Oil.Retail.Activity",
+                        "Bank.Retail.Activity",
+                        "Finance.Retail.Activity",
+                        "Miscellaneous.Retail.Activity",
+                        "Upscale.Retail",
+                        "Upscale.Speciality.Retail",
+                        "Retail.Activity"
+)
+summary <- summary(orders[interestingColumns])
+summary[is.na(summary)]<-""
+write.table(summary, file = paste(pathTableFolder,"CustomerData.csv"), sep=",", row.names=FALSE)
 
 # Utility function for subplot support
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
