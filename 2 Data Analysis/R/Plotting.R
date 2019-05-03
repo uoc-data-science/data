@@ -62,22 +62,25 @@ ggplot(orders, aes(x=Order.Line.Quantity)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +  # Overlay with transparent density plot
   geom_vline(aes(xintercept=mean(Order.Line.Quantity, na.rm=T)),   # Ignore NA values for mean
              color="red", linetype="dashed", size=1) +
-  scale_x_continuous(limits = c(0.5,7.5),breaks = round(seq(1, 7, by = 1),1))
+  scale_x_continuous(name ="Order Line Quantity",limits = c(0.5,7.5),breaks = round(seq(1, 7, by = 1),1))
 ggsave(filename=paste(pathPlotFolder,"Order Line Quantity.png"))
 
 # Distribution of order amount
 p1 <- ggplot(orders, aes(x=Order.Line.Amount)) + 
   geom_density() +
-  scale_x_continuous(limits = c(-0.5,45.5),breaks = round(seq(0, 45, by = 3),1))
+  scale_x_continuous(name="Order Line Amount",limits = c(-0.5,45.5),breaks = round(seq(0, 45, by = 3),1)) +
+  scale_y_continuous(limits = c(0,0.15))
 p2 <- ggplot(orders, aes(x=Order.Line.Amount)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +
-  scale_x_continuous(limits = c(-2.5,45.5),breaks = round(seq(0, 45, by = 3),1))
+  scale_x_continuous(name="Order Line Amount",limits = c(-2.5,45.5),breaks = round(seq(0, 45, by = 3),1)) +
+  scale_y_continuous(limits = c(0,900))
 # Distribution of order unit price
 p3 <- ggplot(orders, aes(x=Order.Line.Unit.List.Price)) + 
   geom_density() +
-  scale_x_continuous(limits = c(-0.5,45.5),breaks = round(seq(0, 45, by = 3),1))
+  scale_x_continuous(name="Order Line Unit List Price",limits = c(-0.5,45.5),breaks = round(seq(0, 45, by = 3),1))
 p4 <- ggplot(orders, aes(x=Order.Line.Unit.List.Price)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +
-  scale_x_continuous(limits = c(-2.5,45.5),breaks = round(seq(0, 45, by = 3),1))
+  scale_x_continuous(name="Order Line Unit List Price",limits = c(-2.5,45.5),breaks = round(seq(0, 45, by = 3),1)) +
+  scale_y_continuous(limits = c(0,900))
 multiplot(p1, p2, p3, p4, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Order Price.png"),multiplot(p1, p2, p3, p4, cols=2), width=15)
