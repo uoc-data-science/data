@@ -1,0 +1,10 @@
+Clicks:																	Orders:
+Session ID (0 nan)			 									Order Line Session ID  (11% nan) -> no matches
+Session ID (0 nan)     											Order Session ID (11% an) -> no matches
+Customer ID (empty)											Customer ID (0% nan) -> not possible
+Request Assortment ID (empty)							....
+Session Cookie ID (0 nan)									Order Line Session ID  (11% nan) -> no matches
+Session Cookie ID (0 nan)     								Order Session ID (11% nan) -> no matches
+Product ID (69 nan)												Product ID -> too many combinations possible
+Product Object ID (69 nan)									Product Object ID (5% nan) -> no matches
+Product Family ID (69 nan)									Product Family ID (5% nan) -> error
