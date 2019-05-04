@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(stringi)
+library(hms)
 
 rootDir <- knitr::opts_knit$get("root.dir")
 headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
@@ -34,7 +35,7 @@ result <- stri_extract_first(obj_list, regex="[A-z ,]+")
 dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
 
 dataframe <- read_csv(dataPath, col_names = result)
-dataframe$order_time <- strptime(dataframe$"Order Line Date_Time","%H\\:%M\\:%S")
+dataframe$order_time <- parse_time(dataframe$"Order Line Date_Time","%H\\:%M\\:%S")
 
 
 dataframe
@@ -44,8 +45,8 @@ dataframe
 
 You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

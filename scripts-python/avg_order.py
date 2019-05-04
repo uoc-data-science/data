@@ -7,6 +7,8 @@ from read_data import load_dataframe_without_ignore
 df = load_dataframe("order.pkl")
 df_mod = load_dataframe_without_ignore("order.pkl","order_columns.txt")
 
+df_mod["order_datetime"] = pd.to_datetime(df['Order Line Date'] + ' ' + df['Order Line Date_Time'], format="%Y-%m-%d %H\\:%M\\:%S")
+
 f = open("../tmp_outputs/console.txt","w")
 
 #for column in df:
