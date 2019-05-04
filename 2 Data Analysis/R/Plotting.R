@@ -1,5 +1,7 @@
 library(ggplot2)
 library(gridExtra)
+library(dplyr)
+library(janitor)
 
 useSmallVersions <- TRUE
 
@@ -18,7 +20,8 @@ orders <- read.csv(file=pathOrders)
 clicks <- read.csv(file=pathClicks)
 
 # Overview table of order data
-interestingColumns <- c("Order.Line.Quantity","Order.Line.Unit.List.Price",
+interestingColumns <- c("Order.Line.Quantity",
+                        "Order.Line.Unit.List.Price",
                         "Order.Line.Amount",
                         "Spend.Over..12.Per.Order.On.Average",
                         "Order.Line.Day.of.Week",
@@ -107,21 +110,22 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
       # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
       
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$col,
-                                      layout.pos.col = matchidx$row))
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                        layout.pos.col = matchidx$col))
+      
     }
   }
 }
 
 
-
+#Plots for order data
 # Distribution of order line quantity
 ggplot(orders, aes(x=Order.Line.Quantity)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +  # Overlay with transparent density plot
   geom_vline(aes(xintercept=mean(Order.Line.Quantity, na.rm=T)),   # Ignore NA values for mean
              color="red", linetype="dashed", size=1) +
   scale_x_continuous(name ="Order Line Quantity",limits = c(0.5,7.5),breaks = round(seq(1, 7, by = 1),1))
-ggsave(filename=paste(pathPlotFolder,"Order Line Quantity.png"))
+ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Line Quantity.png",sep=""))
 
 # Distribution of order amount
 p1 <- ggplot(orders, aes(x=Order.Line.Amount)) + 
@@ -140,5 +144,39 @@ p4 <- ggplot(orders, aes(x=Order.Line.Unit.List.Price)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +
   scale_x_continuous(name="Order Line Unit List Price",limits = c(-2.5,45.5),breaks = round(seq(0, 45, by = 3),1)) +
   scale_y_continuous(limits = c(0,900))
-multiplot(p1, p2, p3, p4, cols=2)
-ggsave(filename=paste(pathPlotFolder,"Order Price.png"),multiplot(p1, p2, p3, p4, cols=2), width=15)
+multiplot(p1, p3, p2, p4, cols=2)
+ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p2, p4, cols=2), width=15)
+
+# Distribution of order day of week and hour of day
+p1 <- ggplot(orders,aes(x=reorder(Order.Line.Day.of.Week,Order.Line.Day.of.Week,function(x)-length(x)))) +
+  geom_bar() +
+  scale_x_discrete(name="Order Line Day of Week")
+p2 <- ggplot(orders, aes(x=Order.Line.Hour.of.Day)) +
+  geom_density() +
+  scale_x_continuous(name="Order Line Hour of Day")
+multiplot(p1, p2, cols=2)
+ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Time.png",sep=""),multiplot(p1, p2, cols=2), width=15)
+
+# Distribution of discounts
+p1 <- ggplot(orders, aes(x=Order.Discount.Amount)) +
+  geom_density() +
+  scale_x_continuous(name="Order Discount Amount")
+# Create ranking for top 10 promotion codes
+top <-tabyl(orders$Order.Promotion.Code, sort = TRUE)
+top <- top[with(top, order(top$n,decreasing=TRUE)),]
+top <- head(top,10)
+top <- top %>% select(1:2)
+colnames(top) <- c("Order.Promotion.Code","n")
+sumTotal <- nrow(orders)
+sumTop <- sum(top$n)
+countOthers <- sumTotal - sumTop
+top[,c(1)] <- as.character(top[,c(1)])
+levels(top) <- c(levels(top),"(Others)")
+top[nrow(top) + 1,] = list("(Others)",countOthers)
+top[,c(1)] <- as.factor(top[,c(1)])
+print(top)
+p2 <- ggplot(top, aes(x=Order.Promotion.Code,y=n)) +
+  geom_bar(stat="identity") +
+  scale_x_discrete(name="Order Promotion Code")
+multiplot(p1, p2, cols=2)
+ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=""),multiplot(p1, p2, cols=2), width=15)
