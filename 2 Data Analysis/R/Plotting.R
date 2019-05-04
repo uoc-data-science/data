@@ -31,6 +31,15 @@ interestingColumns <- c("Order.Line.Quantity",
 )
 summary <- summary(orders[interestingColumns])
 summary[is.na(summary)]<-""
+colnames(summary) <- c("Order Line Quantity",
+                        "Order Line Unit List Price",
+                        "Order Line Amount",
+                        "Spend Over $12 Per Order On Average",
+                        "Order Line Day of Week",
+                        "Order Line Hour of.Day",
+                        "Order Promotion Code",
+                        "Order Discount Amount"
+                       )
 write.table(summary, file = paste(pathTableFolder,"OrderData.csv"), sep=",", row.names=FALSE)
 # Overview table of payment method data
 interestingColumns <- c("Order.Credit.Card.Brand",
@@ -41,9 +50,18 @@ interestingColumns <- c("Order.Credit.Card.Brand",
                         "TE.Card.Holder",
                         "Premium.Card.Holder",
                         "New.Bank.Card"
-)
+                        )
 summary <- summary(orders[interestingColumns])
 summary[is.na(summary)]<-""
+colnames(summary) <- c("Order Credit Card.Brand",
+                       "Bank Card Holder",
+                       "Gas Card Holder",
+                       "Upscale Card Holder",
+                       "Unknown Card Type",
+                       "TE Card Holder",
+                       "Premium Card Holder",
+                       "New Bank Card"
+                       )
 write.table(summary, file = paste(pathTableFolder,"PaymentMethodData.csv"), sep=",", row.names=FALSE)
 # Overview table of product data
 interestingColumns <- c("StockType",
@@ -77,6 +95,27 @@ interestingColumns <- c("City",
 )
 summary <- summary(orders[interestingColumns])
 summary[is.na(summary)]<-""
+colnames(summary) <- c("City",
+                       "Country",
+                       "US State",
+                       "Age",
+                       "Marital Status",
+                       "Gender",
+                       "Audience",
+                       "Truck Owner",
+                       "RV Owner",
+                       "Motorcycle Owner",
+                       "Working Woman",
+                       "Presence Of Children",
+                       "Speciality Store Retail",
+                       "Oil Retail Activity",
+                       "Bank Retail Activity",
+                       "Finance Retail Activity",
+                       "Miscellaneous Retail Activity",
+                       "Upscale Retail",
+                       "Upscale Speciality Retail",
+                       "Retail Activity"
+)
 write.table(summary, file = paste(pathTableFolder,"CustomerData.csv"), sep=",", row.names=FALSE)
 
 # Utility function for subplot support
@@ -150,7 +189,7 @@ p5 <- ggplot(plotData, aes(x="", y=n, fill=Spend.Over..12.Per.Order.On.Average))
   geom_bar(stat="identity", width=1) + 
   coord_polar("y", start=0) +
   geom_text(aes(label = paste(round(percent*100),"%",sep="")), position = position_stack(vjust = 0.5)) +
-  labs(x = NULL, y = NULL, fill = NULL, title = "Customers that spend \nover 12$ on average") +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Customers that spend \nover $12 on average") +
   theme_classic() +
   theme(axis.line = element_blank(),
         axis.text = element_blank(),
@@ -173,7 +212,7 @@ for (day in c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sun
 p6 <- ggplot(plotData, aes(x=reorder(Day_of_week,-Over_12_dollar_percentage),y=Over_12_dollar_percentage)) +
   geom_bar(stat="identity") +
   scale_x_discrete(name="Day of week") +
-  scale_y_continuous(name="% of customers spending \nover 12$ per order\n on average")
+  scale_y_continuous(name="% of customers spending \nover $12 per order\n on average")
 multiplot(p1, p3, p5, p2, p4, p6, cols=2)
 
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p5, p2, p4, p6, cols=2), width=15)

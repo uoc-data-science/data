@@ -1,4 +1,4 @@
-"Order.Line.Quantity","Order.Line.Unit.List.Price","Order.Line.Amount","Spend.Over..12.Per.Order.On.Average","Order.Line.Day.of.Week","Order.Line.Hour.of.Day","      Order.Promotion.Code","Order.Discount.Amount"
+"Order Line Quantity","Order Line Unit List Price","Order Line Amount","Spend Over $12 Per Order On Average","Order Line Day of Week","Order Line Hour of.Day","Order Promotion Code","Order Discount Amount"
 "Min.   :-2.00  ","Min.   : 0.000  ","Min.   :-40.00  ","False:2219  ","Friday   :571  ","Min.   : 0.00  ","FRIEND          :2186  ","Min.   : 0.000  "
 "1st Qu.: 1.00  ","1st Qu.: 5.000  ","1st Qu.:  5.96  ","True :1246  ","Monday   :257  ","1st Qu.: 9.00  ","SPRING          :  57  ","1st Qu.: 0.000  "
 "Median : 1.00  ","Median : 7.500  ","Median : 10.00  ","","Saturday :292  ","Median :13.00  ","MARCH1          :  51  ","Median :10.000  "
