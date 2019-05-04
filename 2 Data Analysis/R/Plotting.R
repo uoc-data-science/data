@@ -171,12 +171,14 @@ sumTotal <- nrow(orders)
 sumTop <- sum(top$n)
 countOthers <- sumTotal - sumTop
 top[,c(1)] <- as.character(top[,c(1)])
+top <- subset(top, !is.na(Order.Promotion.Code))
 levels(top) <- c(levels(top),"(Others)")
 top[nrow(top) + 1,] = list("(Others)",countOthers)
 top[,c(1)] <- as.factor(top[,c(1)])
 print(top)
-p2 <- ggplot(top, aes(x=Order.Promotion.Code,y=n)) +
+p2 <- ggplot(top, aes(x=reorder(Order.Promotion.Code,-n),y=n)) +
   geom_bar(stat="identity") +
-  scale_x_discrete(name="Order Promotion Code")
+  scale_x_discrete(name="Order Promotion Code") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 multiplot(p1, p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=""),multiplot(p1, p2, cols=2), width=15)
