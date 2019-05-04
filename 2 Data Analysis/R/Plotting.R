@@ -144,8 +144,20 @@ p4 <- ggplot(orders, aes(x=Order.Line.Unit.List.Price)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +
   scale_x_continuous(name="Order Line Unit List Price",limits = c(-2.5,45.5),breaks = round(seq(0, 45, by = 3),1)) +
   scale_y_continuous(limits = c(0,900))
-multiplot(p1, p3, p2, p4, cols=2)
-ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p2, p4, cols=2), width=15)
+plotData <-tabyl(orders$Spend.Over..12.Per.Order.On.Average, sort = TRUE)
+colnames(plotData) <- c("Spend.Over..12.Per.Order.On.Average","n","percent")
+pie = ggplot(plotData, aes(x="", y=n, fill=Spend.Over..12.Per.Order.On.Average)) + 
+  geom_bar(stat="identity", width=1) + 
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Customers that spend \nover 12$ on average") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+multiplot(p1, p3, pie, p2, p4, cols=2)
+ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, pie, p2, p4, cols=2), width=15)
 
 # Distribution of order day of week and hour of day
 p1 <- ggplot(orders,aes(x=reorder(Order.Line.Day.of.Week,Order.Line.Day.of.Week,function(x)-length(x)))) +
