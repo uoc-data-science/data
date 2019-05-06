@@ -118,6 +118,62 @@ colnames(summary) <- c("City",
 )
 write.table(summary, file = paste(pathTableFolder,"CustomerData.csv"), sep=",", row.names=FALSE)
 
+# Overview table of clickstream data
+interestingColumns <- c("BrandName",
+                        "UnitsPerInnerBox",
+                        "PrimaryPackage",
+                        "PrimaryPackage",
+                        "Depth",
+                        "VendorMinREOrderDollars",
+                        "Cat1Sub2",
+                        "Height",
+                        "UnitsPerOuterBox",
+                        "StockType",
+                        "Pack",
+                        "ProductForm",
+                        "Look",
+                        "BasicOrFashion",
+                        "SaleOrNonSale",
+                        "Length",
+                        "Cat1Sub3",
+                        "ColorOrScentDropdown",
+                        "DisContinuedInd",
+                        "Socktype2",
+                        "MinQty",
+                        "LeadTime",
+                        "Terms",
+                        "Weight",
+                        "Socktype1",
+                        "InOrOutofStock",
+                        "HasDressingRoom",
+                        "ColorOrScent",
+                        "Width",
+                        "Texture",
+                        "WeightUOM",
+                        "Manufacturer",
+                        "ExplodedProdKits",
+                        "DimUOM",
+                        "ToeFeature",
+                        "Category2",
+                        "Material",
+                        "CategoryCode",
+                        "Cat1Sub1",
+                        "UnitIncrement",
+                        "WaistControl",
+                        "Collection",
+                        "BodyFeature",
+                        "Audience",
+                        "Category1",
+                        "Freight",
+                        "Product",
+                        "Cat2Sub1",
+                        "ActionCode",
+                        "Pattern"
+)
+summary <- summary(clicks[interestingColumns])
+summary[is.na(summary)]<-""
+write.table(summary, file = paste(pathTableFolder,"ClickstreamData.csv"), sep=",", row.names=FALSE)
+
 # Utility function for subplot support
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
