@@ -122,7 +122,6 @@ write.table(summary, file = paste(pathTableFolder,"CustomerData.csv"), sep=",", 
 interestingColumns <- c("BrandName",
                         "UnitsPerInnerBox",
                         "PrimaryPackage",
-                        "PrimaryPackage",
                         "Depth",
                         "VendorMinREOrderDollars",
                         "Cat1Sub2",
@@ -308,3 +307,12 @@ p2 <- ggplot(top, aes(x=reorder(Order.Promotion.Code,-n),y=n)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 multiplot(p1, p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=""),multiplot(p1, p2, cols=2), width=15)
+
+#Plots for clickstream data
+# Distribution of brand names
+ggplot(data=subset(clicks, !is.na(BrandName)), aes(BrandName)) +
+  geom_bar(width=.5, fill="tomato3") +
+  theme(axis.text.x = element_text(angle=90, vjust=0.6))
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Brand Name Quantity.png",sep=""))
+
+
