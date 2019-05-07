@@ -1,3 +1,3 @@
 from script_02_join_data_with_column_names import read_order_data
 
-read_order_data
+read_order_data()
