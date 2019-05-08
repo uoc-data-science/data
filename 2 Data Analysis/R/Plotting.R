@@ -122,6 +122,62 @@ colnames(summary) <- c("City",
 write.table(summary, file = paste(pathTableFolder,"CustomerData.csv"), sep=",", row.names=FALSE)
 
 #-----------------------------------------------------------------------------------
+# Overview table of clickstream data
+interestingColumns <- c("BrandName",
+                        "UnitsPerInnerBox",
+                        "PrimaryPackage",
+                        "Depth",
+                        "VendorMinREOrderDollars",
+                        "Cat1Sub2",
+                        "Height",
+                        "UnitsPerOuterBox",
+                        "StockType",
+                        "Pack",
+                        "ProductForm",
+                        "Look",
+                        "BasicOrFashion",
+                        "SaleOrNonSale",
+                        "Length",
+                        "Cat1Sub3",
+                        "ColorOrScentDropdown",
+                        "DisContinuedInd",
+                        "Socktype2",
+                        "MinQty",
+                        "LeadTime",
+                        "Terms",
+                        "Weight",
+                        "Socktype1",
+                        "InOrOutofStock",
+                        "HasDressingRoom",
+                        "ColorOrScent",
+                        "Width",
+                        "Texture",
+                        "WeightUOM",
+                        "Manufacturer",
+                        "ExplodedProdKits",
+                        "DimUOM",
+                        "ToeFeature",
+                        "Category2",
+                        "Material",
+                        "CategoryCode",
+                        "Cat1Sub1",
+                        "UnitIncrement",
+                        "WaistControl",
+                        "Collection",
+                        "BodyFeature",
+                        "Audience",
+                        "Category1",
+                        "Freight",
+                        "Product",
+                        "Cat2Sub1",
+                        "ActionCode",
+                        "Pattern"
+)
+summary <- summary(clicks[interestingColumns])
+summary[is.na(summary)]<-""
+write.table(summary, file = paste(pathTableFolder,"ClickstreamData.csv"), sep=",", row.names=FALSE)
+
+
 # Utility function for subplot support
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
@@ -252,7 +308,6 @@ ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=
 
 #-----------------------------------------------------------------------------------
 #Plots product data
-# Create ranking for top 10 promotion codes
 top <- tabyl(orders$StockType, sort = TRUE) #create frequency table
 top <- top[with(top, order(top$amount,decreasing=TRUE)),] #sort
 top <- top %>% select(1:2) #only values and amount
@@ -277,3 +332,11 @@ print(top)
 #   scale_y_discrete(name="amount") +
 #   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 # ggsave(filename=paste(pathPlotFolder,"Product Data Plots/Stock Type.png",sep=""))
+#------------------------------------------------------------------------
+#------------------------------------------------------------------------
+#Plots for clickstream data
+# Distribution of brand names
+ggplot(data=subset(clicks, !is.na(BrandName)), aes(BrandName)) +
+  geom_bar(width=.5, fill="tomato3") +
+  theme(axis.text.x = element_text(angle=90, vjust=0.6))
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Brand Name Quantity.png",sep=""))
