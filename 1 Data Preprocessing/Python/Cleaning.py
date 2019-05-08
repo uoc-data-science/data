@@ -48,25 +48,28 @@ orders = orders.replace(to_replace="?", value=nan)
 orders = orders.replace(to_replace="NULL", value=nan)
 
 #Drop nan columns
-clicks=clicks.dropna(axis=1)
-order=orders.dropna(axis=1)
+clicks=clicks.dropna(axis=1, how="all")
+orders=orders.dropna(axis=1, how="all")
+
+#Clean Time and Date
+for column in orders.columns:
+    if "Time" in column:
+        orders[column]=orders[column].str.replace('\\', '', regex=True)
+for column in clicks.columns:
+    if "Time" in column:
+        clicks[column] = clicks[column].str.replace('\\', '', regex=True)
 
 # Save to CSV
 clicks.to_csv(path_or_buf=pathClicksClean, index=False)
 (clicks.head(200)).to_csv(path_or_buf=pathClicksSmall, index=False)
-print ("Clickstream:" + str(clicks.shape))
+print("Clickstream:" + str(clicks.shape))
 orders.to_csv(path_or_buf=pathOrdersClean, index=False)
 (orders.head(200)).to_csv(path_or_buf=pathOrdersSmall, index=False)
-print ("Orders:" + str(orders.shape))
+print("Orders:" + str(orders.shape))
 
 #Merging
-orders.rename(columns={"Order Line Session ID":"Session ID"}, inplace=True)
-
-print(list(orders.columns.values))
-print(list(clicks.columns.values))
-
-mergedData = pd.merge(clicks, orders, on='Session ID', how='outer', suffixes=("_clicks","_orders"))
+mergedData = pd.merge(clicks, orders,  how='inner', left_on=['Session ID','Product Object ID','Product ID'], right_on = ['Order Session ID','Product Object ID','Product ID'])
 print(list(mergedData.columns.values))
 print(list(mergedData.shape))
 mergedData.to_csv(path_or_buf=pathMerge, index=False)
-(mergedData.head(200)).to_csv(path_or_buf=pathMergeSmall, index=False)
+(mergedData.head(10000)).to_csv(path_or_buf=pathMergeSmall, index=False)
