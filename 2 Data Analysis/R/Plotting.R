@@ -5,6 +5,7 @@ library(janitor)
 
 useSmallVersions <- TRUE
 
+# decide whether to use dev data or not
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
 pathClicks  <- "0 Data/clickstream_data_cleaned_R.csv"
 if (useSmallVersions){
@@ -12,14 +13,16 @@ if (useSmallVersions){
   pathClicks <- "0 Data/clickstream_data_small_R.csv"
 }
 
+# target path
 pathPlotFolder <- "./4 Data Overview/Plots/"
 pathTableFolder <- "./4 Data Overview/Tables/"
 
-
+# read data
 orders <- read.csv(file=pathOrders)
 clicks <- read.csv(file=pathClicks)
 
-# Overview table of order data
+#-----------------------------------------------------------------------------------
+# overview table of order data
 interestingColumns <- c("Order.Line.Quantity",
                         "Order.Line.Unit.List.Price",
                         "Order.Line.Amount",
@@ -118,15 +121,13 @@ colnames(summary) <- c("City",
 )
 write.table(summary, file = paste(pathTableFolder,"CustomerData.csv"), sep=",", row.names=FALSE)
 
+#-----------------------------------------------------------------------------------
 # Utility function for subplot support
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
-  
   # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
-  
   numPlots = length(plots)
-  
   # If layout is NULL, then use 'cols' to determine layout
   if (is.null(layout)) {
     # Make the panel
@@ -135,33 +136,29 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
                      ncol = cols, nrow = ceiling(numPlots/cols))
   }
-  
   if (numPlots==1) {
     print(plots[[1]])
-    
   } else {
     # Set up the page
     grid.newpage()
     pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
     # Make each plot, in the correct location
     for (i in 1:numPlots) {
       # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
                                         layout.pos.col = matchidx$col))
-      
     }
   }
 }
 
-
+#-----------------------------------------------------------------------------------
 #Plots for order data
+
 # Distribution of order line quantity
 ggplot(orders, aes(x=Order.Line.Quantity)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +  # Overlay with transparent density plot
-  geom_vline(aes(xintercept=mean(Order.Line.Quantity, na.rm=T)),   # Ignore NA values for mean
+  geom_vline(aes(xintercept=mean(Order.Line.Quantity, na.rm=T)), # Ignore NA values for mean
              color="red", linetype="dashed", size=1) +
   scale_x_continuous(name ="Order Line Quantity",limits = c(0.5,7.5),breaks = round(seq(1, 7, by = 1),1))
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Line Quantity.png",sep=""))
@@ -227,7 +224,7 @@ p2 <- ggplot(orders, aes(x=Order.Line.Hour.of.Day)) +
 multiplot(p1, p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Time.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 
-# Distribution of discounts
+# Order Discounts: Distribution of discounts
 p1 <- ggplot(orders, aes(x=Order.Discount.Amount)) +
   geom_density() +
   scale_x_continuous(name="Order Discount Amount")
@@ -252,3 +249,31 @@ p2 <- ggplot(top, aes(x=reorder(Order.Promotion.Code,-n),y=n)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 multiplot(p1, p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=""),multiplot(p1, p2, cols=2), width=15)
+
+#-----------------------------------------------------------------------------------
+#Plots product data
+# Create ranking for top 10 promotion codes
+top <- tabyl(orders$StockType, sort = TRUE) #create frequency table
+top <- top[with(top, order(top$amount,decreasing=TRUE)),] #sort
+top <- top %>% select(1:2) #only values and amount
+print(top)
+colnames(top) <- c("StockType","amount")
+sumTotal <- nrow(orders)
+print(sumTotal)
+sumTop <- sum(top$amount)
+print(sumTop)#
+countOthers <- sumTotal - sumTop
+top[,c(1)] <- as.character(top[,c(1)])
+top <- subset(top, !is.na(StockType))
+levels(top) <- c(levels(top),"(Others)")
+top[nrow(top) + 1,] = list("(Others)",countOthers)
+top[,c(1)] <- as.factor(top[,c(1)])
+print(top)
+
+
+# ggplot(top, aes(x=reorder(StockType,-n), y=n)) + 
+#   geom_bar(stat="identity") +
+#   scale_x_discrete(name="Stock Type") +
+#   scale_y_discrete(name="amount") +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+# ggsave(filename=paste(pathPlotFolder,"Product Data Plots/Stock Type.png",sep=""))
