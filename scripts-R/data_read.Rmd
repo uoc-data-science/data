@@ -7,7 +7,7 @@ output: html_document
 
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
-knitr::opts_knit$set(root.dir = "~/StudDocs/Master/SS2019/Programming Data Science/data")
+knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -38,8 +38,20 @@ dataframe <- read_csv(dataPath, col_names = result)
 dataframe$order_time <- parse_time(dataframe$"Order Line Date_Time","%H\\:%M\\:%S")
 
 
-dataframe
+head(dataframe)
 ```
+
+## Replacing "?" with na
+```{r}
+library(naniar)
+na_strings <- c("?", "NULL")
+dataframe <- dataframe %>% replace_with_na_all(condition = ~.x %in% na_strings)
+## dataframe <- str_replace_all(dataframe, ";", ",")
+head(dataframe)
+
+```
+
+
 
 ## Including Plots
 
