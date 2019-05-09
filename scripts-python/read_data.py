@@ -18,7 +18,7 @@ def read_raw_data(filename,column_file,samplename,dataset_name):
     print(df)
 
 def read_raw_columns(filename):
-    filename = "../01_data_understanding/"+filename
+    filename = "../01_data_unterstanding/"+filename
     path_to_file = relative_to_absolute(filename)
     textfull= open(path_to_file,"r")
     line_list = textfull.readlines()
@@ -33,7 +33,7 @@ def read_raw_columns(filename):
 
 def load_dataframe_without_ignore(filename, column_file):
     #Determine which columns should be ignored
-    column_file = "../01_data_understanding/"+column_file
+    column_file = "../01_data_unterstanding/"+column_file
     path_to_file = relative_to_absolute(column_file)
     textfull= open(path_to_file,"r")
     line_list = textfull.readlines()
@@ -96,7 +96,7 @@ def create_sampel_excel(dataframe,samplename):
     from pandas import ExcelWriter
     #create a Excelsheet with the heads and the first 100 lines for data unterstanding
     df = dataframe.iloc[:1000]
-    samplename = "../01_data_understanding/"+samplename
+    samplename = "../01_data_unterstanding/"+samplename
     path_to_file = relative_to_absolute(samplename)
     xlsx_writer = ExcelWriter(path_to_file)
     df.to_excel(xlsx_writer,"Sheet1",index=False)
@@ -104,7 +104,7 @@ def create_sampel_excel(dataframe,samplename):
 
 def create_csv_from_dataframe(dataframe,filename):
     filename = "../00_raw_data/"+filename
-    path_to_file = relative_to_absolute(samplename)
+    path_to_file = relative_to_absolute(filename)
     df = dataframe
     df.to_csv(path_or_buf=path_to_file,index=False)
 

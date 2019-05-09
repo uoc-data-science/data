@@ -7,7 +7,7 @@ output: html_document
 
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
-knitr::opts_knit$set(root.dir = "~/StudDocs/Master/SS2019/Programming Data Science/data")
+knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -17,39 +17,49 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+library(stringi)
+library(hms)
 
-# From Julius Braun (jbraun253)
-# get file paths
-curDir <- ""
-filePath <- paste(curDir, "01_data_understanding", sep="")
-dataPath <- file.path(filePath, "order_data.csv")
-headersPath <- "./01_data_understanding/order_data.csv"
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
+dataPath <- paste(rootDir, "00_raw_data/order_data.csv", sep="/")
+
 # prepare column name list
 headersFile = file(headersPath, "r")
 headerNames <- list()
-while(TRUE) {
-  line = readLines(headersFile, n = 1)
-  if(length(line) == 0){
-    break
-  }
-  headerNames <- append(headerNames, strsplit(line, ":")[[1]][1])
-}
-close(headersFile)
-# End cite
+#http://r.789695.n4.nabble.com/How-to-read-plain-text-documents-into-a-vector-td901794.html
+obj_list <- readLines(headersFile)
 
-dataframe <- read_csv("./00_raw_data/order_data.csv", col_names = FALSE)
+#To convert to a vector, do the following:
+result <- stri_extract_first(obj_list, regex="[A-z ,]+")
+dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
+
+dataframe <- read_csv(dataPath, col_names = result)
+dataframe$order_time <- parse_time(dataframe$"Order Line Date_Time","%H\\:%M\\:%S")
 
 
-
-dataframe
+head(dataframe)
 ```
+
+## Replacing "?" with na
+```{r}
+library(naniar)
+na_strings <- c("?", "NULL")
+dataframe <- dataframe %>% replace_with_na_all(condition = ~.x %in% na_strings)
+## dataframe <- str_replace_all(dataframe, ";", ",")
+head(dataframe)
+
+```
+
+
 
 ## Including Plots
 
 You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+lapply(dataframe, mean)
+lapply(dataframe, max)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
