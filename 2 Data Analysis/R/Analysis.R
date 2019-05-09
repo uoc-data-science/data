@@ -6,6 +6,12 @@ if (useSmallVersions){
     pathOrders <- "0 Data/order_data_small_R.csv"
     pathClicks <- "0 Data/clickstream_data_small_R.csv"
 }
+pathOrdersPython <- "0 Data/order_data_cleaned_P.csv"
+pathClicksPython  <- "0 Data/clickstream_data_cleaned_P.csv"
+if (useSmallVersions){
+  pathOrdersPython <- "0 Data/order_data_small_P.csv"
+  pathClicksPython <- "0 Data/clickstream_data_small_P.csv"
+}
 
 pathNULLAnalysisOrders <- "2 Data Analysis/NAorders.csv"
 pathNULLAnalysisClicks <- "2 Data Analysis/NAclicks.csv"
@@ -41,3 +47,8 @@ for (column in names(clicks)){
 # Sort by NA percentage ascending
 NAclicks <- NAclicks[with(NAclicks, order(NAclicks$NA_percentage)),]
 write.table(NAclicks, file = pathNULLAnalysisClicks, sep=",", row.names=FALSE)
+
+# Compare csv files
+library(diffobj)
+diffCsv(target=pathOrdersPython, current=pathOrders)
+diffCsv(target=pathClicksPython, current=pathClicks)
