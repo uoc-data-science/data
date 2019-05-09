@@ -75,10 +75,10 @@ for (col in names(clicks)){
 write.table(clicks, file = pathClicksClean, sep=",", row.names=FALSE)
 
 # 3) Save smaller versions for readability and dev purposes
-small_size = min(10000,nrow(orders))
+small_size = min(1000,nrow(orders))
 orders_small = orders[1:small_size,]
 write.table(orders_small, file = pathOrdersSmall, sep=",", row.names=FALSE)
 
-small_size = min(10000,nrow(clicks))
+small_size = min(1000,nrow(clicks))
 clicks_small = clicks[1:small_size,]
 write.table(clicks_small, file = pathClicksSmall, sep=",", row.names=FALSE)

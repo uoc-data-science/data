@@ -61,10 +61,10 @@ for column in clicks.columns:
 
 # Save to CSV
 clicks.to_csv(path_or_buf=pathClicksClean, index=False)
-(clicks.head(200)).to_csv(path_or_buf=pathClicksSmall, index=False)
+(clicks.head(1000)).to_csv(path_or_buf=pathClicksSmall, index=False)
 print("Clickstream:" + str(clicks.shape))
 orders.to_csv(path_or_buf=pathOrdersClean, index=False)
-(orders.head(200)).to_csv(path_or_buf=pathOrdersSmall, index=False)
+(orders.head(1000)).to_csv(path_or_buf=pathOrdersSmall, index=False)
 print("Orders:" + str(orders.shape))
 
 #Merging
