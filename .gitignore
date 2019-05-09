@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+.idea
 *.csv
 *.pyc
 *.pkl
