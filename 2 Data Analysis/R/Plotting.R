@@ -4,7 +4,7 @@ library(janitor)
 library(maps)
 library(ggplot2)
 
-useSmallVersions <- TRUE
+useSmallVersions <- FALSE
 
 # decide whether to use dev data or not
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
@@ -625,17 +625,6 @@ ggplot() +
   theme(panel.background = element_rect(fill = "transparent")) # bg of the panel)
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=13)
 
-
-cities <- top
-us_states <- map_data("usa")
-ggplot(us_states, aes(x=long, y=lat)) +
-  geom_polygon() +
-  coord_map() +
-  labs(title = "Top 20 Customer Cities") +
-  geom_point(data=cities, aes(x=long, y=lat, size=cities$amount), color="orange") +
-  labs(size = "Percent")
-ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=12)
-
 # retail activity
 plotData <- tabyl(orders$Retail.Activity, sort = TRUE, show_na = FALSE)
 print(plotData)
@@ -704,7 +693,7 @@ ggplot(plotData, aes(x=reorder(Vehicle,-percentage_yes),y=percentage_yes)) +
   scale_x_discrete(name="Vehicle") +
   scale_y_continuous(name="Percentage of owners") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
-ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/VehicleOwnership.png.png",sep=""), width=13)
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/VehicleOwnership.png",sep=""), width=13)
 #------------------------------------------------------------------------
 #------------------------------------------------------------------------
 #Plots for clickstream data
