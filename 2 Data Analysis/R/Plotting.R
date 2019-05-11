@@ -371,6 +371,31 @@ ggplot(top, aes(Manufacturer, amount), y=amount) +
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/ManufacturerTop10.png",sep=""))
 
 
+# Create ranking for Manufacturer
+firstx = 50
+top <- (tabyl(orders$Order.Line.Subassortment.ID)) %>% select(1,3) #create frequency table
+names(top) <- c("Order.Line.Subassortment.ID", "amount") #rename
+top[,c(1)] <- as.character(top[,c(1)])
+top[is.na(top)] <- "Others"
+top <- arrange(top, desc(amount))
+amountTotal <- sum(top$amount)
+amountTop <- sum(head(top, firstx)$amount)
+top <- head(top, firstx) #only first 25 rows
+top[nrow(top) + 1,] = list("Others",amountTotal-amountTop)
+top <- top %>% arrange(desc(amount))
+#top$Order.Line.Subassortment.ID <- factor(top$Order.Line.Subassortment.ID, levels = top$Order.Line.Subassortment.ID) #lockOrder
+print(top)
+ggplot(top, aes(reorder(Order.Line.Subassortment.ID,-amount),amount), y=amount) +
+  geom_bar(stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_x_discrete(name="Product ID") +
+  scale_y_continuous(name="Order Quantity Percentage") +
+  ggtitle("Order Quantity Share of the Top 50 products") +
+  theme(plot.title = element_text(hjust = 0.5))
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/ProductsTop25.png",sep=""), width = 15, height = 7)
+
+
+
 # Create ranking for BrandName
 firstx = 10
 top <- (tabyl(orders$BrandName)) %>% select(1:2) #create frequency table
