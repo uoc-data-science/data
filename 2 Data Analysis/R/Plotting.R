@@ -212,15 +212,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 #-----------------------------------------------------------------------------------
 #Plots for order data
 
-# Distribution of order line quantity
-ggplot(orders, aes(x=Order.Line.Quantity)) +
-  geom_histogram(binwidth=1, colour="black", fill="white") +  # Overlay with transparent density plot
-  geom_vline(aes(xintercept=mean(Order.Line.Quantity, na.rm=T)), # Ignore NA values for mean
-             color="red", linetype="dashed", size=1) +
-  scale_x_continuous(name ="Order Line Quantity",limits = c(0.5,7.5),breaks = round(seq(1, 7, by = 1),1))
-ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Line Quantity.png",sep=""))
-
-# Distribution of order amount
+# Distribution of order amount, unit price, order quantity
 p1 <- ggplot(orders, aes(x=Order.Line.Amount)) + 
   geom_density() +
   scale_x_continuous(name="Order Line Amount",limits = c(-0.5,45.5),breaks = round(seq(0, 45, by = 3),1)) +
@@ -279,15 +271,36 @@ for (day in orders$Order.Line.Date){
   }
 }
 plotData <- plotData %>% arrange(Date)
-p6 <- ggplot(data=plotData, aes(x=Date, y=Over_12_dollar_percentage, group=5)) +
+p6 <- ggplot(data=plotData, aes(x=Date, y=Over_12_dollar_percentage, group=1)) +
   geom_line() +
   geom_point() +
   scale_x_discrete(breaks = c(head(plotData,1)$Date, tail(plotData,1)$Date)) +
   scale_y_continuous(name="Percentage of customers \nthat spend over $12\n on average")
 
-multiplot(p1, p3, p5, p2, p4, p6, cols=2)
+p7 <- ggplot(orders, aes(x=Order.Line.Quantity)) +
+  geom_histogram(binwidth=1, colour="black", fill="white") +  # Overlay with transparent density plot
+  scale_x_continuous(name ="Order Line Quantity",limits = c(0.5,7.5),breaks = round(seq(1, 7, by = 1),1))
 
-ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p5, p2, p4, p6, cols=2), width=15)
+plotData <- data.frame(matrix(ncol = 2, nrow = 0))
+x <- c("Date", "Avg_Order_Quantity")
+colnames(plotData) <- x
+for (day in orders$Order.Line.Date){
+  if (!substring(day,6) %in% plotData$Date){
+    subset <- orders %>% filter(Order.Line.Date == day)
+    quantity = mean(subset$Order.Line.Quantity)
+    plotData[nrow(plotData) + 1,] = list(substring(day,6),quantity)
+  }
+}
+plotData <- plotData %>% arrange(Date)
+p8 <- ggplot(data=plotData, aes(x=Date, y=Avg_Order_Quantity, group=1)) +
+  geom_line() +
+  geom_point() +
+  scale_x_discrete(breaks = c(head(plotData,1)$Date, tail(plotData,1)$Date)) +
+  scale_y_continuous(name="Average order \nquantity")
+
+multiplot(p1, p3, p5, p7, p2, p4, p6, p8, cols=2)
+
+ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p5, p7, p2, p4, p6, p8, cols=2), width=15)
 
 # Distribution of order day of week and hour of day
 p1 <- ggplot(orders,aes(x=reorder(Order.Line.Day.of.Week,Order.Line.Day.of.Week,function(x)-length(x)))) +
