@@ -751,9 +751,11 @@ p3 <- ggplot(orders, aes(x=Age)) +
   geom_density() +
   scale_x_continuous(name="Age")
 
-p7 <- ggplot(orders, aes(x=Age)) + 
-  geom_density() +
-  scale_x_continuous(name="Age")
+plotData <- na.omit(orders %>% select(Age, Gender))
+p7 <- ggplot(plotData) + 
+  geom_density(aes(x=Age, colour=Gender),show_guide=FALSE)+
+  stat_density(aes(x=Age, colour=Gender), geom="line",position="identity") +
+  labs(title = "Age Distribution per Gender")
 
 plotData <- tabyl(orders$Number.Of.Adults, sort = TRUE, show_na = FALSE)
 colnames(plotData) <- c("Number.Of.Adults","n","percent")
@@ -769,7 +771,7 @@ p8 <- ggplot(plotData, aes(x="", y=n, fill=Number.Of.Adults)) +
         plot.title = element_text(hjust = 0.5, color = "#666666"))
 
 multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2)
-ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Social_Data.png",sep=""),multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2), width=9, height=15)
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Social_Data.png",sep=""),multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2), width=13, height=15)
 
 
 #Vehicle Ownership
