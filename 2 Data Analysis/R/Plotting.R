@@ -4,7 +4,7 @@ library(janitor)
 library(maps)
 library(ggplot2)
 
-useSmallVersions <- TRUE
+useSmallVersions <- FALSE
 
 # decide whether to use dev data or not
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
@@ -177,6 +177,7 @@ summary <- summary(clicks[interestingColumns])
 summary[is.na(summary)]<-""
 write.table(summary, file = paste(pathTableFolder,"ClickstreamData.csv"), sep=",", row.names=FALSE)
 
+#-----------------------------------------------------------------------------------
 
 # Utility function for subplot support
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
@@ -248,24 +249,42 @@ p5 <- ggplot(plotData, aes(x="", y=n, fill=Spend.Over..12.Per.Order.On.Average))
         axis.text = element_blank(),
         axis.ticks = element_blank(),
         plot.title = element_text(hjust = 0.5, color = "#666666"))
+# plotData <- data.frame(matrix(ncol = 2, nrow = 0))
+# x <- c("Day_of_week", "Over_12_dollar_percentage")
+# colnames(plotData) <- x
+# for (day in c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")){
+#   subset <- orders %>% filter(Order.Line.Day.of.Week == day)
+#   top <-tabyl(subset$Spend.Over..12.Per.Order.On.Average, sort = TRUE)
+#   colnames(top) <- c("Spend.Over..12.Per.Order.On.Average","n","percent")
+#   top <- top %>% filter(Spend.Over..12.Per.Order.On.Average == "True")
+#   percent <- top[1,"percent"]
+#   percent <- round(percent*100)
+#   print(top)
+#   print(percent)
+#   plotData[nrow(plotData) + 1,] = list(day,percent)
+# }
+# p6 <- ggplot(plotData, aes(x=reorder(Day_of_week,-Over_12_dollar_percentage),y=Over_12_dollar_percentage)) +
+#   geom_bar(stat="identity") +
+#   scale_x_discrete(name="Day of week") +
+#   scale_y_continuous(name="% of customers spending \nover $12 per order\n on average")
 plotData <- data.frame(matrix(ncol = 2, nrow = 0))
-x <- c("Day_of_week", "Over_12_dollar_percentage")
+x <- c("Date", "Over_12_dollar_percentage")
 colnames(plotData) <- x
-for (day in c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")){
-  subset <- orders %>% filter(Order.Line.Day.of.Week == day)
-  top <-tabyl(subset$Spend.Over..12.Per.Order.On.Average, sort = TRUE)
-  colnames(top) <- c("Spend.Over..12.Per.Order.On.Average","n","percent")
-  top <- top %>% filter(Spend.Over..12.Per.Order.On.Average == "True")
-  percent <- top[1,"percent"]
-  percent <- round(percent*100)
-  print(top)
-  print(percent)
-  plotData[nrow(plotData) + 1,] = list(day,percent)
+for (day in orders$Order.Line.Date){
+  if (!substring(day,6) %in% plotData$Date){
+    subset <- orders %>% filter(Order.Line.Date == day)
+    subsetTrue = subset %>% filter(Spend.Over..12.Per.Order.On.Average == "True")
+    percentage = round(nrow(subsetTrue)/nrow(subset),2)
+    plotData[nrow(plotData) + 1,] = list(substring(day,6),percentage)
+  }
 }
-p6 <- ggplot(plotData, aes(x=reorder(Day_of_week,-Over_12_dollar_percentage),y=Over_12_dollar_percentage)) +
-  geom_bar(stat="identity") +
-  scale_x_discrete(name="Day of week") +
-  scale_y_continuous(name="% of customers spending \nover $12 per order\n on average")
+plotData <- plotData %>% arrange(Date)
+p6 <- ggplot(data=plotData, aes(x=Date, y=Over_12_dollar_percentage, group=5)) +
+  geom_line() +
+  geom_point() +
+  scale_x_discrete(breaks = c(head(plotData,1)$Date, tail(plotData,1)$Date)) +
+  scale_y_continuous(name="Percentage of customers \nthat spend over $12\n on average")
+
 multiplot(p1, p3, p5, p2, p4, p6, cols=2)
 
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p5, p2, p4, p6, cols=2), width=15)
