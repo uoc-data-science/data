@@ -673,6 +673,105 @@ multiplot(p1,p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Retail_Activity.png",sep=""),multiplot(p1,p2, cols=2), width=8, height=5)
 
 
+#social data
+plotData <- tabyl(orders$Gender, sort = TRUE, show_na = FALSE)
+colnames(plotData) <- c("Gender","n","percent")
+p1 <- ggplot(plotData, aes(x="", y=n, fill=Gender)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100, digits = 0),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Gender") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666")) +
+  scale_fill_manual(values = c("Female" = "#55DDE0",
+                               "Male" = "#F26419"))
+
+plotData <- orders %>% filter(Gender == "Female")
+plotData <- tabyl(plotData$Marital.Status, sort = TRUE, show_na = FALSE)
+colnames(plotData) <- c("Marital.Status","n","percent")
+p2 <- ggplot(plotData, aes(x="", y=n, fill=Marital.Status)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100, digits = 0),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Marital Status of\nFemale Customers") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+plotData <- orders %>% filter(Gender == "Male")
+plotData <- tabyl(plotData$Marital.Status, sort = TRUE, show_na = FALSE)
+colnames(plotData) <- c("Marital.Status","n","percent")
+p6 <- ggplot(plotData, aes(x="", y=n, fill=Marital.Status)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100, digits = 0),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Marital Status of\nMale Customers") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+plotData <- orders %>% filter(Gender == "Female")
+plotData <- tabyl(plotData$Working.Woman, sort = TRUE, show_na = FALSE)
+colnames(plotData) <- c("Working.Woman","n","percent")
+print(plotData)
+p5 <- ggplot(plotData, aes(x="", y=n, fill=Working.Woman)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100, digits = 0),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Working Woman") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666")) +
+  scale_fill_manual(values = c("True" = "#55DDE0",
+                               "False" = "#F26419"))
+
+plotData <- tabyl(orders$Presence.Of.Children, sort = TRUE, show_na = FALSE)
+colnames(plotData) <- c("Presence.Of.Children","n","percent")
+p4 <- ggplot(plotData, aes(x="", y=n, fill=Presence.Of.Children)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100, digits = 0),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Presence of Children") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+p3 <- ggplot(orders, aes(x=Age)) + 
+  geom_density() +
+  scale_x_continuous(name="Age")
+
+p7 <- ggplot(orders, aes(x=Age)) + 
+  geom_density() +
+  scale_x_continuous(name="Age")
+
+plotData <- tabyl(orders$Number.Of.Adults, sort = TRUE, show_na = FALSE)
+colnames(plotData) <- c("Number.Of.Adults","n","percent")
+p8 <- ggplot(plotData, aes(x="", y=n, fill=Number.Of.Adults)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100, digits = 0),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Number of Adults \n in Household") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2)
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Social_Data.png",sep=""),multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2), width=9, height=15)
+
+
 #Vehicle Ownership
 plotData <- data.frame(matrix(ncol = 2, nrow = 0))
 x <- c("Vehicle", "percentage_yes")
