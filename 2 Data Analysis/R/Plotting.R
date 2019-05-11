@@ -1,7 +1,8 @@
-library(ggplot2)
 library(gridExtra)
 library(dplyr)
 library(janitor)
+library(maps)
+library(ggplot2)
 
 useSmallVersions <- TRUE
 
@@ -20,7 +21,6 @@ pathTableFolder <- "./4 Data Overview/Tables/"
 # read data
 orders <- read.csv(file=pathOrders)
 clicks <- read.csv(file=pathClicks)
-
 #-----------------------------------------------------------------------------------
 # overview table of order data
 interestingColumns <- c("Order.Line.Quantity",
@@ -308,30 +308,290 @@ ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=
 
 #-----------------------------------------------------------------------------------
 #Plots product data
-top <- tabyl(orders$StockType, sort = TRUE) #create frequency table
-top <- top[with(top, order(top$amount,decreasing=TRUE)),] #sort
-top <- top %>% select(1:2) #only values and amount
-print(top)
-colnames(top) <- c("StockType","amount")
-sumTotal <- nrow(orders)
-print(sumTotal)
-sumTop <- sum(top$amount)
-print(sumTop)#
-countOthers <- sumTotal - sumTop
+#Create ranking for Stock Type
+top <- (tabyl(orders$StockType)) %>% select(1:2) #create frequency table
+names(top) <- c("StockType", "amount") #rename
 top[,c(1)] <- as.character(top[,c(1)])
-top <- subset(top, !is.na(StockType))
-levels(top) <- c(levels(top),"(Others)")
-top[nrow(top) + 1,] = list("(Others)",countOthers)
-top[,c(1)] <- as.factor(top[,c(1)])
+top[is.na(top)] <- "Others"
+top <- arrange(top, desc(amount))
+top$StockType <- factor(top$StockType, levels = top$StockType) #lockOrder
+print(top)
+ggplot(top, aes(StockType, amount), y=amount) +
+  geom_bar(stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/StockType.png",sep=""))
+
+
+# Create ranking for Manufacturer
+firstx = 10
+top <- (tabyl(orders$Manufacturer)) %>% select(1:2) #create frequency table
+names(top) <- c("Manufacturer", "amount") #rename
+top[,c(1)] <- as.character(top[,c(1)])
+top[is.na(top)] <- "Others"
+top <- arrange(top, desc(amount))
+top <- head(top, firstx) #only first 10 rows3
+top$Manufacturer <- factor(top$Manufacturer, levels = top$Manufacturer) #lockOrder
+print(top)
+ggplot(top, aes(Manufacturer, amount), y=amount) +
+  geom_bar(stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/ManufacturerTop10.png",sep=""))
+
+
+# Create ranking for BrandName
+firstx = 10
+top <- (tabyl(orders$BrandName)) %>% select(1:2) #create frequency table
+names(top) <- c("BrandName", "amount") #rename
+top[,c(1)] <- as.character(top[,c(1)])
+top <- arrange(top, desc(amount))
+top <- head(top, firstx) #only first 10 rows3
+topBrands <- top$BrandName
+top[is.na(top)] <- "Others"
+top$BrandName <- factor(top$BrandName, levels = top$BrandName) #lockOrder
+print(top)
+ggplot(top, aes(BrandName, amount), y=amount) +
+  geom_bar(stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/BrandNameTop10.png",sep=""))
+
+#StockPerBrand
+top <- orders
+top <- table(top$StockType, top$BrandName, useNA="always")
+top <- top[, which(colSums(top) != 0)] #drop columns not included in top 10
+top <- top[, order(colSums(top), decreasing=TRUE)]
+colnames(top)[is.na(colnames(top))] <- 'Others'
+rownames(top)[is.na(rownames(top))] <- 'Others'
+top <- data.frame(top)
+names(top) = c("StockType", "BrandName", "amount")
+print(top)
+# Stacked Plot
+p1 <- ggplot(top, aes(fill=StockType, y=amount, x=BrandName)) + 
+  geom_bar( stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+#StockPerManufacturer
+top <- orders
+top <- table(top$StockType, top$Manufacturer, useNA="always")
+top <- top[, which(colSums(top) != 0)] #drop columns not included in top 10
+top <- top[, order(colSums(top), decreasing=TRUE)]
+colnames(top)[is.na(colnames(top))] <- 'Others'
+rownames(top)[is.na(rownames(top))] <- 'Others'
+top <- data.frame(top)
+names(top) = c("StockType", "Manufacturer", "amount")
+print(top)
+# Stacked Plot
+p2 <- ggplot(top, aes(fill=StockType, y=amount, x=Manufacturer)) + 
+  geom_bar( stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/StockPer.png",sep=""),multiplot(p1, p2, cols=2), width=15)
+
+#------------------------------------------------------------------------
+#Plots for Payment Method
+#Card Holder
+plotData <-tabyl(orders$Bank.Card.Holder, sort = TRUE, show_na = FALSE)
+colnames(plotData) <- c("CardHolder","n","percent")
+plotData[,c(1)] <- as.character(plotData[,c(1)])
+plotData[is.na(plotData)] <- "No value"
+plotData$CardHolder[plotData$CardHolder == "True"] <- "Yes"
+plotData$CardHolder[plotData$CardHolder == "False"] <- "No"
+print(plotData)
+p1 <- ggplot(plotData, aes(x="", y=n, fill=CardHolder)) + 
+  geom_bar(stat="identity", width=1) + 
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Card Holder") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+#Gas Card
+plotData <- tabyl(orders$Gas.Card.Holder, sort = TRUE, show_na = FALSE)
+colnames(plotData) <- c("GasCard","n","percent")
+plotData[,c(1)] <- as.character(plotData[,c(1)])
+plotData[is.na(plotData)] <- "No value"
+plotData$GasCard[plotData$GasCard == "True"] <- "Yes"
+plotData$GasCard[plotData$GasCard == "False"] <- "No"
+print(plotData)
+p2 <- ggplot(plotData, aes(x="", y=n, fill=GasCard)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Gas Card") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+plotData <- tabyl(orders$ Upscale.Card.Holder, sort = TRUE, show_na = FALSE)
+print(plotData)
+colnames(plotData) <- c("UpscaleCard","n","percent")
+plotData[,c(1)] <- as.character(plotData[,c(1)])
+plotData[is.na(plotData)] <- "No value"
+plotData$UpscaleCard[plotData$UpscaleCard == "True"] <- "Yes"
+plotData$UpscaleCard[plotData$UpscaleCard == "False"] <- "No"
+print(plotData)
+p3 <- ggplot(plotData, aes(x="", y=n, fill=UpscaleCard)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Upscale Card") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+plotData <- tabyl(orders$Unknown.Card.Type, sort = TRUE, show_na = FALSE)
+print(plotData)
+colnames(plotData) <- c("UnknownCard","n","percent")
+plotData[,c(1)] <- as.character(plotData[,c(1)])
+plotData[is.na(plotData)] <- "No value"
+plotData$UnknownCard[plotData$UnknownCard == "True"] <- "Yes"
+plotData$UnknownCard[plotData$UnknownCard == "False"] <- "No"
+print(plotData)
+p4 <- ggplot(plotData, aes(x="", y=n, fill=UnknownCard)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Unknow Card") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+plotData <- tabyl(orders$TE.Card.Holder, sort = TRUE, show_na = FALSE)
+print(plotData)
+colnames(plotData) <- c("TECard","n","percent")
+plotData[,c(1)] <- as.character(plotData[,c(1)])
+plotData[is.na(plotData)] <- "No value"
+plotData$TECard[plotData$TECard == "True"] <- "Yes"
+plotData$TECard[plotData$TECard == "False"] <- "No"
+print(plotData)
+p5 <- ggplot(plotData, aes(x="", y=n, fill=TECard)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "TE Card") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+plotData <- tabyl(orders$Premium.Card.Holder, sort = TRUE, show_na = FALSE)
+print(plotData)
+colnames(plotData) <- c("PremiumCard","n","percent")
+plotData[,c(1)] <- as.character(plotData[,c(1)])
+plotData[is.na(plotData)] <- "No value"
+plotData$PremiumCard[plotData$PremiumCard == "True"] <- "Yes"
+plotData$PremiumCard[plotData$PremiumCard == "False"] <- "No"
+print(plotData)
+p6 <- ggplot(plotData, aes(x="", y=n, fill=PremiumCard)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Premium Card") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+plotData <- tabyl(orders$New.Bank.Card, sort = TRUE, show_na = FALSE)
+print(plotData)
+colnames(plotData) <- c("NewBank","n","percent")
+plotData[,c(1)] <- as.character(plotData[,c(1)])
+plotData[is.na(plotData)] <- "No value"
+plotData$NewBank[plotData$NewBank == "True"] <- "Yes"
+plotData$NewBank[plotData$NewBank == "False"] <- "No"
+print(plotData)
+p7 <- ggplot(plotData, aes(x="", y=n, fill=NewBank)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100, digits = 2),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "New Card") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardInfos.png",sep=""),multiplot(p1, p2, p3, p4, p5, p6, p7, cols=4), width=15)
+
+#CardTypes
+top <- orders
+top <- table(top$Premium.Card.Holder, top$Order.Credit.Card.Brand, useNA="always")
+top <- top[, which(colSums(top) != 0)] #drop columns not included in top 10
+top <- top[, order(colSums(top), decreasing=TRUE)]
+colnames(top)[is.na(colnames(top))] <- 'Others'
+rownames(top)[is.na(rownames(top))] <- 'No value'
+top <- data.frame(top)
+names(top) = c("Premium", "CardBrand", "amount")
+print(top)
+# Stacked Plot
+p1 <- ggplot(top, aes(fill=Premium, y=amount, x=CardBrand)) + 
+  geom_bar( stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+#StockPerManufacturer
+top <- orders
+top <- table(top$New.Bank.Card, top$Order.Credit.Card.Brand, useNA="always")
+top <- top[, which(colSums(top) != 0)] #drop columns not included in top 10
+top <- top[, order(colSums(top), decreasing=TRUE)]
+colnames(top)[is.na(colnames(top))] <- 'Others'
+rownames(top)[is.na(rownames(top))] <- 'No value'
+top <- data.frame(top)
+names(top) = c("New", "CardBrand", "amount")
+print(top)
+# Stacked Plot
+p2 <- ggplot(top, aes(fill=New, y=amount, x=CardBrand)) + 
+  geom_bar( stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardBrand.png",sep=""),multiplot(p1, p2, cols=2), width=15)
+
+#------------------------------------------------------------------------
+#Customer Data
+states <- read.csv(file="2 Data Analysis/states.csv")
+states$State <- tolower(states$State)
+#names(states) <- c("region", "abb") #rename
+plotData <- orders
+plotData <- merge(plotData, states, by.x="US.State", by.y="Abbreviation")
+plotData <-tabyl(plotData$State, sort = TRUE)
+names(plotData) <- c("region", "amount", "percentage")
+us_states <- map_data("state")
+us_states <- left_join(us_states, plotData)
+print(us_states)
+ggplot(data = us_states, mapping = aes(x = long, y = lat, group = group, fill = round(percentage*100, 2), labels=TRUE)) +
+  geom_polygon(color = "grey", size = 0.1) +
+  scale_fill_gradient(low = "#d4ebf2", high = "#CB454A") + 
+  labs(title = "Customer Hotspots") +
+  labs(fill = "Percent")
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/States.png",sep=""), width=13)
+
+
+states <- read.csv(file="2 Data Analysis/states.csv")
+plotData <- orders
+plotData <- merge(plotData, states, by.x="US.State", by.y="Abbreviation")
+plotData$name<- with(plotData, paste0(City, " ", US.State))
+plotData <-tabyl(plotData$name, sort = TRUE)
+names(plotData) <- c("name", "amount", "percentage")
+us.cities <- left_join(us.cities, plotData)
+us.cities <- na.omit(us.cities)
+us.cities <- arrange(us.cities, desc(amount))
+top <- head(us.cities, 20)
 print(top)
 
-
-# ggplot(top, aes(x=reorder(StockType,-n), y=n)) + 
-#   geom_bar(stat="identity") +
-#   scale_x_discrete(name="Stock Type") +
-#   scale_y_discrete(name="amount") +
-#   theme(axis.text.x = element_text(angle = 90, hjust = 1))
-# ggsave(filename=paste(pathPlotFolder,"Product Data Plots/Stock Type.png",sep=""))
+cities <- top
+us_states <- map_data("usa")
+ggplot(us_states, aes(x=long, y=lat)) +
+  geom_polygon() +
+  coord_map() +
+  labs(title = "Top 20 Customer Cities") +
+  geom_point(data=cities, aes(x=long, y=lat, size=cities$amount), color="orange") +
+  labs(size = "Percent")
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=12)
 #------------------------------------------------------------------------
 #------------------------------------------------------------------------
 #Plots for clickstream data
