@@ -300,7 +300,7 @@ p8 <- ggplot(data=plotData, aes(x=Date, y=Avg_Order_Quantity, group=1)) +
 
 multiplot(p1, p3, p5, p7, p2, p4, p6, p8, cols=2)
 
-ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p5, p7, p2, p4, p6, p8, cols=2), width=15)
+ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p5, p7, p2, p4, p6, p8, cols=2), width=15, height=10)
 
 # Distribution of order day of week and hour of day
 p1 <- ggplot(orders,aes(x=reorder(Order.Line.Day.of.Week,Order.Line.Day.of.Week,function(x)-length(x)))) +
@@ -624,6 +624,55 @@ ggplot(us_states, aes(x=long, y=lat)) +
   geom_point(data=cities, aes(x=long, y=lat, size=cities$amount), color="orange") +
   labs(size = "Percent")
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=12)
+
+# retail activity
+plotData <- tabyl(orders$Retail.Activity, sort = TRUE, show_na = FALSE)
+print(plotData)
+colnames(plotData) <- c("Retail.Activity","n","percent")
+plotData[,c(1)] <- as.character(plotData[,c(1)])
+plotData[is.na(plotData)] <- "No value"
+plotData$Retail.Activity[plotData$Retail.Activity == "True"] <- "Yes"
+plotData$Retail.Activity[plotData$Retail.Activity == "False"] <- "No"
+print(plotData)
+p1 <- ggplot(plotData, aes(x="", y=n, fill=Retail.Activity)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  geom_text(aes(label = paste(round(percent*100, digits = 2),"%",sep="")), position = position_stack(vjust = 0.5)) +
+  labs(x = NULL, y = NULL, fill = NULL, title = "Retail Activity") +
+  theme_classic() +
+  theme(axis.line = element_blank(),
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666"))
+
+plotData <- data.frame(matrix(ncol = 2, nrow = 0))
+x <- c("Retail_Activity", "percentage_yes")
+colnames(plotData) <- x
+columnList <- c("Speciality.Store.Retail","Oil.Retail.Activity","Bank.Retail.Activity",
+                "Finance.Retail.Activity","Miscellaneous.Retail.Activity","Upscale.Retail",
+                "Upscale.Speciality.Retail")
+labelList <- c("Speciality Store Retail","Oil Retail Activity","Bank Retail Activity",
+               "Finance Retail Activity","Miscellaneous Retail Activity","Upscale Retail",
+               "Upscale Speciality Retail")
+i <- 1
+for (sector in columnList){
+  top <- tabyl(orders[,sector], sort = TRUE, show_na = FALSE)
+  colnames(top) <- c(sector,"n","percent")
+  percentage <- round(top[2,"percent"],2)
+  plotData[nrow(plotData) + 1,] = list(labelList[[i]],percentage)
+  i <- i+1
+}
+plotData <- plotData %>% arrange(desc(percentage_yes))
+p2 <- ggplot(plotData, aes(x=reorder(Retail_Activity,-percentage_yes),y=percentage_yes)) +
+  geom_bar(stat="identity") +
+  scale_x_discrete(name="Retail Activity Type") +
+  scale_y_continuous(name="Percentage of active customers") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+multiplot(p1,p2, cols=2)
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Retail_Activity.png",sep=""),multiplot(p1,p2, cols=2), width=8, height=5)
+
+
 #------------------------------------------------------------------------
 #------------------------------------------------------------------------
 #Plots for clickstream data
