@@ -12,10 +12,11 @@ def read_raw_data(filename,column_file,samplename,dataset_name):
     path_to_file = relative_to_absolute(filename)
     columns, dtypes = read_raw_columns(column_file)
     df = pd.read_csv(path_to_file, names=columns,low_memory=False, encoding="ansi")
-    df = recreate_dtypes(df, dtypes)
+    #df = recreate_dtypes(df, dtypes)
     create_sampel_excel(df,samplename)
     save_dataframe(df,dataset_name)
     print(df)
+    return df
 
 def read_raw_columns(filename):
     filename = "../01_data_unterstanding/"+filename
@@ -122,3 +123,5 @@ def load_dataframe(filename):
 
 
 
+#df = read_raw_data("order_data.csv","order_columns.txt","order.xlsx","order.pkl")
+#print(df[["DoYouPurchaseForOthers","SendEmail","ProductCode","New Bank Card"]])

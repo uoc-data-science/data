@@ -1,13 +1,15 @@
 ---
 title: "DataImport"
-author: "Philipp Peter"
-date: "1 Mai 2019"
+author: "Philipp Peter & Laurenz Harnischmacher"
+date: "11 Mai 2019"
 output: html_document
 ---
 
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
-knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
+#knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
+#lh_root
+knitr::opts_knit$set(root.dir = "C:/Users/Laure/Documents/git_Repositories/phyk_data")
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -21,7 +23,7 @@ library(stringi)
 library(hms)
 
 rootDir <- knitr::opts_knit$get("root.dir")
-headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
+headersPath <- paste(rootDir, "01_data_unterstanding/order_columns.txt", sep="/")
 dataPath <- paste(rootDir, "00_raw_data/order_data.csv", sep="/")
 
 # prepare column name list
@@ -41,6 +43,8 @@ dataframe$order_time <- parse_time(dataframe$"Order Line Date_Time","%H\\:%M\\:%
 head(dataframe)
 ```
 
+
+
 ## Replacing "?" with na
 ```{r}
 library(naniar)
@@ -51,6 +55,11 @@ head(dataframe)
 
 ```
 
+## Clean_dataset
+```{r}
+#dataframe[!sapply(dataframe, function(x) all(x == ""))]
+
+```
 
 
 ## Including Plots
