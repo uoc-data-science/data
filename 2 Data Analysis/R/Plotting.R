@@ -620,12 +620,12 @@ plotData <-tabyl(plotData$State, sort = TRUE)
 names(plotData) <- c("region", "count", "percentage")
 plotData <- left_join(map_data("state"), plotData)
 print(plotData)
-ggplot(data = plotData, mapping = aes(x = long, y = lat, group = group, fill = count)) +
+ggplot(data = plotData, mapping = aes(x = long, y = lat, group = group, fill = count), label=State) +
   geom_polygon(color = "#fd9409", size = 0.3) +
   scale_fill_gradient(low = "white", high = "#331919") +
   labs(title = "Customer Hotspots") +
   labs(fill = "Count") +
-  theme(panel.background = element_rect(fill = "transparent")) # bg of the panel)
+  theme(panel.background = element_rect(fill = "transparent"))
 # geom_text(aes(label = plotData$region, x = long, y = lat)) #add labels at centroids
 #geom_label(label=plotData$region, nudge_x = 0.25, nudge_y = 0.2)
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/States.png",sep=""), bg = "transparent", width=13)
@@ -642,12 +642,16 @@ plotData <- arrange(plotData, desc(count))
 cities <- head(plotData, 100)
 print(cities)
 ggplot() + 
-  geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region), fill="grey", color="white", size=0.15) +
+  geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
   geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="#fd9409", alpha = .4) +
-  #geom_text(aes(label=cities$name),hjust=0, vjust=0) +
+  geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
   labs(title = "Top 100 Customer Cities") +
-  labs(size = "Percent") +
-  theme(panel.background = element_rect(fill = "transparent")) # bg of the panel)
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+        axis.title.y=element_blank(),legend.position="none",
+        panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),plot.background=element_blank())
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=13)
 
 # retail activity
