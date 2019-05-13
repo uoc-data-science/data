@@ -12,14 +12,18 @@ def read_raw_data(filename,column_file,samplename,dataset_name):
     path_to_file = relative_to_absolute(filename)
     columns, dtypes = read_raw_columns(column_file)
     df = pd.read_csv(path_to_file, names=columns,low_memory=False, encoding="ansi")
+    ### deactivated 
+    # due to unwanted data altering 
+    # see for example column DoYouPurchaseForOthers before and after execution
     #df = recreate_dtypes(df, dtypes)
+    ### end of deactivation 
     create_sampel_excel(df,samplename)
     save_dataframe(df,dataset_name)
     print(df)
     return df
 
 def read_raw_columns(filename):
-    filename = "../01_data_unterstanding/"+filename
+    filename = "../01_data_understanding/"+filename
     path_to_file = relative_to_absolute(filename)
     textfull= open(path_to_file,"r")
     line_list = textfull.readlines()
@@ -34,7 +38,7 @@ def read_raw_columns(filename):
 
 def load_dataframe_without_ignore(filename, column_file):
     #Determine which columns should be ignored
-    column_file = "../01_data_unterstanding/"+column_file
+    column_file = "../01_data_understanding/"+column_file
     path_to_file = relative_to_absolute(column_file)
     textfull= open(path_to_file,"r")
     line_list = textfull.readlines()
@@ -97,14 +101,14 @@ def create_sampel_excel(dataframe,samplename):
     from pandas import ExcelWriter
     #create a Excelsheet with the heads and the first 100 lines for data unterstanding
     df = dataframe.iloc[:1000]
-    samplename = "../01_data_unterstanding/"+samplename
+    samplename = "../01_data_understanding/"+samplename
     path_to_file = relative_to_absolute(samplename)
     xlsx_writer = ExcelWriter(path_to_file)
     df.to_excel(xlsx_writer,"Sheet1",index=False)
     xlsx_writer.save()
 
 def create_csv_from_dataframe(dataframe,filename):
-    filename = "../00_raw_data/"+filename
+    filename = "../00_raw_data/"+fiename
     path_to_file = relative_to_absolute(filename)
     df = dataframe
     df.to_csv(path_or_buf=path_to_file,index=False)
@@ -122,6 +126,6 @@ def load_dataframe(filename):
 
 
 
-
+##test if dataset is altered by type change 
 #df = read_raw_data("order_data.csv","order_columns.txt","order.xlsx","order.pkl")
 #print(df[["DoYouPurchaseForOthers","SendEmail","ProductCode","New Bank Card"]])

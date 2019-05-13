@@ -1,6 +1,6 @@
 
 #import order data heads
-order_columns <- file("C:/Users/Laure/Documents/git_Repositories/phyk_data/01_data_unterstanding/order_columns.txt","r")
+order_columns <- file("C:/Users/Laure/Documents/git_Repositories/phyk_data/01_data_understanding/order_columns.txt","r")
 order_heads <- c()
 while (TRUE){
   line = readLines(order_columns,n=1)
@@ -39,7 +39,7 @@ ggplot(data = order_data)+
 
 #plot with ggplot2
 ggplot(data = order_data)+
-  geom_point(mapping = aes(x=Order.Credit.Card.Brand,
+  geom_point(mapping = aes(x=Order.Line.Quantity,
                            y=Order.Amount, 
                            color=Gender))
 

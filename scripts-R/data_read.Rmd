@@ -23,7 +23,7 @@ library(stringi)
 library(hms)
 
 rootDir <- knitr::opts_knit$get("root.dir")
-headersPath <- paste(rootDir, "01_data_unterstanding/order_columns.txt", sep="/")
+headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
 dataPath <- paste(rootDir, "00_raw_data/order_data.csv", sep="/")
 
 # prepare column name list
