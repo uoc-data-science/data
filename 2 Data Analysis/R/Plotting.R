@@ -3,6 +3,7 @@ library(dplyr)
 library(janitor)
 library(maps)
 library(ggplot2)
+library(ggrepel)
 
 useSmallVersions <- FALSE
 
@@ -444,6 +445,28 @@ ggsave(filename=paste(pathPlotFolder,"Product Data Plots/StockPer.png",sep=""),m
 
 #------------------------------------------------------------------------
 #Plots for Payment Method
+#Cards
+plotData <- data.frame(matrix(ncol = 2, nrow = 0))
+x <- c("CardType", "percentage_yes")
+colnames(plotData) <- x
+columnList <- c("Bank.Card.Holder", "Gas.Card.Holder", "Upscale.Card.Holder", "Unknown.Card.Type", "TE.Card.Holder", "Premium.Card.Holder", "New.Bank.Card")
+labelList <- c("Bank Card", "Gas Card", "Upscale Card", "Unknown Card", "TE Card", "Premium Card", "New Bank Card")
+i <- 1
+for (sector in columnList){
+  top <- tabyl(orders[,sector], sort = TRUE, show_na = FALSE)
+  colnames(top) <- c(sector,"n","percent")
+  percentage <- (round(top[2,"percent"],2))*100
+  plotData[nrow(plotData) + 1,] = list(labelList[[i]],percentage)
+  i <- i+1
+}
+plotData <- plotData %>% arrange(desc(percentage_yes))
+ggplot(plotData, aes(x=reorder(CardType,-percentage_yes),y=percentage_yes)) +
+  geom_bar(stat="identity") +
+  scale_x_discrete(name="Card Type") +
+  scale_y_continuous(name="Percentage of Holders") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardTypes.png",sep=""), width=10)
+
 #Card Holder
 plotData <-tabyl(orders$Bank.Card.Holder, sort = TRUE, show_na = FALSE)
 colnames(plotData) <- c("CardHolder","n","percent")
@@ -611,23 +634,31 @@ ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardBrand.png",sep="")
 
 #------------------------------------------------------------------------
 #Customer Data
-
-#states
 states <- usStates
 states$State <- tolower(states$State)
-plotData <- merge(orders, states, by.x="US.State", by.y="Abbreviation")
+gusa <- map_data("state")
+plotData <- merge(orders, states, by.x="US.State", group = group, by.y="Abbreviation")
 plotData <-tabyl(plotData$State, sort = TRUE)
 names(plotData) <- c("region", "count", "percentage")
-plotData <- left_join(map_data("state"), plotData)
 print(plotData)
-ggplot(data = plotData, mapping = aes(x = long, y = lat, group = group, fill = count), label=State) +
-  geom_polygon(color = "#fd9409", size = 0.3) +
-  scale_fill_gradient(low = "white", high = "#331919") +
-  labs(title = "Customer Hotspots") +
-  labs(fill = "Count") +
-  theme(panel.background = element_rect(fill = "transparent"))
-# geom_text(aes(label = plotData$region, x = long, y = lat)) #add labels at centroids
-#geom_label(label=plotData$region, nudge_x = 0.25, nudge_y = 0.2)
+top <- head(arrange(plotData, desc(count)), 10)
+top <- top$region
+#Calculate centroids
+centroids <- summarize(group_by(gusa, region), x = mean(range(long)), y = mean(range(lat)))
+names(centroids)[1] <- "state"
+centroids <- centroids[centroids$state %in% top,]
+plotData <- left_join(gusa, plotData)
+plotData[is.na(plotData)] <- 0
+ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
+  geom_polygon(aes(group=group, fill=count), color = "#fd9409", size = 0.3) +
+  labs(x = NULL, y = NULL, fill = "Count", title = "Customer Hotspots") +
+  scale_fill_gradient(low = "white", high = "black") +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(), axis.title.y=element_blank(),
+        panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank()) +
+  geom_label_repel(data = centroids, aes(x, y, label=state), force=2, segment.color="#fd9409", nudge_x=0.5) +
+  coord_map()
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/States.png",sep=""), bg = "transparent", width=13)
 
 #cities
@@ -648,10 +679,8 @@ ggplot() +
   labs(title = "Top 100 Customer Cities") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
-        axis.title.x=element_blank(),
-        axis.title.y=element_blank(),legend.position="none",
-        panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank(),
-        panel.grid.minor=element_blank(),plot.background=element_blank())
+        axis.title.x=element_blank(), axis.title.y=element_blank(),
+        panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank())
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=13)
 
 # retail activity
@@ -687,7 +716,7 @@ i <- 1
 for (sector in columnList){
   top <- tabyl(orders[,sector], sort = TRUE, show_na = FALSE)
   colnames(top) <- c(sector,"n","percent")
-  percentage <- round(top[2,"percent"],2)
+  percentage <- round(top[2,"percent"],2)*100
   plotData[nrow(plotData) + 1,] = list(labelList[[i]],percentage)
   i <- i+1
 }
@@ -823,7 +852,7 @@ ggplot(plotData, aes(x=reorder(Vehicle,-percentage_yes),y=percentage_yes)) +
   scale_x_discrete(name="Vehicle") +
   scale_y_continuous(name="Percentage of owners") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
-ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/VehicleOwnership.png",sep=""), width=13)
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/VehicleOwnership.png",sep=""), width=4)
 #------------------------------------------------------------------------
 #------------------------------------------------------------------------
 #Plots for clickstream data
