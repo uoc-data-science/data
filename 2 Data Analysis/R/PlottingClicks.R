@@ -79,24 +79,56 @@ write.table(summary, file = paste(pathTableFolder,"ClickstreamData.csv"), sep=",
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 
-# Distribution of brand names
-ggplot(data=subset(clicks, !is.na(BrandName)), aes(BrandName)) +
-  geom_bar(width=.5, fill="tomato3") +
-  theme(axis.text.x = element_text(angle=90, vjust=0.6))
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Brand Name Quantity.png",sep=""))
-
 #Plot for BrandNames
 top <- (tabyl(clicks$BrandName)) %>% select(1:2) #create frequency table
 names(top) <- c("BrandName", "amount") #rename
 top[,c(1)] <- as.character(top[,c(1)])
-nas <- top[is.na(top),]
+nas <- top[is.na(top),] #get NAs for added text
 nas <- nas$amount
 nas <- paste0("Amount of NAs: ", nas)
-top <- na.omit(top)
+top <- na.omit(top) #delete NAs from table
 top <- arrange(top, desc(amount))
 top$BrandName <- factor(top$BrandName, levels = top$BrandName) #lockOrder
+textXpos <- last(top$amount) #get the last row
+textXpos <- which(top[ , 2]==textXpos) -4 #set the position of the text to highest index -4
 ggplot(top, aes(BrandName, amount), y=amount) +
   geom_bar(width=.8, fill="tomato3", stat="identity") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
-  annotate("text", x = 20, y = 200, label = nas)
+  annotate("text", x = textXpos, y = top[1, 2]/1.2, label = nas)
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Brand Name.png",sep=""))
+
+#Plot for StockType
+top <- (tabyl(clicks$StockType)) %>% select(1:2) #create frequency table
+names(top) <- c("StockType", "amount") #rename
+top[,c(1)] <- as.character(top[,c(1)])
+nas <- top[is.na(top),] #get NAs for added text
+nas <- nas$amount
+nas <- paste0("Amount of NAs: ", nas)
+top <- na.omit(top) #delete NAs from table
+top <- arrange(top, desc(amount))
+top$StockType <- factor(top$StockType, levels = top$StockType) #lockOrder
+textXpos <- last(top$amount) #get the last row
+textXpos <- which(top[ , 2]==textXpos) -1 #set the position of the text to highest index -1
+ggplot(top, aes(StockType, amount), y=amount) +
+  geom_bar(width=.8, fill="tomato3", stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
+  annotate("text", x = textXpos, y = top[1, 2]/1.2, label = nas)
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/StockType.png",sep=""))
+
+#Plot for UnitsPerInnerBox
+top <- (tabyl(clicks$UnitsPerInnerBox)) %>% select(1:2) #create frequency table
+names(top) <- c("UnitsPerInnerBox", "amount") #rename
+top[,c(1)] <- as.character(top[,c(1)])
+nas <- top[is.na(top),] #get NAs for added text
+nas <- nas$amount
+nas <- paste0("Amount of NAs: ", nas)
+top <- na.omit(top) #delete NAs from table
+top <- arrange(top, desc(amount))
+top$UnitsPerInnerBox <- factor(top$UnitsPerInnerBox, levels = top$UnitsPerInnerBox) #lockOrder
+textXpos <- last(top$amount) #get the last row
+textXpos <- which(top[ , 2]==textXpos) -1 #set the position of the text to highest index -1
+ggplot(top, aes(UnitsPerInnerBox, amount), y=amount) +
+  geom_bar(width=.8, fill="tomato3", stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
+  annotate("text", x = textXpos, y = top[1, 2]/1.2, label = nas)
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/UnitsPerInnerBox.png",sep=""))
