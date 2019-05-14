@@ -163,7 +163,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 }
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
-#Plotting
+#Plotting Order Data
 #-----------------------------------------------------------------------------------
 # Distribution of order amount, unit price, order quantity
 p1 <- ggplot(orders, aes(x=Order.Line.Amount)) + 
@@ -292,7 +292,9 @@ multiplot(p1, p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 
 #-----------------------------------------------------------------------------------
-#Plots product data
+#-----------------------------------------------------------------------------------
+#Plotting product data
+#-----------------------------------------------------------------------------------
 #Create ranking for Stock Type
 top <- (tabyl(orders$StockType)) %>% select(1:2) #create frequency table
 names(top) <- c("StockType", "amount") #rename
@@ -346,8 +348,6 @@ ggplot(top, aes(reorder(Order.Line.Subassortment.ID,-amount),amount), y=amount) 
   theme(plot.title = element_text(hjust = 0.5))
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/ProductsTop25.png",sep=""), width = 15, height = 7)
 
-
-
 # Create ranking for BrandName
 firstx = 10
 top <- (tabyl(orders$BrandName)) %>% select(1:2) #create frequency table
@@ -394,8 +394,10 @@ p2 <- ggplot(top, aes(fill=StockType, y=amount, x=Manufacturer)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/StockPer.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 
-#------------------------------------------------------------------------
-#Plots for Payment Method
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+#Plotting payment method
+#-----------------------------------------------------------------------------------
 #Cards
 plotData <- data.frame(matrix(ncol = 2, nrow = 0))
 x <- c("CardType", "percentage_yes")
@@ -583,8 +585,11 @@ p2 <- ggplot(top, aes(fill=New, y=amount, x=CardBrand)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardBrand.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 
-#------------------------------------------------------------------------
-#Customer Data
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+#Plotting Customer Data
+#-----------------------------------------------------------------------------------
+# US States heatmap
 states <- usStates
 states$State <- tolower(states$State)
 gusa <- map_data("state")
@@ -594,8 +599,7 @@ names(plotData) <- c("region", "count", "percentage")
 print(plotData)
 top <- head(arrange(plotData, desc(count)), 10)
 top <- top$region
-#Calculate centroids
-centroids <- summarize(group_by(gusa, region), x = mean(range(long)), y = mean(range(lat)))
+centroids <- summarize(group_by(gusa, region), x = mean(range(long)), y = mean(range(lat))) #Calculate centroids
 names(centroids)[1] <- "state"
 centroids <- centroids[centroids$state %in% top,]
 plotData <- left_join(gusa, plotData)
@@ -612,7 +616,7 @@ ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
   coord_map()
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/States.png",sep=""), bg = "transparent", width=13)
 
-#cities
+#most important cities (map)
 states <- usStates
 plotData <- merge(orders, states, by.x="US.State", by.y="Abbreviation")
 plotData$name<- with(plotData, paste0(City, " ", US.State)) #new column with city and state
@@ -677,10 +681,8 @@ p2 <- ggplot(plotData, aes(x=reorder(Retail_Activity,-percentage_yes),y=percenta
   scale_x_discrete(name="Retail Activity Type") +
   scale_y_continuous(name="Percentage of active customers") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
-
 multiplot(p1,p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Retail_Activity.png",sep=""),multiplot(p1,p2, cols=2), width=8, height=5)
-
 
 #social data
 plotData <- tabyl(orders$Gender, sort = TRUE, show_na = FALSE)
@@ -781,7 +783,6 @@ p8 <- ggplot(plotData, aes(x="", y=n, fill=Number.Of.Adults)) +
 
 multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Social_Data.png",sep=""),multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2), width=13, height=15)
-
 
 #Vehicle Ownership
 plotData <- data.frame(matrix(ncol = 2, nrow = 0))
