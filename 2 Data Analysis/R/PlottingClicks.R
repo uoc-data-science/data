@@ -89,8 +89,7 @@ nas <- paste0("Amount of NAs: ", nas)
 top <- na.omit(top) #delete NAs from table
 top <- arrange(top, desc(amount))
 top$BrandName <- factor(top$BrandName, levels = top$BrandName) #lockOrder
-textXpos <- last(top$amount) #get the last row
-textXpos <- which(top[ , 2]==textXpos) -4 #set the position of the text to highest index -4
+textXpos <- length(top$amount)/1.2
 ggplot(top, aes(BrandName, amount), y=amount) +
   geom_bar(width=.8, fill="tomato3", stat="identity") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
@@ -107,8 +106,7 @@ nas <- paste0("Amount of NAs: ", nas)
 top <- na.omit(top) #delete NAs from table
 top <- arrange(top, desc(amount))
 top$StockType <- factor(top$StockType, levels = top$StockType) #lockOrder
-textXpos <- last(top$amount) #get the last row
-textXpos <- which(top[ , 2]==textXpos) -1 #set the position of the text to highest index -1
+textXpos <- length(top$amount)/1.2
 ggplot(top, aes(StockType, amount), y=amount) +
   geom_bar(width=.8, fill="tomato3", stat="identity") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
@@ -125,8 +123,7 @@ nas <- paste0("Amount of NAs: ", nas)
 top <- na.omit(top) #delete NAs from table
 top <- arrange(top, desc(amount))
 top$UnitsPerInnerBox <- factor(top$UnitsPerInnerBox, levels = top$UnitsPerInnerBox) #lockOrder
-textXpos <- last(top$amount) #get the last row
-textXpos <- which(top[ , 2]==textXpos) -1 #set the position of the text to highest index -1
+textXpos <- length(top$amount)/1.2
 ggplot(top, aes(UnitsPerInnerBox, amount), y=amount) +
   geom_bar(width=.8, fill="tomato3", stat="identity") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
