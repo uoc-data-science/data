@@ -9,7 +9,7 @@ output: html_document
 require("knitr")
 #knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
 #lh_root
-knitr::opts_knit$set(root.dir = "C:/Users/Laure/Documents/git_Repositories/phyk_data")
+knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -35,11 +35,10 @@ obj_list <- readLines(headersFile)
 #To convert to a vector, do the following:
 result <- stri_extract_first(obj_list, regex="[A-z ,]+")
 dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
+result <- gsub(" ", "_", result)
 
-dataframe <- read_csv(dataPath, col_names = result)
-dataframe$order_time <- parse_time(dataframe$"Order Line Date_Time","%H\\:%M\\:%S")
-
-
+dataframe <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+dataframe$order_time <- parse_time(dataframe$"Order_Line_Date_Time","%H\\:%M\\:%S")
 head(dataframe)
 ```
 
@@ -49,9 +48,9 @@ head(dataframe)
 ```{r}
 library(naniar)
 na_strings <- c("?", "NULL")
-dataframe <- dataframe %>% replace_with_na_all(condition = ~.x %in% na_strings)
+df2 <- dataframe %>% replace_with_na_all(condition = ~.x %in% na_strings)
 ## dataframe <- str_replace_all(dataframe, ";", ",")
-head(dataframe)
+head(df2)
 
 ```
 
@@ -67,8 +66,30 @@ head(dataframe)
 You can also embed plots, for example:
 
 ```{r}
-lapply(dataframe, mean)
-lapply(dataframe, max)
+
+#x = unique(dataframe$Order_Line_Session_ID)
+#y = tabulate(match(dataframe$Order_Line_Session_ID, x))
+x = as.POSIXct(paste(dataframe$Order_Line_Date, dataframe$order_time), format="%Y-%m-%d %H:%M:%S")
+
+
+ggplot(dataframe) + 
+  geom_point(mapping = aes(x = x, y = dataframe$Order_Line_Amount, color=dataframe$Product_Level_)) +
+  labs(
+    x = "Time",
+    y = "Shipping Amount",
+    colour = "Product Level"
+  )
+ggplot(dataframe) + 
+  geom_point(mapping = aes(x = x, y = dataframe$Order_Line_Amount, colour = dataframe$Order_Line_Quantity)) +
+  labs(
+    x = "Time",
+    y = "Shipping Amount",
+    colour = "Order Quantity"
+  )
+#lapply(dataframe, mean)
+#lapply(dataframe, max)
 ```
 
+```{r}
+```
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
