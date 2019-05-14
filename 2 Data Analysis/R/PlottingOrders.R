@@ -3,28 +3,31 @@ library(dplyr)
 library(janitor)
 library(maps)
 library(ggplot2)
-library(ggrepel)
+library(ggrepel) #for advanced labeling possibilities
 
 useSmallVersions <- FALSE
 
 # decide whether to use dev data or not
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
-pathClicks  <- "0 Data/clickstream_data_cleaned_R.csv"
 if (useSmallVersions){
   pathOrders <- "0 Data/order_data_small_R.csv"
-  pathClicks <- "0 Data/clickstream_data_small_R.csv"
 }
 
 # target path
 pathPlotFolder <- "./4 Data Overview/Plots/"
 pathTableFolder <- "./4 Data Overview/Tables/"
 
+#read mapping table for US states plotting
+usStates <- read.csv(file="2 Data Analysis/states.csv")
+
 # read data
 orders <- read.csv(file=pathOrders)
-clicks <- read.csv(file=pathClicks)
-usStates <- read.csv(file="2 Data Analysis/states.csv")
+
 #-----------------------------------------------------------------------------------
-# overview table of order data
+#-----------------------------------------------------------------------------------
+# overview tables for interesting columns
+#-----------------------------------------------------------------------------------
+# order data
 interestingColumns <- c("Order.Line.Quantity",
                         "Order.Line.Unit.List.Price",
                         "Order.Line.Amount",
@@ -46,7 +49,8 @@ colnames(summary) <- c("Order Line Quantity",
                         "Order Discount Amount"
                        )
 write.table(summary, file = paste(pathTableFolder,"OrderData.csv"), sep=",", row.names=FALSE)
-# Overview table of payment method data
+#-----------------------------------------------------------------------------------
+# payment method
 interestingColumns <- c("Order.Credit.Card.Brand",
                         "Bank.Card.Holder",
                         "Gas.Card.Holder",
@@ -68,7 +72,8 @@ colnames(summary) <- c("Order Credit Card.Brand",
                        "New Bank Card"
                        )
 write.table(summary, file = paste(pathTableFolder,"PaymentMethodData.csv"), sep=",", row.names=FALSE)
-# Overview table of product data
+#-----------------------------------------------------------------------------------
+# product data
 interestingColumns <- c("StockType",
                         "Manufacturer",
                         "BrandName"
@@ -76,7 +81,8 @@ interestingColumns <- c("StockType",
 summary <- summary(orders[interestingColumns])
 summary[is.na(summary)]<-""
 write.table(summary, file = paste(pathTableFolder,"ProductData.csv"), sep=",", row.names=FALSE)
-# Overview table of customer data
+#-----------------------------------------------------------------------------------
+# customer data
 interestingColumns <- c("City",
                         "Country",
                         "US.State",
@@ -124,61 +130,6 @@ colnames(summary) <- c("City",
 write.table(summary, file = paste(pathTableFolder,"CustomerData.csv"), sep=",", row.names=FALSE)
 
 #-----------------------------------------------------------------------------------
-# Overview table of clickstream data
-interestingColumns <- c("BrandName",
-                        "UnitsPerInnerBox",
-                        "PrimaryPackage",
-                        "Depth",
-                        "VendorMinREOrderDollars",
-                        "Cat1Sub2",
-                        "Height",
-                        "UnitsPerOuterBox",
-                        "StockType",
-                        "Pack",
-                        "ProductForm",
-                        "Look",
-                        "BasicOrFashion",
-                        "SaleOrNonSale",
-                        "Length",
-                        "Cat1Sub3",
-                        "ColorOrScentDropdown",
-                        "DisContinuedInd",
-                        "Socktype2",
-                        "MinQty",
-                        "LeadTime",
-                        "Terms",
-                        "Weight",
-                        "Socktype1",
-                        "InOrOutofStock",
-                        "HasDressingRoom",
-                        "ColorOrScent",
-                        "Width",
-                        "Texture",
-                        "WeightUOM",
-                        "Manufacturer",
-                        "ExplodedProdKits",
-                        "DimUOM",
-                        "ToeFeature",
-                        "Category2",
-                        "Material",
-                        "CategoryCode",
-                        "Cat1Sub1",
-                        "UnitIncrement",
-                        "WaistControl",
-                        "Collection",
-                        "BodyFeature",
-                        "Audience",
-                        "Category1",
-                        "Freight",
-                        "Product",
-                        "Cat2Sub1",
-                        "ActionCode",
-                        "Pattern"
-)
-summary <- summary(clicks[interestingColumns])
-summary[is.na(summary)]<-""
-write.table(summary, file = paste(pathTableFolder,"ClickstreamData.csv"), sep=",", row.names=FALSE)
-
 #-----------------------------------------------------------------------------------
 
 # Utility function for subplot support
@@ -210,10 +161,10 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     }
   }
 }
-
 #-----------------------------------------------------------------------------------
-#Plots for order data
-
+#-----------------------------------------------------------------------------------
+#Plotting
+#-----------------------------------------------------------------------------------
 # Distribution of order amount, unit price, order quantity
 p1 <- ggplot(orders, aes(x=Order.Line.Amount)) + 
   geom_density() +
@@ -853,27 +804,3 @@ ggplot(plotData, aes(x=reorder(Vehicle,-percentage_yes),y=percentage_yes)) +
   scale_y_continuous(name="Percentage of owners") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/VehicleOwnership.png",sep=""), width=4)
-#------------------------------------------------------------------------
-#------------------------------------------------------------------------
-#Plots for clickstream data
-# Distribution of brand names
-ggplot(data=subset(clicks, !is.na(BrandName)), aes(BrandName)) +
-  geom_bar(width=.5, fill="tomato3") +
-  theme(axis.text.x = element_text(angle=90, vjust=0.6))
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Brand Name Quantity.png",sep=""))
-
-#Plot for BrandNames
-top <- (tabyl(clicks$BrandName)) %>% select(1:2) #create frequency table
-names(top) <- c("BrandName", "amount") #rename
-top[,c(1)] <- as.character(top[,c(1)])
-nas <- top[is.na(top),]
-nas <- nas$amount
-nas <- paste0("Amount of NAs: ", nas)
-top <- na.omit(top)
-top <- arrange(top, desc(amount))
-top$BrandName <- factor(top$BrandName, levels = top$BrandName) #lockOrder
-ggplot(top, aes(BrandName, amount), y=amount) +
-  geom_bar(width=.8, fill="tomato3", stat="identity") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
-  annotate("text", x = 20, y = 200, label = nas)
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Brand Name.png",sep=""))
