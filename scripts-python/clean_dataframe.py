@@ -72,19 +72,14 @@ df = read_data.load_dataframe("order.pkl")
 df = clean_df_generic(df,1)
 
 #clickstream
-#df2 = read_data.load_dataframe("click.pkl")
-#df2 = clean_df_generic(df2,1)
+df2 = read_data.load_dataframe("click.pkl")
+df2 = clean_df_generic(df2,1)
 
 
 
 ##semiauto_cleaning 
 
-#order
-df = merge_columns(df,"Registration Gender","Gender")
 
-
-
-# merge columns Registration Gender and Gender to Gender and drop Registration Gender
 
     
 
