@@ -1,6 +1,6 @@
 
 #import order data heads
-order_columns <- file("C:/Users/Laure/Documents/git_Repositories/phyk_data/01_data_understanding/order_columns.txt","r")
+order_columns <- file("C:/Github/Programming_Data_Science/ourdata/01_data_understanding/order_columns.txt","r")
 order_heads <- c()
 while (TRUE){
   line = readLines(order_columns,n=1)
@@ -12,14 +12,14 @@ while (TRUE){
 }
 
 #import order data with heads via order_heads
-order_data <- read.csv("C:/Users/Laure/Documents/git_Repositories/phyk_data/00_raw_data/order_data.csv", col.names= order_heads,encoding = "ansi")
+order_data <- read.csv("C:/Github/Programming_Data_Science/ourdata/00_raw_data/order_data.csv", col.names= order_heads,encoding = "ansi")
 
 #replace ? and NULL with NA
 library(naniar)
-na_strings <- c("?")
+na_strings <- c("?","NULL")
 order_data <- order_data %>% replace_with_na_all(condition = ~.x %in% na_strings)
 
-View(order_data)
+head(order_data)
 
 #clean order 
 order_data[colSums(!is.na(order_data)) > 0]
@@ -29,6 +29,7 @@ summary(order_data)
 
 
 #plot with ggplot2
+library(tidyverse)
 ggplot(data = order_data)+
   geom_point(mapping = aes(x=Order.Line.Quantity,
                            y=Order.Amount, 
@@ -53,8 +54,7 @@ ggplot(data = order_data)+
 #plot with ggplot2
 ggplot(data = order_data)+
   geom_point(mapping = aes(x=Order.Amount,
-                           y=Product.ID, 
-                           ))
+                           y=Product.ID))
 
 
 #plot with ggplot2
