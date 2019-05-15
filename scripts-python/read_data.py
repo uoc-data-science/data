@@ -17,7 +17,7 @@ def read_raw_data(filename,column_file,samplename,dataset_name):
     # see for example column DoYouPurchaseForOthers before and after execution
     #df = recreate_dtypes(df, dtypes)
     ### end of deactivation 
-    create_sampel_excel(df,samplename)
+    #create_sampel_excel(df,samplename)
     save_dataframe(df,dataset_name)
     print(df)
     return df
@@ -108,7 +108,7 @@ def create_sampel_excel(dataframe,samplename):
     xlsx_writer.save()
 
 def create_csv_from_dataframe(dataframe,filename):
-    filename = "../00_raw_data/"+fiename
+    filename = "../00_raw_data/"+filename
     path_to_file = relative_to_absolute(filename)
     df = dataframe
     df.to_csv(path_or_buf=path_to_file,index=False)

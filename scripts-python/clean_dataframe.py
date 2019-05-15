@@ -45,24 +45,48 @@ def clean_df_generic(df,threshold):
     print(df)
     return df
 
-   
 
-        
+
+
+def merge_columns(df,column_name1,column_name2):
+    print(df[[column_name1,column_name2]])
+    for index, row in df.iterrows():
+        if row[column_name1] != row[column_name2]:        
+            if pd.isnull(row[column_name1])==True:
+                #print(row[column_name1]," ",row[column_name2])
+                df.at[index,column_name1] = row[column_name2]
+            if pd.isnull(row[column_name2])==True:
+                #print(row[column_name1]," ",row[column_name2])
+                df.at[index,column_name2] = row[column_name1]
+    print(df[[column_name1,column_name2]])
+    df = df.drop(columns=[column_name1])
+    df = df.dropna(subset=[column_name2])
+    print(df)
+    return df
 
 
 ##generic cleaning 
 
+#order 
 df = read_data.load_dataframe("order.pkl")
-delete_columns_with_nullonly_or_morethan99p(df)
 df = clean_df_generic(df,1)
 
-
-df2 = read_data.load_dataframe("click.pkl")
-df2 = clean_df_generic(df2,1)
+#clickstream
+#df2 = read_data.load_dataframe("click.pkl")
+#df2 = clean_df_generic(df2,1)
 
 
 
 ##semiauto_cleaning 
+
+#order
+df = merge_columns(df,"Registration Gender","Gender")
+
+
+
+# merge columns Registration Gender and Gender to Gender and drop Registration Gender
+
+    
 
 
 
