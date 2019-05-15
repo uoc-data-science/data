@@ -24,8 +24,8 @@ library(stringi)
 library(hms)
 
 rootDir <- knitr::opts_knit$get("root.dir")
-headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
-dataPath <- paste(rootDir, "00_raw_data/order_data.csv", sep="/")
+headersPath <- paste(rootDir, "01_data_understanding/clickstream_columns.txt", sep="/")
+dataPath <- paste(rootDir, "00_raw_data/clickstream_data.csv", sep="/")
 
 # prepare column name list
 headersFile = file(headersPath, "r")
@@ -39,10 +39,9 @@ dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
 result <- gsub(" ", "_", result)
 
 dataframe <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
-dataframe$order_time <- parse_time(dataframe$"Order_Line_Date_Time","%H\\:%M\\:%S")
+
 head(dataframe)
 ```
-
 
 ## Clean_dataset
 ```{r}
