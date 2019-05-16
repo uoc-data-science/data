@@ -37,13 +37,13 @@ def delete_empty_indexorcolumns_in_df(df, index_or_columns, threshold):
     return df
 
 
-def clean_df_generic(df, threshold):
-    print(df)
+def clean_df_generic(df,threshold):
+    #print(df)
     index_or_columns = "columns"
     df = delete_empty_indexorcolumns_in_df(df, index_or_columns, threshold)
     index_or_columns = "index"
-    df = delete_empty_indexorcolumns_in_df(df, index_or_columns, threshold)
-    print(df)
+    df = delete_empty_indexorcolumns_in_df(df,index_or_columns,threshold)
+    #print(df)
     return df
 
 
