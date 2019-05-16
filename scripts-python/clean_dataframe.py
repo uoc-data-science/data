@@ -68,12 +68,12 @@ def merge_columns(df,column_name1,column_name2):
 ##generic cleaning 
 
 #order 
-df = read_data.load_dataframe("order.pkl")
-df = clean_df_generic(df,0)
+#df = read_data.load_dataframe("order.pkl")
+#df = clean_df_generic(df,0)
 
 #clickstream
-df2 = read_data.load_dataframe("click.pkl")
-df2 = clean_df_generic(df2,0)
+#df2 = read_data.load_dataframe("click.pkl")
+#df2 = clean_df_generic(df2,0)
 
 
 

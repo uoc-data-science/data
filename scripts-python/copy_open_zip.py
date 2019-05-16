@@ -44,4 +44,6 @@ def copy_into_raw_data_and_data_understanding():
 
 
 
+copy_into_raw_data_and_data_understanding()
+
 

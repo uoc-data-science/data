@@ -120,6 +120,6 @@ def load_dataframe(filename):
 
 
 
-##test if dataset is altered by type change 
+#test if dataset is altered by type change 
 #df = read_raw_data("order_data.csv","order_columns.txt","order.xlsx","order.pkl")
 #print(df[["DoYouPurchaseForOthers","SendEmail","ProductCode","New Bank Card"]])
