@@ -10,10 +10,10 @@ df2 = load_dataframe("click.pkl")
 
 # df_mod["order_datetime"] = pd.to_datetime(df['Order Line Date'] + ' ' + df['Order Line Date_Time'], format="%Y-%m-%d %H\\:%M\\:%S")
 
-# df_joined = pd.merge(df, df2, how='outer', left_on="Order Session ID", right_on="Session ID",
-#         left_index=False, right_index=False, sort=True,
-#         suffixes=('_x', '_y'), copy=True, indicator=False,
-#         validate=None)
+df_joined = pd.merge(df, df2, how='outer', left_on="Order Session ID", right_on="Session ID",
+         left_index=False, right_index=False, sort=True,
+         suffixes=('_x', '_y'), copy=True, indicator=False,
+         validate=None)
 
 f = open("../tmp_outputs/console.txt","w")
 
