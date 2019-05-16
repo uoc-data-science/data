@@ -6,10 +6,21 @@ output: html_document
 ---
 
 ```{r "knitr config", cache = FALSE, include=FALSE}
-require("knitr")
-knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
-#lh_root
+#nico
+#require("knitr")
+#knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
+
+
+#Philipp_roots
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+
+#lh_roots
+##surface
+#knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
+
+##desktop
+knitr::opts_knit$set(root.dir = "F:\\Laure\\Documents\\git hub Repositories\\phyk_data")
+
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -73,7 +84,7 @@ for (i in 1:ncol(dataframe)) {
     }
   }
 }
-# Lösche doppelte Spalten (immer die 2.)
+# L?sche doppelte Spalten (immer die 2.)
 dataframe <- subset(dataframe, select = -drop)
 head(dataframe)
 ```

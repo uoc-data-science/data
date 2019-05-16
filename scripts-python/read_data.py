@@ -10,16 +10,10 @@ from absolute_data_paths import relative_to_absolute
 def read_raw_data(filename,column_file,samplename,dataset_name):
     filename = "../00_raw_data/"+filename
     path_to_file = relative_to_absolute(filename)
-    columns, dtypes = read_raw_columns(column_file)
+    columns = read_raw_columns(column_file)
     df = pd.read_csv(path_to_file, names=columns,low_memory=False, encoding="ansi")
-    ### deactivated 
-    # due to unwanted data altering 
-    # see for example column DoYouPurchaseForOthers before and after execution
-    #df = recreate_dtypes(df, dtypes)
-    ### end of deactivation 
-    #create_sampel_excel(df,samplename)
     save_dataframe(df,dataset_name)
-    print(df)
+    #print(df)
     return df
 
 def read_raw_columns(filename):
@@ -34,7 +28,7 @@ def read_raw_columns(filename):
         string_list = string.split(":")
         column_list.append(string_list[0])
         dtype_list.append(identify_column_type(string_list[1]))
-    return column_list, dtype_list
+    return column_list
 
 def load_dataframe_without_ignore(filename, column_file):
     #Determine which columns should be ignored
@@ -99,7 +93,7 @@ def split_ordered_categories(categories):
 
 def create_sampel_excel(dataframe,samplename):
     from pandas import ExcelWriter
-    #create a Excelsheet with the heads and the first 100 lines for data unterstanding
+    #create a Excelsheet with the heads and the first 1000 lines for data unterstanding
     df = dataframe.iloc[:1000]
     samplename = "../01_data_understanding/"+samplename
     path_to_file = relative_to_absolute(samplename)
