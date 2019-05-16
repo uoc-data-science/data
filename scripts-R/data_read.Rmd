@@ -7,9 +7,9 @@ output: html_document
 
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
-knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
+#knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
 #lh_root
-#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -42,23 +42,13 @@ dataframe$order_time <- parse_time(dataframe$"Order_Line_Date_Time","%H\\:%M\\:%
 head(dataframe)
 ```
 
-
-
-## Replacing "?" and "NULL" with nan
-```{r}
-library(naniar)
-na_strings <- c("?", "NULL")
-df2 <- dataframe %>% replace_with_na_all(condition = ~.x %in% na_strings)
-## dataframe <- str_replace_all(dataframe, ";", ",")
-head(df2)
-
-```
-
 ## Clean_dataset
 ```{r}
 #dataframe[colSums(!is.na(dataframe)) > 0]
 dataframe <- dataframe[rowSums(!is.na(dataframe)) > 0,colSums(!is.na(dataframe)) > 0]
-
+dataframe
+```
+```{r}
 # Vergleiche Spalten, ob Dopplungen vorkommen
 drop <- vector()
 k <- 1
@@ -73,6 +63,7 @@ for (i in 1:ncol(dataframe)) {
     }
   }
 }
+print(drop)
 # Lösche doppelte Spalten (immer die 2.)
 dataframe <- subset(dataframe, select = -drop)
 head(dataframe)
