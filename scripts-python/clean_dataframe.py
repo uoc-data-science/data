@@ -37,13 +37,12 @@ def delete_empty_indexorcolumns_in_df(df, index_or_columns, threshold):
     return df
 
 
-def clean_df_generic(df,threshold):
-    #print(df)
-    index_or_columns = "columns"
-    df = delete_empty_indexorcolumns_in_df(df, index_or_columns, threshold)
-    index_or_columns = "index"
-    df = delete_empty_indexorcolumns_in_df(df,index_or_columns,threshold)
-    #print(df)
+def clean_df_generic(df, threshold):
+    print(df)
+    df = drop_identical(df)
+    df = delete_empty_indexorcolumns_in_df(df, "columns", threshold)
+    df = delete_empty_indexorcolumns_in_df(df, "index", threshold)
+    print(df)
     return df
 
 
@@ -53,7 +52,7 @@ def clean_df_generic_alternative(df, mode="all"):
     return df
 
 
-def find_identical(df):
+def find_identical_column(df):
     to_drop = []
     for i in range(0, len(df.columns)-2):
         for j in range(i+1, len(df.columns)-1):
@@ -65,8 +64,9 @@ def find_identical(df):
 
 
 def drop_identical(df):
-    to_drop = find_identical(df)
+    to_drop = find_identical_column(df)
     df.drop(labels=to_drop, axis="columns", inplace=True)
+    return df
 
 
 def merge_columns(df, column_name1, column_name2):
