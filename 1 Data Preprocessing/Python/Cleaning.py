@@ -1,7 +1,7 @@
 import shutil
 import pandas as pd
 
-#variables
+#paths
 pathOrders = "../../orders/order_data.csv"
 newPathOrders = "../../0 Data/order_data_P.csv"
 pathOrdersClean = "../../0 Data/order_data_cleaned_P.csv"
@@ -18,16 +18,32 @@ pathClicksHeaders = "../../clickstream/clickstream_columns.txt"
 pathMerge = "../../0 Data/merged_P.csv"
 pathMergeSmall = "../../0 Data/merged_small_P.csv"
 
+#null values
 nan = float('nan')
 
 def headers(path):
-    text_file = open(path)
-    headers = text_file.read().split("\n")
+    headers = open(path).\
+              read().\
+              split("\n")
     for counter, header in enumerate(headers):
         headers[counter] = (header.split(":"))[0]
         if not header: #for empty rows
             headers.pop(counter)
     return headers
+
+def clean(df):
+    #write NANs, delete empty columns
+    df = df. \
+         replace(to_replace="?", value=nan). \
+         replace(to_replace="NULL", value=nan). \
+         dropna(axis=1, how="all")
+    #Clean Time and Date
+    for column in df.columns:
+        if "Time" in column:
+            df[column] = df[column].\
+                         str.\
+                         replace('\\', '', regex=True)
+    return df
 
 # Copy files
 shutil.copy(pathClicks, newPathClicks)
@@ -43,24 +59,8 @@ ordersHeaders = headers(pathOrdersHeaders)
 # Read data
 clicks = pd.read_csv(pathClicks, sep=",", names=clicksHeaders, dtype=str, encoding="ISO-8859-1")
 clicks2 = pd.read_csv(pathClicks2, sep=",", names=clicksHeaders, dtype=str, encoding="ISO-8859-1")
-clicks = clicks.append(clicks2)
-clicks = clicks.replace(to_replace="?", value=nan)
-clicks = clicks.replace(to_replace="NULL", value=nan)
-orders = pd.read_csv(pathOrders, sep=",", names=ordersHeaders, dtype=str, encoding="utf-8")
-orders = orders.replace(to_replace="?", value=nan)
-orders = orders.replace(to_replace="NULL", value=nan)
-
-#Drop nan columns
-clicks=clicks.dropna(axis=1, how="all")
-orders=orders.dropna(axis=1, how="all")
-
-#Clean Time and Date
-for column in orders.columns:
-    if "Time" in column:
-        orders[column]=orders[column].str.replace('\\', '', regex=True)
-for column in clicks.columns:
-    if "Time" in column:
-        clicks[column] = clicks[column].str.replace('\\', '', regex=True)
+clicks = clean(clicks.append(clicks2))
+orders = clean(pd.read_csv(pathOrders, sep=",", names=ordersHeaders, dtype=str, encoding="utf-8"))
 
 # Save to CSV
 clicks.to_csv(path_or_buf=pathClicksClean, index=False)
