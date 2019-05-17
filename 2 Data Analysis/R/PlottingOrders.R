@@ -22,7 +22,53 @@ usStates <- read.csv(file="2 Data Analysis/states.csv")
 
 # read data
 orders <- read.csv(file=pathOrders)
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+#functions
+#-----------------------------------------------------------------------------------
+#count different values in column of dataframe (calculate ratio)
+giveTop <- function(df, column, first, percentage){
+  top <- (tabyl(df[[column]])) #create frequency table
+  top[,c(1)] <- as.character(top[,c(1)])
+  top[is.na(top)] <- "Others"
+  if (percentage == TRUE){
+    top <- top %>% select(1, 3)
+    names(top) <- c(column, "percentage") #rename
+    top$percentage <- round(top$percentage*100, digits = 2)
+    top <- arrange(top, desc(percentage))
+  }
+  else{
+    top <- top %>% select(1:2)
+    names(top) <- c(column, "amount") #rename
+    top <- arrange(top, desc(amount))
+  }
+  if (first != 0){top <- head(top, first)} #only first columns
+  top[[column]] <- factor(top[[column]], levels=top[[column]]) #lockOrder
+  return(top)
+}
 
+#simpl bar plot
+plotBar <- function(df, xAxis, yAxis, filename, title, size){
+  ggplot(df, aes_string(x = xAxis, y = yAxis)) +
+    geom_bar(stat="identity") +
+    ggtitle(title) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    theme(plot.title = element_text(hjust = 0.5))
+  ggsave(filename=paste(pathPlotFolder,filename,sep=""), width=size)
+}
+
+#calculate percentages from different bool columns
+boolToBar <- function(df, columnList, labelList, plotData){
+  i <- 1
+  for (sector in columnList){
+    top <- tabyl(df[,sector], sort = TRUE, show_na = FALSE)
+    colnames(top) <- c(sector,"n","percent")
+    percentage <- (round(top[2,"percent"],2))*100
+    plotData[nrow(plotData) + 1,] = list(labelList[[i]],percentage)
+    i <- i+1
+  }
+  return(plotData %>% arrange(desc(percentage)))
+}
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # overview tables for interesting columns
@@ -295,74 +341,38 @@ ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=
 #-----------------------------------------------------------------------------------
 #Plotting product data
 #-----------------------------------------------------------------------------------
-#Create ranking for Stock Type
-top <- (tabyl(orders$StockType)) %>% select(1:2) #create frequency table
-names(top) <- c("StockType", "amount") #rename
-top[,c(1)] <- as.character(top[,c(1)])
-top[is.na(top)] <- "Others"
-top <- arrange(top, desc(amount))
-top$StockType <- factor(top$StockType, levels = top$StockType) #lockOrder
-print(top)
-ggplot(top, aes(StockType, amount), y=amount) +
-  geom_bar(stat="identity") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-ggsave(filename=paste(pathPlotFolder,"Product Data Plots/StockType.png",sep=""))
+#Stock Type
+plotData <- giveTop(orders, "StockType", 0, FALSE)
+print(plotData)
+filename = "Product Data Plots/StockType.png"
+plotBar(plotData, "StockType", "amount", filename, "Stock Types", 10)
 
+#Manufacturer
+plotData <- giveTop(orders, "Manufacturer", 10, FALSE)
+print(plotData)
+filename = "Product Data Plots/ManufacturerTop10.png"
+plotBar(plotData, "Manufacturer", "amount", filename, "Manufacturer  Top 10", 10)
 
-# Create ranking for Manufacturer
-firstx = 10
-top <- (tabyl(orders$Manufacturer)) %>% select(1:2) #create frequency table
-names(top) <- c("Manufacturer", "amount") #rename
-top[,c(1)] <- as.character(top[,c(1)])
-top[is.na(top)] <- "Others"
-top <- arrange(top, desc(amount))
-top <- head(top, firstx) #only first 10 rows3
-top$Manufacturer <- factor(top$Manufacturer, levels = top$Manufacturer) #lockOrder
-print(top)
-ggplot(top, aes(Manufacturer, amount), y=amount) +
-  geom_bar(stat="identity") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-ggsave(filename=paste(pathPlotFolder,"Product Data Plots/ManufacturerTop10.png",sep=""))
-
-
-# Create ranking for Manufacturer
-firstx = 50
-top <- (tabyl(orders$Order.Line.Subassortment.ID)) %>% select(1,3) #create frequency table
-names(top) <- c("Order.Line.Subassortment.ID", "amount") #rename
-top[,c(1)] <- as.character(top[,c(1)])
-top[is.na(top)] <- "Others"
-top <- arrange(top, desc(amount))
-amountTotal <- sum(top$amount)
-amountTop <- sum(head(top, firstx)$amount)
-top <- head(top, firstx) #only first 25 rows
-top[nrow(top) + 1,] = list("Others",amountTotal-amountTop)
-top <- top %>% arrange(desc(amount))
-#top$Order.Line.Subassortment.ID <- factor(top$Order.Line.Subassortment.ID, levels = top$Order.Line.Subassortment.ID) #lockOrder
-print(top)
-ggplot(top, aes(reorder(Order.Line.Subassortment.ID,-amount),amount), y=amount) +
+# Product IDs
+plotData <- giveTop(orders, "Order.Line.Subassortment.ID", 50, TRUE)
+others <- 100 - sum(plotData$percentage)
+plotData[nrow(plotData) + 1,] = list("Others",others)
+plotData <- plotData %>% arrange(desc(percentage))
+print(plotData)
+ggplot(plotData, aes(reorder(Order.Line.Subassortment.ID,-percentage),percentage)) +
   geom_bar(stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   scale_x_discrete(name="Product ID") +
   scale_y_continuous(name="Order Quantity Percentage") +
   ggtitle("Order Quantity Share of the Top 50 products") +
   theme(plot.title = element_text(hjust = 0.5))
-ggsave(filename=paste(pathPlotFolder,"Product Data Plots/ProductsTop25.png",sep=""), width = 15, height = 7)
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/ProductsTop50.png",sep=""), width = 15, height = 7)
 
-# Create ranking for BrandName
-firstx = 10
-top <- (tabyl(orders$BrandName)) %>% select(1:2) #create frequency table
-names(top) <- c("BrandName", "amount") #rename
-top[,c(1)] <- as.character(top[,c(1)])
-top <- arrange(top, desc(amount))
-top <- head(top, firstx) #only first 10 rows3
-topBrands <- top$BrandName
-top[is.na(top)] <- "Others"
-top$BrandName <- factor(top$BrandName, levels = top$BrandName) #lockOrder
-print(top)
-ggplot(top, aes(BrandName, amount), y=amount) +
-  geom_bar(stat="identity") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-ggsave(filename=paste(pathPlotFolder,"Product Data Plots/BrandNameTop10.png",sep=""))
+#BrandName
+plotData <- giveTop(orders, "BrandName", 10, FALSE)
+print(plotData)
+filename = "Product Data Plots/BrandNameTop10.png"
+plotBar(plotData, "BrandName", "amount", filename, "Brand Names Top 10", 10)
 
 #StockPerBrand
 top <- orders
@@ -393,27 +403,18 @@ p2 <- ggplot(top, aes(fill=StockType, y=amount, x=Manufacturer)) +
   geom_bar( stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/StockPer.png",sep=""),multiplot(p1, p2, cols=2), width=15)
-
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 #Plotting payment method
 #-----------------------------------------------------------------------------------
 #Cards
 plotData <- data.frame(matrix(ncol = 2, nrow = 0))
-x <- c("CardType", "percentage_yes")
-colnames(plotData) <- x
+colnames(plotData) <- c("CardType", "percentage")
 columnList <- c("Bank.Card.Holder", "Gas.Card.Holder", "Upscale.Card.Holder", "Unknown.Card.Type", "TE.Card.Holder", "Premium.Card.Holder", "New.Bank.Card")
 labelList <- c("Bank Card", "Gas Card", "Upscale Card", "Unknown Card", "TE Card", "Premium Card", "New Bank Card")
-i <- 1
-for (sector in columnList){
-  top <- tabyl(orders[,sector], sort = TRUE, show_na = FALSE)
-  colnames(top) <- c(sector,"n","percent")
-  percentage <- (round(top[2,"percent"],2))*100
-  plotData[nrow(plotData) + 1,] = list(labelList[[i]],percentage)
-  i <- i+1
-}
-plotData <- plotData %>% arrange(desc(percentage_yes))
-ggplot(plotData, aes(x=reorder(CardType,-percentage_yes),y=percentage_yes)) +
+plotData <- boolToBar(orders, columnList, labelList, plotData)
+print(plotData)
+ggplot(plotData, aes(x=reorder(CardType,-percentage),y=percentage)) +
   geom_bar(stat="identity") +
   scale_x_discrete(name="Card Type") +
   scale_y_continuous(name="Percentage of Holders") +
@@ -659,24 +660,16 @@ p1 <- ggplot(plotData, aes(x="", y=n, fill=Retail.Activity)) +
         plot.title = element_text(hjust = 0.5, color = "#666666"))
 
 plotData <- data.frame(matrix(ncol = 2, nrow = 0))
-x <- c("Retail_Activity", "percentage_yes")
-colnames(plotData) <- x
+colnames(plotData) <- c("Retail_Activity", "percentage")
 columnList <- c("Speciality.Store.Retail","Oil.Retail.Activity","Bank.Retail.Activity",
                 "Finance.Retail.Activity","Miscellaneous.Retail.Activity","Upscale.Retail",
                 "Upscale.Speciality.Retail")
 labelList <- c("Speciality Store Retail","Oil Retail Activity","Bank Retail Activity",
                "Finance Retail Activity","Miscellaneous Retail Activity","Upscale Retail",
                "Upscale Speciality Retail")
-i <- 1
-for (sector in columnList){
-  top <- tabyl(orders[,sector], sort = TRUE, show_na = FALSE)
-  colnames(top) <- c(sector,"n","percent")
-  percentage <- round(top[2,"percent"],2)*100
-  plotData[nrow(plotData) + 1,] = list(labelList[[i]],percentage)
-  i <- i+1
-}
-plotData <- plotData %>% arrange(desc(percentage_yes))
-p2 <- ggplot(plotData, aes(x=reorder(Retail_Activity,-percentage_yes),y=percentage_yes)) +
+plotData <- boolToBar(orders, columnList, labelList, plotData)
+print(plotData)
+p2 <- ggplot(plotData, aes(x=reorder(Retail_Activity,-percentage),y=percentage)) +
   geom_bar(stat="identity") +
   scale_x_discrete(name="Retail Activity Type") +
   scale_y_continuous(name="Percentage of active customers") +
@@ -786,20 +779,12 @@ ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Social_Data.png",sep="
 
 #Vehicle Ownership
 plotData <- data.frame(matrix(ncol = 2, nrow = 0))
-x <- c("Vehicle", "percentage_yes")
-colnames(plotData) <- x
+colnames(plotData) <- c("Vehicle", "percentage")
 columnList <- c("Truck.Owner", "Motorcycle.Owner", "RV.Owner")
 labelList <- c("Truck","Motorcycle","RV")
-i <- 1
-for (sector in columnList){
-  top <- tabyl(orders[,sector], sort = TRUE, show_na = FALSE)
-  colnames(top) <- c(sector,"n","percent")
-  percentage <- round(top[2,"percent"],2)
-  plotData[nrow(plotData) + 1,] = list(labelList[[i]],percentage)
-  i <- i+1
-}
-plotData <- plotData %>% arrange(desc(percentage_yes))
-ggplot(plotData, aes(x=reorder(Vehicle,-percentage_yes),y=percentage_yes)) +
+plotData <- boolToBar(orders, columnList, labelList, plotData)
+print(plotData)
+ggplot(plotData, aes(x=reorder(Vehicle,-percentage),y=percentage)) +
   geom_bar(stat="identity") +
   scale_x_discrete(name="Vehicle") +
   scale_y_continuous(name="Percentage of owners") +
