@@ -4,12 +4,16 @@ author: "Philipp Peter & Laurenz Harnischmacher & Nico Lindert"
 date: "11 Mai 2019"
 output: html_document
 ---
-
+## definie enviromentpath
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
 #knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
-#lh_root
-knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+#Philipp_root
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+
+#laurenz_root
+knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
+
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -64,7 +68,7 @@ for (i in 1:ncol(dataframe)) {
   }
 }
 print(drop)
-# Lösche doppelte Spalten (immer die 2.)
+# LÃ¶sche doppelte Spalten (immer die 2.)
 dataframe <- subset(dataframe, select = -drop)
 head(dataframe)
 ```
@@ -75,7 +79,27 @@ colnames(dataframe) <- str_replace(colnames(dataframe),"\\\\","")
 head(dataframe)
 ```
 
+## create csv from dataframe
+## comapre py csv and r csv
+``` {r}
+write.csv(dataframe, file = "../00_raw_data/order_r.csv", row.names =FALSE, na = "")
 
+# r csv
+r_df = read.csv(file = "../00_raw_data/order_r.csv",na=c("", "?", "NULL", "NA", "Nan") )
+
+# py csv
+py_df = read.csv(file = "../00_raw_data/order_py.csv",na=c("", "?", "NULL", "NA", "Nan"))
+
+
+head(r_df)
+head(py_df)
+# show difference between python and r dataset
+diff <-r_df[!(r_df%in%py_df)]
+head(diff)
+
+
+
+```
 ## Including Plots
 
 You can also embed plots, for example:
