@@ -80,7 +80,7 @@ head(dataframe)
 ```
 
 ## create csv from dataframe
-## comapre py csv and r csv
+## compare py csv and r csv
 ``` {r}
 write.csv(dataframe, file = "../00_raw_data/order_r.csv", row.names =FALSE, na = "")
 
