@@ -2,6 +2,7 @@ library(gridExtra)
 library(dplyr)
 library(janitor)
 library(ggplot2)
+library(ineq)
 
 useSmallVersions <- FALSE
 
@@ -125,6 +126,31 @@ plotOrderedBarChart <- function(ColumnName) {
     theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
     annotate("text", x = textXpos, y = top[1, 2]/1.2, label = nas)
 }
+
+
+# Compute the Lorenz curve Lc{ineq}
+top <- clicks[, "Pattern"] %>% na.omit() %>% (tabyl) %>% select(1,3) #create frequency table
+names(top) <- c("Pattern", "percentage") #rename
+top[,c(1)] <- as.character(top[,c(1)])
+top <- arrange(top, -percentage)
+top[, "Pattern"] <- factor(top[, "Pattern"], levels = top[, "Pattern"]) #lockOrder
+
+Distr1 <- Lc(top$percentage)
+
+# create data.frame from LC
+Distr1_df <- data.frame(p = Distr1$p, L = rev(1-Distr1$L))
+Rename_df <- data.frame(Pattern = "", percentage = 0)
+newDf <- rbind(Rename_df, top)
+newDf$percentage <- Distr1_df$L
+countOfEntries <- newDf[, "Pattern"] %>% tabyl() %>% select(2) %>% sum()
+
+# plot
+ggplot(data=newDf, aes(x=Pattern, y=percentage, group=1)) +
+  geom_point() +
+  geom_line() +
+  geom_abline(slope = 1/(countOfEntries-1), intercept = -1/(countOfEntries-1))
+
+#------------------------------------------------------------------------------
 
 #Plots for product-related columns
 p1 <- plotOrderedBarChart("BrandName")
