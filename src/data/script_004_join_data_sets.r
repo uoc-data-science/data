@@ -34,5 +34,5 @@ message("HEAD")
 head(joinedDf)
 
 message("Writing the joined data frame to disc...")
-write.csv(clickstreamDf, file="data/interim/joined/joined_df.csv", row.names=FALSE)
+write.csv(joinedDf, file="data/interim/joined/joined_df.csv", row.names=FALSE)
 message("Done!")

@@ -1,0 +1,130 @@
+---
+title: "Descriptive statistics for Products"
+output: pdf_document
+---
+
+## What are the most ordered products in the data set?
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+orderDf <- read.csv(file="../data/interim/orders/orders_cleaned.csv", sep=",")
+clickstreamDf <- read.csv(file="../data/interim/clickstream/clickstream_cleaned.csv", sep=",")
+```
+To figure this out we first load the data sets and choose all relevant columns:
+```{r}
+partialOrdersDf <- orderDf[c("Order_Session_ID", "Product_Object_ID",
+                             "Product_ID", "Order_Line_Unit_List_Price", "Order_Day_of_Week",
+                             "Product_Creation_Date", "Product_Family_ID")]
+
+partialClickstreamDf <- clickstreamDf[c("Session_ID", "Product_Object_ID",
+                                        "Product_ID", "Request_Date")]
+```
+
+```{r include=FALSE}
+# force certain variables to be categorical:
+partialOrdersDf$Order_Session_ID <- factor(partialOrdersDf$Order_Session_ID)
+partialOrdersDf$Product_Object_ID <- factor(partialOrdersDf$Product_Object_ID)
+partialOrdersDf$Product_ID <- factor(partialOrdersDf$Product_ID)
+partialOrdersDf$Product_Family_ID <- factor(partialOrdersDf$Product_Family_ID)
+
+partialClickstreamDf$Session_ID <- factor(partialClickstreamDf$Session_ID)
+partialClickstreamDf$Product_Object_ID <- factor(partialClickstreamDf$Product_Object_ID)
+partialClickstreamDf$Product_ID <- factor(partialClickstreamDf$Product_ID)
+```
+
+We then pick the 15 Product_IDs with the highest frequency count (which is introduced by dplyr as 'n') while
+ignoring all '?' IDs
+```{r}
+mostOrderedProductsDf <- partialOrdersDf %>%
+  count(Product_ID) %>%
+  arrange(desc(n)) %>%
+  slice(2:16)
+```
+
+and plot them (using the 'identity' stat to provide our own frequency count as y axis):
+```{r}
+ggplot(data = mostOrderedProductsDf) +
+  geom_bar(mapping = aes(x = Product_ID, y = n), stat = "identity")
+```
+
+
+## What are the products most clicked on?
+In an analogous fashion, we pick the most clicked products (again by their product ID)
+```{r}
+mostClickedProductsDf <- partialClickstreamDf %>%
+  count(Product_ID) %>%
+  arrange(desc(n)) %>%
+  slice(2:16)
+```
+
+and plot those:
+```{r}
+ggplot(data = mostClickedProductsDf) +
+  geom_bar(mapping = aes(x = Product_ID, y = n), stat = "identity")
+```
+Although the product with the ID 10315 is clicked more often than any other product, it is interestingly not the ordered most often.
+
+
+## What are the top-selling product families?
+A frequency count of all orders by their Product_Family_ID yields the top-selling product families:
+```{r}
+mostOrderedProductFamiliesDf <- partialOrdersDf %>%
+  count(Product_Family_ID) %>%
+  arrange(desc(n)) %>%
+  slice(1:15)
+head(mostOrderedProductFamiliesDf)
+```
+
+The winner clearly is product family 12295, which is also represented nicely in the corresponding plot:
+```{r}
+ggplot(data = mostOrderedProductFamiliesDf) +
+  geom_bar(mapping = aes(x = Product_Family_ID, y = n), stat = "identity")
+```
+
+
+## How are orders distributed among the different days of the week?
+To plot a frequency distribution of all orders over the days of week we first reorder the days in the
+canonical way and then do a count the usual way:
+```{r}
+dowDf <- partialOrdersDf %>%
+  mutate(Order_Day_of_Week = factor(Order_Day_of_Week, levels=c("Monday", "Tuesday", "Wednesday",
+                                                                "Thursday", "Friday", "Saturday",
+                                                                "Sunday"))) %>%
+  count(Order_Day_of_Week) %>%
+  slice(1:7)
+```
+
+We can then simply plot as before:
+```{r}
+ggplot(data = dowDf) +
+  geom_bar(mapping = aes(x = Order_Day_of_Week, y = n), stat = "identity")
+```
+
+
+\pagebreak
+## Are certain product families bought more often on certain days of the week?
+To figure this out we plot the product Product_Family_ID vs. its frequency count (which is performed 'under the hood' by ggplot) and add the order day as a facet:
+```{r}
+ggplot(data = partialOrdersDf) +
+  geom_bar(mapping = aes(x = Product_Family_ID)) +
+  facet_wrap(~ Order_Day_of_Week)
+#TODO: only print the x most frequent product family IDs!
+```
+
+
+## What are the most and least expensice products?
+To find the most expensive product we can with the help of dplyr select the maximum as follows:
+```{r}
+partialOrdersDf %>%
+  filter(Order_Line_Unit_List_Price == max(Order_Line_Unit_List_Price)) %>%
+  distinct(Product_Object_ID, .keep_all = TRUE) %>%
+  select(Product_Object_ID, Order_Line_Unit_List_Price)
+```
+
+We can find the least expensive one by looking at the minimum respectively:
+```{r}
+partialOrdersDf %>%
+  filter(Order_Line_Unit_List_Price == min(Order_Line_Unit_List_Price)) %>%
+  distinct(Product_Object_ID, .keep_all = TRUE) %>%
+  select(Product_Object_ID, Order_Line_Unit_List_Price)
+```
