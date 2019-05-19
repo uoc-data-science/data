@@ -127,28 +127,32 @@ plotOrderedBarChart <- function(ColumnName) {
     annotate("text", x = textXpos, y = top[1, 2]/1.2, label = nas)
 }
 
+#-------------------------------------
+plotLorenzCurve <- function(ColumnName) {
+  # Compute the Lorenz curve Lc{ineq}
+  top <- clicks[, ColumnName] %>% na.omit() %>% (tabyl) %>% select(1,3) #create frequency table
+  names(top) <- c(ColumnName, "percentage") #rename
+  top[,c(1)] <- as.character(top[,c(1)])
+  top <- arrange(top, -percentage) #sort by descending percentage
+  top[, ColumnName] <- factor(top[, ColumnName], levels = top[, ColumnName]) #lockOrder
+  
+  LorenzCurve <- Lc(top$percentage) #calculate the Lorenz curve
+  
+  # create data.frame from LC
+  LorenzCurve_df <- data.frame(p = LorenzCurve$p, L = rev(1-LorenzCurve$L)) #create datafram from calculation
+  ObsZero_df <- data.frame(ColumnName = "", percentage = 0) #create dataframe with an empty observation
+  names(ObsZero_df) <- c(ColumnName, "percentage") #rename the columns
+  LorenzFinal_df <- rbind(ObsZero_df, top) #add the original dataframe
+  LorenzFinal_df$percentage <- LorenzCurve_df$L #replace the percentage column with entries from calculation 
+  countOfEntries <- LorenzFinal_df[, ColumnName] %>% tabyl() %>% select(2) %>% sum() #count the entries for visual reasons
+  # plot
+  ggplot(data=LorenzFinal_df, aes_string(x=ColumnName, y="percentage", group=1)) +
+    geom_point() +
+    geom_line() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
+    geom_abline(slope = 1/(countOfEntries-1), intercept = -1/(countOfEntries-1))
+}
 
-# Compute the Lorenz curve Lc{ineq}
-top <- clicks[, "Pattern"] %>% na.omit() %>% (tabyl) %>% select(1,3) #create frequency table
-names(top) <- c("Pattern", "percentage") #rename
-top[,c(1)] <- as.character(top[,c(1)])
-top <- arrange(top, -percentage)
-top[, "Pattern"] <- factor(top[, "Pattern"], levels = top[, "Pattern"]) #lockOrder
-
-Distr1 <- Lc(top$percentage)
-
-# create data.frame from LC
-Distr1_df <- data.frame(p = Distr1$p, L = rev(1-Distr1$L))
-Rename_df <- data.frame(Pattern = "", percentage = 0)
-newDf <- rbind(Rename_df, top)
-newDf$percentage <- Distr1_df$L
-countOfEntries <- newDf[, "Pattern"] %>% tabyl() %>% select(2) %>% sum()
-
-# plot
-ggplot(data=newDf, aes(x=Pattern, y=percentage, group=1)) +
-  geom_point() +
-  geom_line() +
-  geom_abline(slope = 1/(countOfEntries-1), intercept = -1/(countOfEntries-1))
 
 #------------------------------------------------------------------------------
 
@@ -182,3 +186,5 @@ multiplot(p2, p3, p4, p5, p6, p8, p11, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickstreamColumns.png",sep="")
        ,multiplot(p2, p3, p4, p5, p6, p8, p11, cols=2), width=10, height=15)
 
+#Lorenz curve plots
+plotLorenzCurve("BrandName")
