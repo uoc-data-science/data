@@ -21,4 +21,13 @@ def read_order_data() -> pd.DataFrame:
 
 def read_clickstream_data() -> pd.DataFrame:
     """ Reads in the clickstream data and returns it in a pandas.DataFrame """
-    return read_data_with_columns(r'data/interim/clickstream/clickstream_data.csv', r'data/raw/clickstream/clickstream_columns.txt')
+    df1 = read_data_with_columns(r'data/interim/clickstream/clickstream_data.csv', r'data/raw/clickstream/clickstream_columns.txt')
+    df2 = read_data_with_columns(r'data/raw/clickstream/clickstream_data_part_2.csv', r'data/raw/clickstream/clickstream_columns.txt')
+    combined_clickstream_df = pd.concat([df1, df2])
+    return combined_clickstream_df
+
+order_data_df = read_order_data()
+order_data_df.to_csv(r'data/interim/orders/orders_with_headers_py.csv', encoding = 'latin-1')
+
+clickstream_data_df = read_clickstream_data()
+clickstream_data_df.to_csv(r'data/interim/clickstream/clickstream_with_headers_py.csv', encoding = 'latin-1')

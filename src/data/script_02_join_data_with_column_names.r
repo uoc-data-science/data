@@ -21,6 +21,10 @@ write.csv(orderDf, file="data/interim/orders/orders_with_headers.csv", row.names
 message("Done!")
 
 # read the CLICKSTREAM data and write the dataset that contains proper headers to data/interim/:
-clickstreamDf <- readdatawithcolumns(headersFile="data/raw/clickstream/clickstream_columns.txt", dataFile="data/interim/clickstream/clickstream_data.csv")
+clickstreamDf1 <- readdatawithcolumns(headersFile="data/raw/clickstream/clickstream_columns.txt",
+                                      dataFile="data/interim/clickstream/clickstream_data.csv")
+clickstreamDf2 <- readdatawithcolumns(headersFile="data/raw/clickstream/clickstream_columns.txt",
+                                      dataFile="data/raw/clickstream/clickstream_data_part_2.csv")
+clickstreamDf <- rbind(clickstreamDf1, clickstreamDf2)
 write.csv(clickstreamDf, file="data/interim/clickstream/clickstream_with_headers.csv", row.names=FALSE)
 message("Done!")
