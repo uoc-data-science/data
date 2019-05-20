@@ -153,12 +153,36 @@ plotLorenzCurve <- function(ColumnName) {
     geom_abline(slope = 1/(countOfEntries-1), intercept = -1/(countOfEntries-1))
 }
 
+plotBarAndLorenz <- function(ColumnName) {
+  top <- clicks[, ColumnName] %>% na.omit() %>% (tabyl)#create frequency table
+  names(top) <- c(ColumnName,"amount", "percentage") #rename
+  top[,c(1)] <- as.character(top[,c(1)])
+  top <- arrange(top, -amount) #sort by descending percentage
+  top[, ColumnName] <- factor(top[, ColumnName], levels = top[, ColumnName]) #lockOrder
+  
+  LorenzCurve <- Lc(top$percentage) #calculate the Lorenz curve
+  
+  # create data.frame from LC
+  LorenzCurve_df <- data.frame(p = LorenzCurve$p, L = rev(1-LorenzCurve$L)) #create datafram from calculation
+  names(LorenzCurve_df) <- c(ColumnName, "percentage") #rename the columns
+  LorenzCurve_df <- LorenzCurve_df[-1,]
+  top$percentage <- LorenzCurve_df$per #add the original dataframe
+  countOfEntries <- top[, ColumnName] %>% tabyl() %>% select(2) %>% sum() #count the entries for visual reasons
+  largest_amount <- top[1,"amount"]
+  
+  ggplot(data=top) +
+    geom_bar(aes_string(ColumnName, "amount"), width=.8, fill="tomato3", stat="identity") +
+    geom_point(aes_string(x=ColumnName, y=top$percentage*largest_amount, group=1)) +
+    geom_line(aes_string(x=ColumnName, y=top$percentage*largest_amount, group=1)) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
+    geom_abline(slope = 1/(countOfEntries)*largest_amount, intercept = 0) +
+    scale_y_continuous(sec.axis = sec_axis(~./largest_amount))
+}
 
 #------------------------------------------------------------------------------
 
 #Plots for product-related columns
-p1 <- plotOrderedBarChart("BrandName")
-
+p1
 p2 <- plotOrderedBarChart("Look")
 
 p3 <- plotOrderedBarChart("BasicOrFashion")
@@ -188,3 +212,6 @@ ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickstreamColumns.
 
 #Lorenz curve plots
 plotLorenzCurve("BrandName")
+
+plotBarAndLorenz("Product")
+
