@@ -1,4 +1,4 @@
-useSmallVersions <- TRUE
+useSmallVersions <- FALSE
 
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
 pathClicks  <- "0 Data/clickstream_data_cleaned_R.csv"
@@ -50,5 +50,7 @@ write.table(NAclicks, file = pathNULLAnalysisClicks, sep=",", row.names=FALSE)
 
 # Compare csv files
 library(diffobj)
-diffCsv(target=pathOrdersPython, current=pathOrders)
-diffCsv(target=pathClicksPython, current=pathClicks)
+clicksP = read.csv(file=pathClicksPython,na.strings=c("","NA"))
+diffPrint(target=clicksP,current=clicks)
+ordersP = read.csv(file=pathOrdersPython,na.strings=c("","NA"))
+diffPrint(target=ordersP,current=orders)

@@ -10,16 +10,20 @@ pathOrdersSmall = "0 Data/order_data_small_R.csv"
 pathOrderHeaders <- "orders/order_columns.txt"
 
 pathClicks <- "clickstream/clickstream_data.csv"
+pathClicks2 <- "clickstream/clickstream_data_part_2.csv"
 newPathClicks <- "0 Data/clickstream_data_R.csv"
+newPathClicks2 <-"0 Data/clickstream_data_part_2_R.csv"
 pathClicksClean  <- "0 Data/clickstream_data_cleaned_R.csv"
 pathClicksSmall = "0 Data/clickstream_data_small_R.csv"
 pathClicksHeaders <- "clickstream/clickstream_columns.txt"
 
 # 1) Copy csv to data folder
 file.copy(pathClicks, newPathClicks, overwrite = TRUE )
+file.copy(pathClicks2, newPathClicks2, overwrite = TRUE )
 file.copy(pathOrders, newPathOrders, overwrite = TRUE )
 pathOrders <- newPathOrders
 pathClicks <- newPathClicks
+pathClicks2 <- newPathClicks2
 
 # 2) read files, set headers and replace ? with NA
 
@@ -63,6 +67,8 @@ for (col in names(orders)){
 write.table(orders, file = pathOrdersClean, sep=",", row.names=FALSE)
 
 clicks <- read.csv(file=pathClicks, header=FALSE)
+clicks2 <- read.csv(file=pathClicks2, header=FALSE)
+clicks <- rbind(clicks,clicks2) 
 clicks[clicks=="?"]<-NA
 clicks[clicks=="NULL"]<-NA
 colnames(clicks) <- clickHeaders
