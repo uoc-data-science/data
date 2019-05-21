@@ -3,6 +3,7 @@ library(dplyr)
 library(janitor)
 library(maps)
 library(ggplot2)
+library(tidyr)
 library(ggrepel) #for advanced labeling possibilities
 
 useSmallVersions <- FALSE
@@ -30,7 +31,7 @@ orders <- read.csv(file=pathOrders)
 giveTop <- function(df, column, first, percentage){
   top <- (tabyl(df[[column]])) #create frequency table
   top[,c(1)] <- as.character(top[,c(1)])
-  top[is.na(top)] <- "Others"
+  totalCount <- sum(top$n) # used when only the top x columns are requested
   if (percentage == TRUE){
     top <- top %>% select(1, 3)
     names(top) <- c(column, "percentage") #rename
@@ -42,7 +43,22 @@ giveTop <- function(df, column, first, percentage){
     names(top) <- c(column, "amount") #rename
     top <- arrange(top, desc(amount))
   }
-  if (first != 0){top <- head(top, first)} #only first columns
+  #get the highest rating x columns only
+  if (first != 0){
+    top <- head(top, first)
+    top <- top %>% drop_na() #drop the row for NA values since they will be added to "Others"
+    if(percentage == TRUE){
+      others <- (100 - sum(top$percentage))
+    }
+    else{
+      others <- (totalCount-sum(top$amount))
+    }
+    top[nrow(top) + 1,] = list("Others",others)
+  } 
+  else {
+    # label the row for NA values as "Others"
+    top[is.na(top)] <- "Others"
+  }
   top[[column]] <- factor(top[[column]], levels=top[[column]]) #lockOrder
   return(top)
 }
