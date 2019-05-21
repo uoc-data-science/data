@@ -150,7 +150,6 @@ plotBarAndLorenz <- function(df, ColumnName) {
   top[,c(1)] <- as.character(top[,c(1)])
   top <- arrange(top, -amount) #sort by descending percentage
   top[, ColumnName] <- factor(top[, ColumnName], levels = top[, ColumnName]) #lockOrder
-  
   LorenzCurve <- Lc(top$percentage) #calculate the Lorenz curve
   
   # create data.frame from LC

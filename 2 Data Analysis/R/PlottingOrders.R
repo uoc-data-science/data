@@ -249,6 +249,10 @@ print(plotData)
 filename = "Product Data Plots/ManufacturerTop10.png"
 plotBar(plotData, "Manufacturer", "amount", filename, "Manufacturer  Top 10", 10)
 
+#Manufacturer lorenz curve
+plotLorenzCurve(orders, "Manufacturer")
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzManufacturer.png",sep=""), width=12, height=13)
+
 # Product IDs
 plotData <- giveTop(orders, "Order.Line.Subassortment.ID", 50, TRUE)
 others <- 100 - sum(plotData$percentage)
@@ -264,11 +268,19 @@ ggplot(plotData, aes(reorder(Order.Line.Subassortment.ID,-percentage),percentage
   theme(plot.title = element_text(hjust = 0.5))
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/ProductsTop50.png",sep=""), width = 15, height = 7)
 
+#Product ID lorenz curve
+plotLorenzCurve(orders, "Order.Line.Subassortment.ID")
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzProducts.png",sep=""), width=20, height=7)
+
 #BrandName
 plotData <- giveTop(orders, "BrandName", 10, FALSE)
 print(plotData)
 filename = "Product Data Plots/BrandNameTop10.png"
 plotBar(plotData, "BrandName", "amount", filename, "Brand Names Top 10", 10)
+
+#BrandName lorenz curve
+plotLorenzCurve(orders, "BrandName")
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzBrandName.png",sep=""), width=12, height=13)
 
 #StockPerBrand
 top <- orders
