@@ -95,13 +95,13 @@ boolToBar <- function(df, columnList, labelList, xLabel, yLabel){
 }
 
 #Returns a plot with a mean of a given column for each day
-meanOverTime <- function(columnOfInterest, yLabel){
+meanOverTime <- function(df, dateColumn, columnOfInterest, yLabel){
   plotData <- data.frame(matrix(ncol = 2, nrow = 0))
   x <- c("Date", "Mean")
   colnames(plotData) <- x
-  for (day in orders$Order.Line.Date){
+  for (day in df[[dateColumn]]){
     if (!substring(day,6) %in% plotData$Date){
-      subset <- orders %>% filter(Order.Line.Date == day)
+      subset <- df %>% filter(as.name(dateColumn) == day)
       meanValue = mean(subset[[columnOfInterest]])
       plotData[nrow(plotData) + 1,] = list(substring(day,6),meanValue)
     }
@@ -312,11 +312,11 @@ p7 <- ggplot(orders, aes(x=Order.Line.Quantity)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +  # Overlay with transparent density plot
   scale_x_continuous(name ="Order Line Quantity",limits = c(0.5,7.5),breaks = round(seq(1, 7, by = 1),1))
 
-p8 <- meanOverTime("Order.Line.Quantity","Average order \nquantity")
+p8 <- meanOverTime(orders,"Order.Line.Date","Order.Line.Quantity","Average order \nquantity")
 
-p9 <- meanOverTime("Order.Line.Amount","Average order \namount in $")
+p9 <- meanOverTime(orders,"Order.Line.Date","Order.Line.Amount","Average order \namount in $")
 
-p10 <- meanOverTime("Order.Line.Unit.List.Price","Average order unit \n list price in $")
+p10 <- meanOverTime(orders,"Order.Line.Date","Order.Line.Unit.List.Price","Average order unit \n list price in $")
 
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p9, p7, p5, p2, p4,p10, p8, p6, cols=2), width=15, height=12)
 
