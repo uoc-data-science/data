@@ -31,6 +31,7 @@ orders <- read.csv(file=pathOrders)
 giveTop <- function(df, column, first, percentage){
   top <- (tabyl(df[[column]])) #create frequency table
   top[,c(1)] <- as.character(top[,c(1)])
+  top[is.na(top)] <- "Not Available"
   totalCount <- sum(top$n) # used when only the top x columns are requested
   if (percentage == TRUE){
     top <- top %>% select(1, 3)
@@ -46,18 +47,17 @@ giveTop <- function(df, column, first, percentage){
   #get the highest rating x columns only
   if (first != 0){
     top <- head(top, first)
-    top <- top %>% drop_na() #drop the row for NA values since they will be added to "Others"
     if(percentage == TRUE){
       others <- (100 - sum(top$percentage))
+      top[nrow(top) + 1,] = list("Others",others)
+      top <- arrange(top, desc(percentage))
     }
     else{
       others <- (totalCount-sum(top$amount))
+      top[nrow(top) + 1,] = list("Others",others)
+      top <- arrange(top, desc(amount))
     }
-    top[nrow(top) + 1,] = list("Others",others)
-  } 
-  else {
-    # label the row for NA values as "Others"
-    top[is.na(top)] <- "Others"
+    
   }
   top[[column]] <- factor(top[[column]], levels=top[[column]]) #lockOrder
   return(top)
