@@ -69,6 +69,28 @@ boolToBar <- function(df, columnList, labelList, plotData){
   }
   return(plotData %>% arrange(desc(percentage)))
 }
+
+#Returns a plot with a mean of a given column for each day
+meanOverTime <- function(columnOfInterest,yLabel){
+  plotData <- data.frame(matrix(ncol = 2, nrow = 0))
+  x <- c("Date", "Mean")
+  colnames(plotData) <- x
+  for (day in orders$Order.Line.Date){
+    if (!substring(day,6) %in% plotData$Date){
+      subset <- orders %>% filter(Order.Line.Date == day)
+      meanValue = mean(subset[[columnOfInterest]])
+      plotData[nrow(plotData) + 1,] = list(substring(day,6),meanValue)
+    }
+  }
+  plotData <- plotData %>% arrange(Date)
+  
+  plot <- ggplot(data=plotData, aes(x=Date, y=Mean, group=1)) +
+    geom_line() +
+    geom_point() +
+    scale_x_discrete(breaks = c(head(plotData,1)$Date, tail(plotData,1)$Date)) +
+    scale_y_continuous(name=yLabel)
+  return(plot)
+}
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # overview tables for interesting columns
@@ -216,18 +238,21 @@ p1 <- ggplot(orders, aes(x=Order.Line.Amount)) +
   geom_density() +
   scale_x_continuous(name="Order Line Amount",limits = c(-0.5,45.5),breaks = round(seq(0, 45, by = 3),1)) +
   scale_y_continuous(limits = c(0,0.15))
+
 p2 <- ggplot(orders, aes(x=Order.Line.Amount)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +
   scale_x_continuous(name="Order Line Amount",limits = c(-2.5,45.5),breaks = round(seq(0, 45, by = 3),1)) +
   scale_y_continuous(limits = c(0,900))
-# Distribution of order unit price
+
 p3 <- ggplot(orders, aes(x=Order.Line.Unit.List.Price)) + 
   geom_density() +
   scale_x_continuous(name="Order Line Unit List Price",limits = c(-0.5,45.5),breaks = round(seq(0, 45, by = 3),1))
+
 p4 <- ggplot(orders, aes(x=Order.Line.Unit.List.Price)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +
   scale_x_continuous(name="Order Line Unit List Price",limits = c(-2.5,45.5),breaks = round(seq(0, 45, by = 3),1)) +
   scale_y_continuous(limits = c(0,900))
+
 plotData <-tabyl(orders$Spend.Over..12.Per.Order.On.Average, sort = TRUE)
 colnames(plotData) <- c("Spend.Over..12.Per.Order.On.Average","n","percent")
 p5 <- ggplot(plotData, aes(x="", y=n, fill=Spend.Over..12.Per.Order.On.Average)) + 
@@ -240,24 +265,7 @@ p5 <- ggplot(plotData, aes(x="", y=n, fill=Spend.Over..12.Per.Order.On.Average))
         axis.text = element_blank(),
         axis.ticks = element_blank(),
         plot.title = element_text(hjust = 0.5, color = "#666666"))
-# plotData <- data.frame(matrix(ncol = 2, nrow = 0))
-# x <- c("Day_of_week", "Over_12_dollar_percentage")
-# colnames(plotData) <- x
-# for (day in c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")){
-#   subset <- orders %>% filter(Order.Line.Day.of.Week == day)
-#   top <-tabyl(subset$Spend.Over..12.Per.Order.On.Average, sort = TRUE)
-#   colnames(top) <- c("Spend.Over..12.Per.Order.On.Average","n","percent")
-#   top <- top %>% filter(Spend.Over..12.Per.Order.On.Average == "True")
-#   percent <- top[1,"percent"]
-#   percent <- round(percent*100)
-#   print(top)
-#   print(percent)
-#   plotData[nrow(plotData) + 1,] = list(day,percent)
-# }
-# p6 <- ggplot(plotData, aes(x=reorder(Day_of_week,-Over_12_dollar_percentage),y=Over_12_dollar_percentage)) +
-#   geom_bar(stat="identity") +
-#   scale_x_discrete(name="Day of week") +
-#   scale_y_continuous(name="% of customers spending \nover $12 per order\n on average")
+
 plotData <- data.frame(matrix(ncol = 2, nrow = 0))
 x <- c("Date", "Over_12_dollar_percentage")
 colnames(plotData) <- x
@@ -280,26 +288,13 @@ p7 <- ggplot(orders, aes(x=Order.Line.Quantity)) +
   geom_histogram(binwidth=1, colour="black", fill="white") +  # Overlay with transparent density plot
   scale_x_continuous(name ="Order Line Quantity",limits = c(0.5,7.5),breaks = round(seq(1, 7, by = 1),1))
 
-plotData <- data.frame(matrix(ncol = 2, nrow = 0))
-x <- c("Date", "Avg_Order_Quantity")
-colnames(plotData) <- x
-for (day in orders$Order.Line.Date){
-  if (!substring(day,6) %in% plotData$Date){
-    subset <- orders %>% filter(Order.Line.Date == day)
-    quantity = mean(subset$Order.Line.Quantity)
-    plotData[nrow(plotData) + 1,] = list(substring(day,6),quantity)
-  }
-}
-plotData <- plotData %>% arrange(Date)
-p8 <- ggplot(data=plotData, aes(x=Date, y=Avg_Order_Quantity, group=1)) +
-  geom_line() +
-  geom_point() +
-  scale_x_discrete(breaks = c(head(plotData,1)$Date, tail(plotData,1)$Date)) +
-  scale_y_continuous(name="Average order \nquantity")
+p8 <- meanOverTime("Order.Line.Quantity","Average order \nquantity")
 
-multiplot(p1, p3, p5, p7, p2, p4, p6, p8, cols=2)
+p9 <- meanOverTime("Order.Line.Amount","Average order \namount in $")
 
-ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p5, p7, p2, p4, p6, p8, cols=2), width=15, height=10)
+p10 <- meanOverTime("Order.Line.Unit.List.Price","Average order unit \n list price in $")
+
+ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p3, p9, p7, p5, p2, p4,p10, p8, p6, cols=2), width=15, height=12)
 
 # Distribution of order day of week and hour of day
 p1 <- ggplot(orders,aes(x=reorder(Order.Line.Day.of.Week,Order.Line.Day.of.Week,function(x)-length(x)))) +
