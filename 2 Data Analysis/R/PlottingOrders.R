@@ -101,7 +101,7 @@ meanOverTime <- function(df, dateColumn, columnOfInterest, yLabel){
   colnames(plotData) <- x
   for (day in df[[dateColumn]]){
     if (!substring(day,6) %in% plotData$Date){
-      subset <- df %>% filter(as.name(dateColumn) == day)
+      subset <- df %>% filter(!!as.name(dateColumn) == day)
       meanValue = mean(subset[[columnOfInterest]])
       plotData[nrow(plotData) + 1,] = list(substring(day,6),meanValue)
     }
