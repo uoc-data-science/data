@@ -200,7 +200,7 @@ write.table(summary, file = paste(pathTableFolder,"CustomerData.csv"), sep=",", 
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 
-# Utility function for subplot support
+# Utility function for subplot support, Source: http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
   # Make a list from the ... arguments and plotlist
