@@ -311,7 +311,6 @@ p1 <- ggplot(orders,aes(x=reorder(Order.Line.Day.of.Week,Order.Line.Day.of.Week,
 p2 <- ggplot(orders, aes(x=Order.Line.Hour.of.Day)) +
   geom_density() +
   scale_x_continuous(name="Order Line Hour of Day")
-multiplot(p1, p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Time.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 
 # Order Discounts: Distribution of discounts
@@ -338,7 +337,6 @@ p2 <- ggplot(top, aes(x=reorder(Order.Promotion.Code,-n),y=n)) +
   scale_x_discrete(name="Order Promotion Code") +
   scale_y_continuous(name="count") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
-multiplot(p1, p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 
 #-----------------------------------------------------------------------------------
@@ -662,7 +660,6 @@ labelList <- c("Speciality Store Retail","Oil Retail Activity","Bank Retail Acti
                "Finance Retail Activity","Miscellaneous Retail Activity","Upscale Retail",
                "Upscale Speciality Retail")
 p2 <- boolToBar(orders, columnList, labelList, "Retail Activity Type","Percentage of active customers")
-multiplot(p1,p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Retail_Activity.png",sep=""),multiplot(p1,p2, cols=2), width=8, height=5)
 
 #social data
@@ -762,7 +759,6 @@ p8 <- ggplot(plotData, aes(x="", y=n, fill=Number.Of.Adults)) +
         axis.ticks = element_blank(),
         plot.title = element_text(hjust = 0.5, color = "#666666"))
 
-multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Social_Data.png",sep=""),multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2), width=13, height=15)
 
 #Vehicle Ownership
