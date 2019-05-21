@@ -328,6 +328,7 @@ print(top)
 p2 <- ggplot(top, aes(x=reorder(Order.Promotion.Code,-n),y=n)) +
   geom_bar(stat="identity") +
   scale_x_discrete(name="Order Promotion Code") +
+  scale_y_continuous(name="count") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 multiplot(p1, p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=""),multiplot(p1, p2, cols=2), width=15)
