@@ -3,6 +3,7 @@ library(dplyr)
 library(janitor)
 library(ggplot2)
 library(ineq)
+source("./2 Data Analysis/R/PlottingUtilityFunctions.R")
 
 useSmallVersions <- FALSE
 
@@ -79,39 +80,11 @@ summary[is.na(summary)]<-""
 
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
-# Utility function for subplot support, Source: http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  library(grid)
-  # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-  numPlots = length(plots)
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     ncol = cols, nrow = ceiling(numPlots/cols))
-  }
-  if (numPlots==1) {
-    print(plots[[1]])
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
+#Functions
 #-----------------------------------------------------------------------------------
 #Ordered bar chart function
-plotOrderedBarChart <- function(ColumnName) {
-  top <- (tabyl(clicks[, ColumnName])) %>% select(1:2) #create frequency table
+plotOrderedBarChart <- function(df, ColumnName) {
+  top <- (tabyl(df[, ColumnName])) %>% select(1:2) #create frequency table
   names(top) <- c(ColumnName, "amount") #rename
   top[,c(1)] <- as.character(top[,c(1)])
   nas <- top[is.na(top),] #get NAs for added text
@@ -127,17 +100,15 @@ plotOrderedBarChart <- function(ColumnName) {
     annotate("text", x = textXpos, y = top[1, 2]/1.2, label = nas)
 }
 
-#-------------------------------------
-plotLorenzCurve <- function(ColumnName) {
+#-----------------------------------------------------------------------------------
+plotLorenzCurve <- function(df, ColumnName) {
   # Compute the Lorenz curve Lc{ineq}
-  top <- clicks[, ColumnName] %>% na.omit() %>% (tabyl) %>% select(1,3) #create frequency table
+  top <- df[, ColumnName] %>% na.omit() %>% (tabyl) %>% select(1,3) #create frequency table
   names(top) <- c(ColumnName, "percentage") #rename
   top[,c(1)] <- as.character(top[,c(1)])
   top <- arrange(top, -percentage) #sort by descending percentage
   top[, ColumnName] <- factor(top[, ColumnName], levels = top[, ColumnName]) #lockOrder
-  
   LorenzCurve <- Lc(top$percentage) #calculate the Lorenz curve
-  
   # create data.frame from LC
   LorenzCurve_df <- data.frame(p = LorenzCurve$p, L = rev(1-LorenzCurve$L)) #create datafram from calculation
   ObsZero_df <- data.frame(ColumnName = "", percentage = 0) #create dataframe with an empty observation
@@ -152,9 +123,9 @@ plotLorenzCurve <- function(ColumnName) {
     theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
     geom_abline(slope = 1/(countOfEntries-1), intercept = -1/(countOfEntries-1))
 }
-
-plotBarAndLorenz <- function(ColumnName) {
-  top <- clicks[, ColumnName] %>% na.omit() %>% (tabyl)#create frequency table
+#-----------------------------------------------------------------------------------
+plotBarAndLorenz <- function(df, ColumnName) {
+  top <- df[, ColumnName] %>% na.omit() %>% (tabyl)#create frequency table
   names(top) <- c(ColumnName,"amount", "percentage") #rename
   top[,c(1)] <- as.character(top[,c(1)])
   top <- arrange(top, -amount) #sort by descending percentage
@@ -180,38 +151,40 @@ plotBarAndLorenz <- function(ColumnName) {
 }
 
 #------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+#Plotting
+#-----------------------------------------------------------------------------------
 
 #Plots for product-related columns
-p1
-p2 <- plotOrderedBarChart("Look")
+p2 <- plotOrderedBarChart(clicks, "Look")
 
-p3 <- plotOrderedBarChart("BasicOrFashion")
+p3 <- plotOrderedBarChart(clicks, "BasicOrFashion")
 
-p4 <- plotOrderedBarChart("ColorOrScent")
+p4 <- plotOrderedBarChart(clicks, "ColorOrScent")
 
-p5 <- plotOrderedBarChart("Texture")
+p5 <- plotOrderedBarChart(clicks, "Texture")
 
-p6 <- plotOrderedBarChart("ToeFeature")
+p6 <- plotOrderedBarChart(clicks, "ToeFeature")
 
-p7 <- plotOrderedBarChart("Material")
+p7 <- plotOrderedBarChart(clicks, "Material")
 
-p8 <- plotOrderedBarChart("BodyFeature")
+p8 <- plotOrderedBarChart(clicks, "BodyFeature")
 
-p9 <- plotOrderedBarChart("Product")
+p9 <- plotOrderedBarChart(clicks, "Product")
 
-p10 <- plotOrderedBarChart("BrandName")
+p10 <- plotOrderedBarChart(clicks, "BrandName")
 
-p11 <- plotOrderedBarChart("Pattern")
+p11 <- plotOrderedBarChart(clicks, "Pattern")
 
-p12 <- plotOrderedBarChart("Manufacturer")
+p12 <- plotOrderedBarChart(clicks, "Manufacturer")
 
 multiplot(p2, p3, p4, p5, p6, p8, p11, cols=2)
-
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickstreamColumns.png",sep="")
        ,multiplot(p2, p3, p4, p5, p6, p8, p11, cols=2), width=10, height=15)
 
 #Lorenz curve plots
-plotLorenzCurve("BrandName")
+plotLorenzCurve(clicks, "BrandName")
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzBrandName.png",sep=""), width=12, height=13)
 
-plotBarAndLorenz("Product")
-
+plotBarAndLorenz(clicks, "Product")
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzProduct.png",sep=""), width=15, height=12)
