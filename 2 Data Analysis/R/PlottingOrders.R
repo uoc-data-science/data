@@ -58,7 +58,9 @@ plotBar <- function(df, xAxis, yAxis, filename, title, size){
 }
 
 #calculate percentages from different bool columns
-boolToBar <- function(df, columnList, labelList, plotData){
+boolToBar <- function(df, columnList, labelList, xLabel, yLabel){
+  plotData <- data.frame(matrix(ncol = 2, nrow = 0))
+  colnames(plotData) <- c("column_of_interest", "percentage")
   i <- 1
   for (sector in columnList){
     top <- tabyl(df[,sector], sort = TRUE, show_na = FALSE)
@@ -67,11 +69,17 @@ boolToBar <- function(df, columnList, labelList, plotData){
     plotData[nrow(plotData) + 1,] = list(labelList[[i]],percentage)
     i <- i+1
   }
-  return(plotData %>% arrange(desc(percentage)))
+  plotData <- plotData %>% arrange(desc(percentage))
+  plot <- ggplot(plotData, aes(x=reorder(column_of_interest,-percentage),y=percentage)) +
+    geom_bar(stat="identity") +
+    scale_x_discrete(name=xLabel) +
+    scale_y_continuous(name=yLabel) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  return(plot)
 }
 
 #Returns a plot with a mean of a given column for each day
-meanOverTime <- function(columnOfInterest,yLabel){
+meanOverTime <- function(columnOfInterest, yLabel){
   plotData <- data.frame(matrix(ncol = 2, nrow = 0))
   x <- c("Date", "Mean")
   colnames(plotData) <- x
@@ -404,17 +412,9 @@ ggsave(filename=paste(pathPlotFolder,"Product Data Plots/StockPer.png",sep=""),m
 #Plotting payment method
 #-----------------------------------------------------------------------------------
 #Cards
-plotData <- data.frame(matrix(ncol = 2, nrow = 0))
-colnames(plotData) <- c("CardType", "percentage")
 columnList <- c("Bank.Card.Holder", "Gas.Card.Holder", "Upscale.Card.Holder", "Unknown.Card.Type", "TE.Card.Holder", "Premium.Card.Holder", "New.Bank.Card")
 labelList <- c("Bank Card", "Gas Card", "Upscale Card", "Unknown Card", "TE Card", "Premium Card", "New Bank Card")
-plotData <- boolToBar(orders, columnList, labelList, plotData)
-print(plotData)
-ggplot(plotData, aes(x=reorder(CardType,-percentage),y=percentage)) +
-  geom_bar(stat="identity") +
-  scale_x_discrete(name="Card Type") +
-  scale_y_continuous(name="Percentage of Holders") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+plot <- boolToBar(orders, columnList, labelList, "Card Type","Percentage of Holders")
 ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardTypes.png",sep=""), width=10)
 
 #Card Holder
@@ -655,21 +655,13 @@ p1 <- ggplot(plotData, aes(x="", y=n, fill=Retail.Activity)) +
         axis.ticks = element_blank(),
         plot.title = element_text(hjust = 0.5, color = "#666666"))
 
-plotData <- data.frame(matrix(ncol = 2, nrow = 0))
-colnames(plotData) <- c("Retail_Activity", "percentage")
 columnList <- c("Speciality.Store.Retail","Oil.Retail.Activity","Bank.Retail.Activity",
                 "Finance.Retail.Activity","Miscellaneous.Retail.Activity","Upscale.Retail",
                 "Upscale.Speciality.Retail")
 labelList <- c("Speciality Store Retail","Oil Retail Activity","Bank Retail Activity",
                "Finance Retail Activity","Miscellaneous Retail Activity","Upscale Retail",
                "Upscale Speciality Retail")
-plotData <- boolToBar(orders, columnList, labelList, plotData)
-print(plotData)
-p2 <- ggplot(plotData, aes(x=reorder(Retail_Activity,-percentage),y=percentage)) +
-  geom_bar(stat="identity") +
-  scale_x_discrete(name="Retail Activity Type") +
-  scale_y_continuous(name="Percentage of active customers") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+p2 <- boolToBar(orders, columnList, labelList, "Retail Activity Type","Percentage of active customers")
 multiplot(p1,p2, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Retail_Activity.png",sep=""),multiplot(p1,p2, cols=2), width=8, height=5)
 
@@ -774,15 +766,7 @@ multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2)
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Social_Data.png",sep=""),multiplot(p1,p2,p3,p4,p5,p6,p7,p8, cols=2), width=13, height=15)
 
 #Vehicle Ownership
-plotData <- data.frame(matrix(ncol = 2, nrow = 0))
-colnames(plotData) <- c("Vehicle", "percentage")
 columnList <- c("Truck.Owner", "Motorcycle.Owner", "RV.Owner")
 labelList <- c("Truck","Motorcycle","RV")
-plotData <- boolToBar(orders, columnList, labelList, plotData)
-print(plotData)
-ggplot(plotData, aes(x=reorder(Vehicle,-percentage),y=percentage)) +
-  geom_bar(stat="identity") +
-  scale_x_discrete(name="Vehicle") +
-  scale_y_continuous(name="Percentage of owners") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+plot <- boolToBar(orders, columnList, labelList, "Vehicle","Percentage of owners")
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/VehicleOwnership.png",sep=""), width=4)
