@@ -116,7 +116,7 @@ plotOrderedBarChart <- function(df, ColumnName) {
   ggplot(top, aes_string(ColumnName, "amount"), y=amount) +
     geom_bar(width=.8, fill="tomato3", stat="identity") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
-    annotate("text", x = textXpos, y = top[1, 2]/1.2, label = nas)
+    annotate("text", x = Inf, y = Inf, label = nas, vjust=1, hjust=1)
 }
 #-----------------------------------------------------------------------------------
 #Lorenz curve for a column
@@ -172,7 +172,7 @@ plotBarAndLorenz <- function(df, ColumnName) {
 #-----------------------------------------------------------------------------------
 # Utility function for subplot support, Source: http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
 #-----------------------------------------------------------------------------------
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, title="") {
   library(grid)
   # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
