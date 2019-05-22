@@ -84,20 +84,19 @@ head(dataframe)
 ``` {r}
 write.csv(dataframe, file = "../00_raw_data/order_r.csv", row.names =FALSE, na = "")
 
-# r csv
-r_df = read.csv(file = "../00_raw_data/order_r.csv",na=c("", "?", "NULL", "NA", "Nan") )
-
 # py csv
-py_df = read.csv(file = "../00_raw_data/order_py.csv",na=c("", "?", "NULL", "NA", "Nan"))
+py_df = read.csv(file = "../00_raw_data/order_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
 
+# r csv
+r_df = read.csv(file = "../00_raw_data/order_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
 
-head(r_df)
-head(py_df)
+#head(r_df)
+#head(py_df)
 # show difference between python and r dataset
-diff <-r_df[!(r_df%in%py_df)]
-head(diff)
-
-
+diff_r <-r_df[!(r_df%in%py_df)]
+head(diff_r)
+diff_p <-py_df[!(py_df%in%r_df)]
+head(diff_p)
 
 ```
 ## Including Plots
@@ -127,6 +126,25 @@ ggplot(dataframe) +
   )
 #lapply(dataframe, mean)
 #lapply(dataframe, max)
+
+ggplot(data = dataframe)+
+  geom_bar(mapping = aes(x = Order_Credit_Card_Brand, fill = Order_Credit_Card_Brand))
+
+
+ggplot(data = dataframe)+
+  geom_point(mapping = aes(x=Order_Line_Quantity,
+                           y=Order_Amount, 
+                           color=Gender))+
+  facet_wrap(~Order_Credit_Card_Brand,nrow = 2)
+
+
+ggplot(data = dataframe)+
+  geom_point(mapping = aes(x=Order_Line_Quantity,
+                           y=Order_Amount, 
+                           color=Gender))+
+  geom_smooth(mapping = aes(x=Order_Line_Quantity,
+                           y=Order_Amount))
+
 ```
 
 ```{r}
