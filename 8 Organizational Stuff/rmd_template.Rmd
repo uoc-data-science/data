@@ -1,0 +1,124 @@
+---
+title: "Kims Report"
+author: "Kim Ferres"
+date: "23-05-2019"
+bibliography: literature.bib 
+output:
+  bookdown::html_document2:
+    toc: yes
+    toc_float: true
+    theme: flatly
+---
+
+```{r importingMyLibraries, echo=FALSE}
+  #    ^ only output, not coding
+  #cmd+alt+i --> for r coding
+  #load libraries
+  library(tidyverse)
+  library(ggplot2)
+  library(dplyr)
+  library(knitr)
+```
+#Prologue
+
+#Introduction {#introduction}
+
+##Motivation
+##Expected Results
+
+
+#Data Import
+
+The `diamonds` dataset has `r nrow(diamonds)` observations.
+```{r basicInformationDiamonds, echo=FALSE}
+  #filter, use diaondswith a certain cut
+  premium_diamonds <- diamonds %>%
+    filter(cut=="Premium")
+```
+
+The `premium_diamonds` dataset has `r nrow(premium_diamonds)` observations.
+
+#Descriptive Statistics
+##Tables
+
+```{r myTables}
+  kable(head(diamonds)) #kableextra
+  df <- data.frame(x=1:10, y=11:20, z=101:110)
+  summary_stats <- df %>% #start with the data frame, and then...
+    summarize_at(
+      .vars = c("x", "y", "z"), #select varibles for table
+      .funs = funs(min, max, mean, median, sd) #summary statistics for table
+      
+    ) %>% 
+    gather(key,value) %>%
+    separate(col=key, sep="_", c("feature", "stat")) %>%
+    spread(key=stat, value=value) #repeated obeservations in multiple columns
+  kable(summary_stats)
+```
+
+What about factors?
+
+```{r myTables2}
+  kable(head(diamonds)) #kableextra
+  df <- data.frame(x=1:10, y=11:20, z=101:110, cat=c("cat1","cat2")) %>% filter(cat=="cat1")
+  summary_stats <- df %>% #start with the data frame, and then...
+    summarize_at(
+      .vars = c("x", "y", "z"), #select varibles for table
+      .funs = funs(min, max, mean, median, sd) #summary statistics for table
+    ) %>% 
+    gather(key,value) %>%
+    separate(col=key, sep="_", c("feature", "stat")) %>%
+    spread(key=stat, value=value) #repeated obeservations in multiple columns
+  kable(summary_stats)
+  
+```
+
+
+##Figures
+
+Figure \@ref(fig:plot) shows carat information against price.
+Figure \@ref(fig:plot2) shows the table information against price
+Section  \@ref(introduction) was the Introduction.
+
+```{r plot, echo=FALSE, fig.cap="Carat against price"}
+  #   ^ names must not include underscores
+  ggplot(data=diamonds, aes(x=carat, y=price)) +
+    geom_point() +
+    theme_bw()
+```
+
+```{r plot2, echo=FALSE, fig.cap="Carat against table"}
+  ggplot(data=diamonds, aes(x=carat, y=table)) +
+    geom_point() +
+    theme_bw()
+```
+
+The number of observations $n=$ `r nrow(diamonds)`. A simple formula: $\sum{i=1}^n = 100$
+
+$$
+\begin{equation}
+\lim\limits{x \to \infty \exp(-x)=0}
+\end{equation}
+$$
+$$
+\begin{equation}
+\lim\limits{x \to \infty \exp(-x)=0}
+(#eq:someMath)
+\end{equation}
+$$
+
+It is trivial to show that \@ref(eq:someMath) is correct.
+Previous work(@R-base) has shown that it is wrong.
+
+
+#Summary
+
+
+
+#Literature
+
+
+
+
+
+
