@@ -10,6 +10,10 @@ require("knitr")
 knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
 #lh_root
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+<<<<<<< HEAD
+=======
+knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
+>>>>>>> 0919cce4c88d6c5a1dc4e64e5d00d15047b8598c
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -43,6 +47,7 @@ head(dataframe)
 ```
 
 
+<<<<<<< HEAD
 
 ## Replacing "?" and "NULL" with nan
 ```{r}
@@ -54,6 +59,8 @@ head(df2)
 
 ```
 
+=======
+>>>>>>> 0919cce4c88d6c5a1dc4e64e5d00d15047b8598c
 ## Clean_dataset
 ```{r}
 #dataframe[colSums(!is.na(dataframe)) > 0]
@@ -104,7 +111,7 @@ ggplot(dataframe) +
     colour = "Product Level"
   )
 ggplot(dataframe) + 
-  geom_point(mapping = aes(x = x, y = dataframe$Order_Line_Amount, colour = dataframe$Order_Line_Quantity)) +
+  geom_point(mapping = aes(x = x, y = dataframe$Order_Amount, colour = dataframe$Gender)) +
   labs(
     x = "Time",
     y = "Shipping Amount",
