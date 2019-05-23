@@ -8,9 +8,15 @@ output: html_document
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
 #knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
-#lh_root
+
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
-knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
+
+#lh_root
+knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
+
+
+
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -25,7 +31,8 @@ library(hms)
 
 rootDir <- knitr::opts_knit$get("root.dir")
 headersPath <- paste(rootDir, "01_data_understanding/clickstream_columns.txt", sep="/")
-dataPath <- paste(rootDir, "00_raw_data/clickstream_data.csv", sep="/")
+dataPath1 <- paste(rootDir, "00_raw_data/clickstream_data.csv", sep="/")
+dataPath2 <- paste(rootDir, "00_raw_data/clickstream_data_part_2.csv", sep="/")
 
 # prepare column name list
 headersFile = file(headersPath, "r")
@@ -38,14 +45,71 @@ result <- stri_extract_first(obj_list, regex="[A-z ,]+")
 dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
 result <- gsub(" ", "_", result)
 
-dataframe <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+dataframe1 <- read_csv(dataPath1, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+dataframe2 <- read_csv(dataPath2,col_names = result , na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+
+ 
+dataframe <- rbind(dataframe1,dataframe2)
+
+
 
 head(dataframe)
+
 ```
+
+
 
 ## Clean_dataset
 ```{r}
-#dataframe[!sapply(dataframe, function(x) all(x == ""))]
+#dataframe[colSums(!is.na(dataframe)) > 0]
+dataframe <- dataframe[rowSums(!is.na(dataframe)) > 0,colSums(!is.na(dataframe)) > 0]
+dataframe
+```
+```{r}
+# Vergleiche Spalten, ob Dopplungen vorkommen
+drop <- vector()
+k <- 1
+for (i in 1:ncol(dataframe)) {
+  col_i = colnames(dataframe)[i]
+  for (j in i+1:ncol(dataframe)){
+    col_j = colnames(dataframe)[j]
+    if(identical(dataframe[[col_i]],dataframe[[col_j]])) {
+      # print(paste(col_i,col_j,sep=" = "))
+      drop[k] <- j
+      k <- k+1
+    }
+  }
+}
+print(drop)
+# Lösche doppelte Spalten (immer die 2.)
+dataframe <- subset(dataframe, select = -drop)
+head(dataframe)
+```
+
+``` {r}
+colnames(dataframe) <- str_replace(colnames(dataframe),"\\\\","")
+# dataframe <- str_replace(dataframe, "\\\\", "/")
+head(dataframe)
+```
+
+## create csv from dataframe
+## compare py csv and r csv
+``` {r}
+write.csv(dataframe, file = "../00_raw_data/clickstream_r.csv", row.names =FALSE, na = "")
+
+# py csv
+py_df = read.csv(file = "../00_raw_data/clickstream_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
+
+# r csv
+r_df = read.csv(file = "../00_raw_data/clickstream_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
+
+head(r_df)
+head(py_df)
+# show difference between python and r dataset
+diff_r <-r_df[!(r_df%in%py_df)]
+head(diff_r)
+diff_p <-py_df[!(py_df%in%r_df)]
+head(diff_p)
 
 ```
 
@@ -56,27 +120,11 @@ You can also embed plots, for example:
 
 ```{r}
 
-#x = unique(dataframe$Order_Line_Session_ID)
-#y = tabulate(match(dataframe$Order_Line_Session_ID, x))
-x = as.POSIXct(paste(dataframe$Order_Line_Date, dataframe$order_time), format="%Y-%m-%d %H:%M:%S")
+
+ggplot(dataframe)+
+  geom_point(mapping = aes(x=Session_ID,y=REQUEST_DAY_OF_WEEK))
 
 
-ggplot(dataframe) + 
-  geom_point(mapping = aes(x = x, y = dataframe$Order_Line_Amount, color=dataframe$Product_Level_)) +
-  labs(
-    x = "Time",
-    y = "Shipping Amount",
-    colour = "Product Level"
-  )
-ggplot(dataframe) + 
-  geom_point(mapping = aes(x = x, y = dataframe$Order_Amount, colour = dataframe$Gender)) +
-  labs(
-    x = "Time",
-    y = "Shipping Amount",
-    colour = "Order Quantity"
-  )
-#lapply(dataframe, mean)
-#lapply(dataframe, max)
 ```
 
 ```{r}

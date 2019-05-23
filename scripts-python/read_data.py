@@ -117,14 +117,11 @@ def create_csv_from_dataframe(dataframe, filename):
     filename = "../00_raw_data/" + filename
     path_to_file = relative_to_absolute(filename)
     df = dataframe
-    booleandf = df.select_dtypes(include=[bool])
-    booleanDictionary = {True: 'TRUE', False: 'FALSE'}
-
-    print(booleandf)
-
-    for column in booleandf:
-        df[column] = df[column].map(booleanDictionary)
-
+    # booleandf = df.select_dtypes(include=[bool])
+    # booleanDictionary = {True: 'TRUE', False: 'FALSE'}
+    # print(booleandf)
+    # for column in booleandf:
+    #     df[column] = df[column].map(booleanDictionary)
     df.to_csv(path_or_buf=path_to_file, index=False)
 
 
