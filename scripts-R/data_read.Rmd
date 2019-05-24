@@ -7,12 +7,14 @@ output: html_document
 ## definie enviromentpath
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
-#knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
+#nico_root
+knitr::opts_knit$set(root.dir = "F:/Github/ourdata/data")
+
 #Philipp_root
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
 
 #laurenz_root
-knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
 
 ```
 ```{r setup, include=FALSE}

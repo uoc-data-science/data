@@ -1,16 +1,20 @@
 ---
 title: "DataImport"
-author: "Philipp Peter & Laurenz Harnischmacher"
-date: "11 Mai 2019"
+author: "Philipp Peter & Laurenz Harnischmacher & Nico Lindert"
+date: "22 Mai 2019"
 output: html_document
 ---
 
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
-#knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
-#lh_root
+#nico_root
+knitr::opts_knit$set(root.dir = "F:/Github/ourdata/data")
+
+#Philipp_root
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
-knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
+
+#lh_root
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -42,13 +46,51 @@ dataframe <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", 
 
 head(dataframe)
 ```
-
 ## Clean_dataset
 ```{r}
-#dataframe[!sapply(dataframe, function(x) all(x == ""))]
+#dataframe[colSums(!is.na(dataframe)) > 0]
+dataframe <- dataframe[rowSums(!is.na(dataframe)) > 0,colSums(!is.na(dataframe)) > 0]
 
+# Vergleiche Spalten, ob Dopplungen vorkommen
+drop <- vector()
+k <- 1
+for (i in 1:ncol(dataframe)) {
+  col_i = colnames(dataframe)[i]
+  for (j in i+1:ncol(dataframe)){
+    col_j = colnames(dataframe)[j]
+    if(identical(dataframe[[col_i]],dataframe[[col_j]])) {
+      # print(paste(col_i,col_j,sep=" = "))
+      drop[k] <- j
+      k <- k+1
+    }
+  }
+}
+print(drop)
+# Lösche doppelte Spalten (immer die 2.)
+dataframe <- subset(dataframe, select = -drop)
+head(dataframe)
 ```
 
+## create csv from dataframe
+## compare py csv and r csv
+``` {r}
+write.csv(dataframe, file = "../00_raw_data/click_r.csv", row.names =FALSE, na = "")
+
+# py csv
+#py_df = read.csv(file = "../00_raw_data/click_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
+
+# r csv
+#r_df = read.csv(file = "../00_raw_data/click_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
+
+#head(r_df)
+#head(py_df)
+# show difference between python and r dataset
+#diff_r <-r_df[!(r_df%in%py_df)]
+#head(diff_r)
+#diff_p <-py_df[!(py_df%in%r_df)]
+#head(diff_p)
+
+```
 
 ## Including Plots
 
