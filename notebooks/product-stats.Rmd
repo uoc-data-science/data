@@ -1,20 +1,24 @@
 ---
-title: "Descriptive statistics for Products"
+title: "Descriptive Statistics for Products"
 output: pdf_document
 ---
-
-## What are the most ordered products in the data set?
+## Load the data!
 ```{r include=FALSE}
 library(dplyr)
 library(ggplot2)
+library(tidyr)
+```
+In order to be able to answer all following product-related questions we first load our data sets, "Orders" and "Clickstreams"
+```{r}
 orderDf <- read.csv(file="../data/interim/orders/orders_cleaned.csv", sep=",")
 clickstreamDf <- read.csv(file="../data/interim/clickstream/clickstream_cleaned.csv", sep=",")
 ```
-To figure this out we first load the data sets and choose all relevant columns:
+
+and choose all columns that are of interest to us:
 ```{r}
 partialOrdersDf <- orderDf[c("Order_Session_ID", "Product_Object_ID",
                              "Product_ID", "Order_Line_Unit_List_Price", "Order_Day_of_Week",
-                             "Product_Creation_Date", "Product_Family_ID")]
+                             "Product_Creation_Date", "Product_Family_ID", "Order_Amount")]
 
 partialClickstreamDf <- clickstreamDf[c("Session_ID", "Product_Object_ID",
                                         "Product_ID", "Request_Date")]
@@ -32,19 +36,30 @@ partialClickstreamDf$Product_Object_ID <- factor(partialClickstreamDf$Product_Ob
 partialClickstreamDf$Product_ID <- factor(partialClickstreamDf$Product_ID)
 ```
 
-We then pick the 15 Product_IDs with the highest frequency count (which is introduced by dplyr as 'n') while
-ignoring all '?' IDs
+
+## What are the most ordered products in the data set?
+To figure this out we pick the 75 Product_IDs with the highest frequency count (which is introduced by dplyr as 'n') while ignoring all '?' IDs
 ```{r}
 mostOrderedProductsDf <- partialOrdersDf %>%
   count(Product_ID) %>%
   arrange(desc(n)) %>%
-  slice(2:16)
+  slice(2:76)
 ```
 
 and plot them (using the 'identity' stat to provide our own frequency count as y axis):
 ```{r}
+# preserve the ordering:
+mostOrderedProductsDf$Product_ID <- factor(mostOrderedProductsDf$Product_ID,
+                                           levels = mostOrderedProductsDf$Product_ID)
+# plot it:
 ggplot(data = mostOrderedProductsDf) +
-  geom_bar(mapping = aes(x = Product_ID, y = n), stat = "identity")
+  geom_bar(mapping = aes(x = Product_ID, y = n), stat = "identity") +
+  theme(axis.text.x=element_blank())
+```
+
+The IDs of the most ordered products are:
+```{r}
+head(mostOrderedProductsDf)
 ```
 
 
@@ -54,31 +69,49 @@ In an analogous fashion, we pick the most clicked products (again by their produ
 mostClickedProductsDf <- partialClickstreamDf %>%
   count(Product_ID) %>%
   arrange(desc(n)) %>%
-  slice(2:16)
+  slice(2:76)
 ```
 
 and plot those:
 ```{r}
+# preserve the ordering:
+mostClickedProductsDf$Product_ID <- factor(mostClickedProductsDf$Product_ID,
+                                           levels = mostClickedProductsDf$Product_ID)
+# plot it:
 ggplot(data = mostClickedProductsDf) +
-  geom_bar(mapping = aes(x = Product_ID, y = n), stat = "identity")
+  geom_bar(mapping = aes(x = Product_ID, y = n), stat = "identity") +
+  theme(axis.text.x=element_blank())
 ```
-Although the product with the ID 10315 is clicked more often than any other product, it is interestingly not the ordered most often.
 
 
+The IDs of those are:
+```{r}
+head(mostClickedProductsDf)
+```
+Although the product with the ID 10315 is clicked more often than any other product, it is interestingly not ordered most often.
+
+
+\pagebreak
 ## What are the top-selling product families?
 A frequency count of all orders by their Product_Family_ID yields the top-selling product families:
 ```{r}
 mostOrderedProductFamiliesDf <- partialOrdersDf %>%
   count(Product_Family_ID) %>%
   arrange(desc(n)) %>%
-  slice(1:15)
+  slice(1:31)
 head(mostOrderedProductFamiliesDf)
 ```
 
 The winner clearly is product family 12295, which is also represented nicely in the corresponding plot:
 ```{r}
+# preserve the ordering:
+mostOrderedProductFamiliesDf$Product_Family_ID <- factor(
+                                  mostOrderedProductFamiliesDf$Product_Family_ID,
+                                  levels = mostOrderedProductFamiliesDf$Product_Family_ID)
+# plot it:
 ggplot(data = mostOrderedProductFamiliesDf) +
-  geom_bar(mapping = aes(x = Product_Family_ID, y = n), stat = "identity")
+  geom_bar(mapping = aes(x = Product_Family_ID, y = n), stat = "identity") +
+  theme(axis.text.x=element_blank())
 ```
 
 
@@ -107,8 +140,8 @@ To figure this out we plot the product Product_Family_ID vs. its frequency count
 ```{r}
 ggplot(data = partialOrdersDf) +
   geom_bar(mapping = aes(x = Product_Family_ID)) +
-  facet_wrap(~ Order_Day_of_Week)
-#TODO: only print the x most frequent product family IDs!
+  facet_wrap(~ Order_Day_of_Week, scales = "free") +
+  theme(axis.text.x=element_blank())
 ```
 
 
@@ -127,4 +160,78 @@ partialOrdersDf %>%
   filter(Order_Line_Unit_List_Price == min(Order_Line_Unit_List_Price)) %>%
   distinct(Product_Object_ID, .keep_all = TRUE) %>%
   select(Product_Object_ID, Order_Line_Unit_List_Price)
+```
+
+## What is the distribution of order amounts?
+```{r include=FALSE}
+library(ineq)
+```
+In order to visualize the distribution of order amounts we compute their Lorenz curve by running:
+```{r}
+lc <- Lc(partialOrdersDf$Order_Amount,
+         n = rep(1, length(partialOrdersDf$Order_Amount)),
+         plot = F)
+```
+
+```{r include=FALSE}
+p <- lc[1]
+L <- lc[2]
+lc <- data.frame(p,L)
+```
+And plot the cummulative percentages:
+```{r}
+ggplot(data = lc) +
+  geom_line(aes(x = p, y = L)) +
+  scale_y_continuous(name="% of order amounts", limits=c(0,1)) +
+  scale_x_continuous(name="% of orders", limits=c(0,1)) +
+  geom_abline()
+```
+
+
+\pagebreak
+## Average unit price vs. Product_Family_ID
+```{r}
+partialOrdersDf %>%
+  mutate(Order_Line_Unit_List_Price = as.numeric(gsub("\\?", NA, Order_Line_Unit_List_Price))) %>%
+  mutate(Product_Family_ID = gsub("\\?", NA, Product_Family_ID)) %>%
+  drop_na() %>%
+  group_by(Product_Family_ID) %>%
+  summarize(average_price = mean(Order_Line_Unit_List_Price)) %>%
+  ggplot(.) +
+    geom_point(mapping = aes(x = average_price, y = Product_Family_ID))
+```
+
+
+\pagebreak
+## Unit price vs. creation date
+```{r}
+partialOrdersDf %>%
+  select(Product_ID, Order_Line_Unit_List_Price, Product_Creation_Date) %>%
+  mutate(Order_Line_Unit_List_Price = as.numeric(gsub("\\?", NA, Order_Line_Unit_List_Price))) %>%
+  mutate(Product_Creation_Date = as.Date(Product_Creation_Date, format="%Y-%m-%d")) %>%
+  drop_na() %>%
+  distinct(Product_ID, .keep_all = TRUE) %>%
+  ggplot(.) +
+    geom_point(mapping = aes(x = Order_Line_Unit_List_Price, y = Product_Creation_Date)) +
+    scale_y_date(date_breaks = "1 month", date_labels =  "%b %Y")
+```
+
+
+\pagebreak
+## Unit price vs. Product_ID vs. creation date (before or after 2000)
+```{r}
+partialOrdersDf %>%
+  mutate(Order_Line_Unit_List_Price = as.numeric(gsub("\\?", NA, Order_Line_Unit_List_Price))) %>%
+  mutate(Product_ID = gsub("\\?", NA, Product_ID)) %>%
+  mutate(Product_Creation_Date = as.Date(Product_Creation_Date, format="%Y-%m-%d")) %>%
+  mutate(Product_before_Feb_2000 = if_else(
+    Product_Creation_Date < as.Date("2000-02-01", format="%Y-%m-%d"), "before", "after")) %>%
+  mutate(Product_before_Feb_2000 = as.factor(Product_before_Feb_2000)) %>%
+  drop_na() %>%
+  distinct(Product_ID, .keep_all = TRUE) %>%
+  ggplot(.) +
+    geom_point(mapping = aes(x = Order_Line_Unit_List_Price,
+                             y = Product_ID,
+                             color = Product_before_Feb_2000)) +
+  theme(axis.text.y=element_blank())
 ```

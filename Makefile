@@ -1,9 +1,10 @@
-all: run_with_r
+all: with_r
 
-run_with_r: clean_and_join_with_r
+with_r: clean_and_join_with_r
 	Rscript src/visualization/script_111_render_all_notebooks.r
 
-run_with_py: clean_and_join_with_py
+with_py: clean_and_join_with_py
+	python src/data/script_004_join_data_sets.py
 #	...
 
 clean_and_join_with_r: inflate
