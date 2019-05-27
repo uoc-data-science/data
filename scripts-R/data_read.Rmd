@@ -64,7 +64,7 @@ for (i in 1:ncol(dataframe)) {
   }
 }
 print(drop)
-# Lösche doppelte Spalten (immer die 2.)
+# Lvsche doppelte Spalten (immer die 2.)
 dataframe <- subset(dataframe, select = -drop)
 head(dataframe)
 ```
