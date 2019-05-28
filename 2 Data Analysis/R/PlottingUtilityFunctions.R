@@ -161,7 +161,7 @@ plotBarAndLorenz <- function(df, ColumnName) {
   largest_amount <- top[1,"amount"]
   
   ggplot(data=top) +
-    geom_bar(aes_string(ColumnName, "amount"), width=.8, fill="tomato3", stat="identity") +
+    geom_bar(aes_string(ColumnName, "amount"), width=.8, stat="identity") +
     geom_point(aes_string(x=ColumnName, y=top$percentage*largest_amount, group=1)) +
     geom_line(aes_string(x=ColumnName, y=top$percentage*largest_amount, group=1)) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
@@ -196,7 +196,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, title="") {
       # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                        layout.pos.col = matchidx$col))
+                                      layout.pos.col = matchidx$col))
     }
   }
 }

@@ -4,6 +4,7 @@ library(janitor)
 library(maps)
 library(ggplot2)
 library(tidyr)
+library(plyr)
 library(ggrepel) #for advanced labeling possibilities
 source("./2 Data Analysis/R/PlottingUtilityFunctions.R")
 
@@ -47,14 +48,14 @@ interestingColumns <- c("Order.Line.Quantity",
 summary <- summary(orders[interestingColumns])
 summary[is.na(summary)]<-""
 colnames(summary) <- c("Order Line Quantity",
-                        "Order Line Unit List Price",
-                        "Order Line Amount",
-                        "Spend Over $12 Per Order On Average",
-                        "Order Line Day of Week",
-                        "Order Line Hour of.Day",
-                        "Order Promotion Code",
-                        "Order Discount Amount"
-                       )
+                       "Order Line Unit List Price",
+                       "Order Line Amount",
+                       "Spend Over $12 Per Order On Average",
+                       "Order Line Day of Week",
+                       "Order Line Hour of.Day",
+                       "Order Promotion Code",
+                       "Order Discount Amount"
+)
 write.table(summary, file = paste(pathTableFolder,"OrderData.csv"), sep=",", row.names=FALSE)
 #-----------------------------------------------------------------------------------
 # payment method
@@ -66,7 +67,7 @@ interestingColumns <- c("Order.Credit.Card.Brand",
                         "TE.Card.Holder",
                         "Premium.Card.Holder",
                         "New.Bank.Card"
-                        )
+)
 summary <- summary(orders[interestingColumns])
 summary[is.na(summary)]<-""
 colnames(summary) <- c("Order Credit Card.Brand",
@@ -77,7 +78,7 @@ colnames(summary) <- c("Order Credit Card.Brand",
                        "TE Card Holder",
                        "Premium Card Holder",
                        "New Bank Card"
-                       )
+)
 write.table(summary, file = paste(pathTableFolder,"PaymentMethodData.csv"), sep=",", row.names=FALSE)
 #-----------------------------------------------------------------------------------
 # product data
@@ -300,6 +301,7 @@ print(top)
 # Stacked Plot
 p1 <- ggplot(top, aes(fill=StockType, y=amount, x=BrandName)) + 
   geom_bar( stat="identity") +
+  scale_fill_grey() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 #StockPerManufacturer
 top <- orders
@@ -314,6 +316,7 @@ print(top)
 # Stacked Plot
 p2 <- ggplot(top, aes(fill=StockType, y=amount, x=Manufacturer)) + 
   geom_bar( stat="identity") +
+  scale_fill_grey() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/StockPer.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 #-----------------------------------------------------------------------------------
@@ -461,7 +464,7 @@ p7 <- ggplot(plotData, aes(x="", y=n, fill=NewBank)) +
 
 ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardInfos.png",sep=""),multiplot(p1, p2, p3, p4, p5, p6, p7, cols=4), width=15)
 
-#CardTypes
+#CardBrand per
 top <- orders
 top <- table(top$Premium.Card.Holder, top$Order.Credit.Card.Brand, useNA="always")
 top <- top[, which(colSums(top) != 0)] #drop columns not included in top 10
@@ -474,8 +477,9 @@ print(top)
 # Stacked Plot
 p1 <- ggplot(top, aes(fill=Premium, y=amount, x=CardBrand)) + 
   geom_bar( stat="identity") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-#StockPerManufacturer
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_grey() 
+#New per Card Brand
 top <- orders
 top <- table(top$New.Bank.Card, top$Order.Credit.Card.Brand, useNA="always")
 top <- top[, which(colSums(top) != 0)] #drop columns not included in top 10
@@ -488,7 +492,8 @@ print(top)
 # Stacked Plot
 p2 <- ggplot(top, aes(fill=New, y=amount, x=CardBrand)) + 
   geom_bar( stat="identity") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_fill_grey()
 ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardBrand.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 
 #-----------------------------------------------------------------------------------
@@ -511,14 +516,14 @@ centroids <- centroids[centroids$state %in% top,]
 plotData <- left_join(gusa, plotData)
 plotData[is.na(plotData)] <- 0
 ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
-  geom_polygon(aes(group=group, fill=count), color = "#fd9409", size = 0.3) +
+  geom_polygon(aes(group=group, fill=count), color = "black", size = 0.3) +
   labs(x = NULL, y = NULL, fill = "Count", title = "Customer Hotspots") +
   scale_fill_gradient(low = "white", high = "black") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
         axis.title.x=element_blank(), axis.title.y=element_blank(),
         panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank()) +
-  geom_label_repel(data = centroids, aes(x, y, label=state), force=2, segment.color="#fd9409", nudge_x=0.5) +
+  #geom_label_repel(data = centroids, aes(x, y, label=state), force=2, segment.color="#fd9409", nudge_x=0.5) +
   coord_map()
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/States.png",sep=""), bg = "transparent", width=13)
 
@@ -535,7 +540,7 @@ cities <- head(plotData, 100)
 print(cities)
 ggplot() + 
   geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
-  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="#fd9409", alpha = .4) +
+  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="black", alpha = .15) +
   geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
   labs(title = "Top 100 Customer Cities") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
@@ -614,9 +619,9 @@ p6 <- ggplot(plotData, aes(x="", y=n, fill=Marital.Status)) +
   labs(x = NULL, y = NULL, fill = NULL, title = "Marital Status of\nMale Customers") +
   theme_classic() +
   theme(axis.line = element_blank(),
-      axis.text = element_blank(),
-      axis.ticks = element_blank(),
-      plot.title = element_text(hjust = 0.5, color = "#666666")) +
+        axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, color = "#666666")) +
   scale_fill_manual(values = mycols)
 
 plotData <- orders %>% filter(Gender == "Female")
@@ -655,12 +660,13 @@ p3 <- ggplot(orders, aes(x=Age)) +
   geom_density() +
   scale_x_continuous(name="Age")
 
+
 plotData <- na.omit(orders %>% select(Age, Gender))
-p7 <- ggplot(plotData) + 
-  geom_density(aes(x=Age, colour=Gender),show_guide=FALSE)+
-  stat_density(aes(x=Age, colour=Gender), geom="line",position="identity") +
-  scale_color_manual(values = c("#CD534CFF", "#0073C2FF")) +
-  labs(title = "Age Distribution per Gender")
+p7 <-ggplot(plotData) + 
+  stat_density(aes(x=Age, linetype=Gender), geom="line", position="identity") +
+  labs(title = "Age Distribution per Gender") +
+  scale_linetype_discrete(guide=guide_legend(override.aes=aes(colour="black"))) +
+  theme_classic()
 
 plotData <- tabyl(orders$Number.Of.Adults, sort = TRUE, show_na = FALSE)
 colnames(plotData) <- c("Number.Of.Adults","n","percent")
