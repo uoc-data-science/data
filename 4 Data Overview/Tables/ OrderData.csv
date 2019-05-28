@@ -1,8 +1,0 @@
-"Order Line Quantity","Order Line Unit List Price","Order Line Amount","Spend Over $12 Per Order On Average","Order Line Day of Week","Order Line Hour of.Day","Order Promotion Code","Order Discount Amount"
-"Min.   :-2.00  ","Min.   : 0.000  ","Min.   :-40.00  ","False:2219  ","Friday   :571  ","Min.   : 0.00  ","FRIEND          :2186  ","Min.   : 0.000  "
-"1st Qu.: 1.00  ","1st Qu.: 5.000  ","1st Qu.:  5.96  ","True :1246  ","Monday   :257  ","1st Qu.: 9.00  ","SPRING          :  57  ","1st Qu.: 0.000  "
-"Median : 1.00  ","Median : 7.500  ","Median : 10.00  ","","Saturday :292  ","Median :13.00  ","MARCH1          :  51  ","Median :10.000  "
-"Mean   : 1.31  ","Mean   : 9.258  ","Mean   : 11.62  ","","Sunday   :195  ","Mean   :13.04  ","FREE            :  37  ","Mean   : 8.824  "
-"3rd Qu.: 1.00  ","3rd Qu.:11.000  ","3rd Qu.: 12.70  ","","Thursday :602  ","3rd Qu.:17.00  ","4128003160593466:  30  ","3rd Qu.:10.000  "
-"Max.   :18.00  ","Max.   :72.000  ","Max.   :234.00  ","","Tuesday  :614  ","Max.   :23.00  ","(Other)         : 302  ","Max.   :50.000  "
-"","","","","Wednesday:934  ","","NA's            : 802  ","NA's   :7  "

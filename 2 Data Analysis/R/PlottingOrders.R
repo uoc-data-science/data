@@ -45,18 +45,11 @@ interestingColumns <- c("Order.Line.Quantity",
                         "Order.Promotion.Code",
                         "Order.Discount.Amount"
 )
-summary <- summary(orders[interestingColumns])
-summary[is.na(summary)]<-""
-colnames(summary) <- c("Order Line Quantity",
-                       "Order Line Unit List Price",
-                       "Order Line Amount",
-                       "Spend Over $12 Per Order On Average",
-                       "Order Line Day of Week",
-                       "Order Line Hour of.Day",
-                       "Order Promotion Code",
-                       "Order Discount Amount"
-)
-write.table(summary, file = paste(pathTableFolder,"OrderData.csv"), sep=",", row.names=FALSE)
+subset <- subset(orders, select=interestingColumns)
+facCol <- summarizeFactorColumns(subset)
+numCol <- summarizeNumericalColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"OrderData_Factors.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"OrderData_Numerical.csv"), sep=",", row.names=FALSE)
 #-----------------------------------------------------------------------------------
 # payment method
 interestingColumns <- c("Order.Credit.Card.Brand",
@@ -68,27 +61,18 @@ interestingColumns <- c("Order.Credit.Card.Brand",
                         "Premium.Card.Holder",
                         "New.Bank.Card"
 )
-summary <- summary(orders[interestingColumns])
-summary[is.na(summary)]<-""
-colnames(summary) <- c("Order Credit Card.Brand",
-                       "Bank Card Holder",
-                       "Gas Card Holder",
-                       "Upscale Card Holder",
-                       "Unknown Card Type",
-                       "TE Card Holder",
-                       "Premium Card Holder",
-                       "New Bank Card"
-)
-write.table(summary, file = paste(pathTableFolder,"PaymentMethodData.csv"), sep=",", row.names=FALSE)
+subset <- subset(orders, select=interestingColumns)
+facCol <- summarizeFactorColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"PaymentMethodData_Factors.csv"), sep=",", row.names=FALSE)
 #-----------------------------------------------------------------------------------
 # product data
 interestingColumns <- c("StockType",
                         "Manufacturer",
                         "BrandName"
 )
-summary <- summary(orders[interestingColumns])
-summary[is.na(summary)]<-""
-write.table(summary, file = paste(pathTableFolder,"ProductData.csv"), sep=",", row.names=FALSE)
+subset <- subset(orders, select=interestingColumns)
+facCol <- summarizeFactorColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"ProductData_Factors.csv"), sep=",", row.names=FALSE)
 #-----------------------------------------------------------------------------------
 # customer data
 interestingColumns <- c("City",
@@ -112,30 +96,11 @@ interestingColumns <- c("City",
                         "Upscale.Speciality.Retail",
                         "Retail.Activity"
 )
-summary <- summary(orders[interestingColumns])
-summary[is.na(summary)]<-""
-colnames(summary) <- c("City",
-                       "Country",
-                       "US State",
-                       "Age",
-                       "Marital Status",
-                       "Gender",
-                       "Audience",
-                       "Truck Owner",
-                       "RV Owner",
-                       "Motorcycle Owner",
-                       "Working Woman",
-                       "Presence Of Children",
-                       "Speciality Store Retail",
-                       "Oil Retail Activity",
-                       "Bank Retail Activity",
-                       "Finance Retail Activity",
-                       "Miscellaneous Retail Activity",
-                       "Upscale Retail",
-                       "Upscale Speciality Retail",
-                       "Retail Activity"
-)
-write.table(summary, file = paste(pathTableFolder,"CustomerData.csv"), sep=",", row.names=FALSE)
+subset <- subset(orders, select=interestingColumns)
+facCol <- summarizeFactorColumns(subset)
+numCol <- summarizeNumericalColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"CustomerData_Factors.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"CustomerData_Numerical.csv"), sep=",", row.names=FALSE)
 
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
