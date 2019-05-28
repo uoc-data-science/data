@@ -74,9 +74,11 @@ interestingColumns <- c("BrandName",
                         "ActionCode",
                         "Pattern"
 )
-summary <- summary(clicks[interestingColumns])
-summary[is.na(summary)]<-""
-#write.table(summary, file = paste(pathTableFolder,"ClickstreamData.csv"), sep=",", row.names=FALSE)
+subset <- subset(clicks, select=interestingColumns)
+facCol <- summarizeFactorColumns(subset)
+numCol <- summarizeNumericalColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"ClickstreamData_Factors.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"ClickstreamData_Numerical.csv"), sep=",", row.names=FALSE)
 
 #------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------

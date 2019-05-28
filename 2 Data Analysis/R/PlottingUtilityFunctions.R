@@ -203,7 +203,7 @@ summarizeFactorColumns <- function(df){
   colnames(summary_stats) <- x
   
   for (column in names(df)){
-    top <- giveTop(orders,column,5,TRUE)
+    top <- giveTop(df,column,5,TRUE)
     Others <- paste("Others: ",round(top[top[,1]=="Others",][1,2], digits = 2),"%",sep="") # Use round to fix a bug where digits are added
     NotAvailable <- "Not Available: 0%"
     if ("Not Available" %in% top[,1]){
