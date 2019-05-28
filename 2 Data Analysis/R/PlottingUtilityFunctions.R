@@ -31,9 +31,12 @@ giveTop <- function(df, column, first, percentage){
   }
   #get the highest rating x columns only
   if (first != 0){
+    if("Not Available" %in% top[,1]){
+      first <- first+1
+    }
     top <- head(top, first)
     if(percentage == TRUE){
-      others <- (100 - sum(top$percentage))
+      others <- max((100 - sum(top$percentage)),0) #Possible bug without max: others < 0 due to rounding
       top[nrow(top) + 1,] = list("Others",others)
       top <- arrange(top, desc(percentage))
     }
@@ -168,6 +171,57 @@ plotBarAndLorenz <- function(df, ColumnName) {
     geom_abline(slope = 1/(countOfEntries)*largest_amount, intercept = 0) +
     scale_y_continuous(sec.axis = sec_axis(~./largest_amount))
 }
+
+#-----------------------------------------------------------------------------------
+#summary function for numerical columns of tables
+summarizeNumericalColumns <- function(df){
+  df <- select_if(df, is.numeric)
+  
+  summary_stats <- data.frame(matrix(ncol = 6, nrow = 0))
+  x <- c("variable","max", "mean", "median", "min", "sd")
+  colnames(summary_stats) <- x
+  
+  for (column in names(df)){
+    maxValue <- max(df[[column]], na.rm = TRUE)
+    meanValue <- mean(df[[column]], na.rm = TRUE)
+    medianValue <- median(df[[column]], na.rm = TRUE)
+    minValue <- min(df[[column]], na.rm = TRUE)
+    sdValue <- sd(df[[column]], na.rm = TRUE)
+    summary_stats[nrow(summary_stats) + 1,] = list(column,maxValue,meanValue,medianValue,minValue,sdValue)
+  }
+  
+  return(summary_stats)
+}
+
+#-----------------------------------------------------------------------------------
+#summary function for factor columns of tables
+summarizeFactorColumns <- function(df){
+  df <- select_if(df, is.factor)
+  
+  summary_stats <- data.frame(matrix(ncol = 8, nrow = 0))
+  x <- c("Variable","Top 1st","Top 2nd", "Top 3rd", "Top 4th", "Top 5th", "Others","Not Available")
+  colnames(summary_stats) <- x
+  
+  for (column in names(df)){
+    top <- giveTop(orders,column,5,TRUE)
+    print(top)
+    Others <- paste("Others: ",round(top[top[,1]=="Others",][1,2], digits = 2),"%",sep="") # Use round to fix a bug where digits are added
+    NotAvailable <- "Not Available: 0%"
+    if ("Not Available" %in% top[,1]){
+      NotAvailable <- paste("Not Available: ",top[top[,1]=="Not Available",][1,2],"%",sep="")
+    }
+    #Subset witohut entry for Others or NA
+    pureTop <- top[top[,1]!="Others" & top[,1]!="Not Available",]
+    summary <- c(column,"","","","","",Others,NotAvailable)
+    loopStop <- min(10,nrow(pureTop))
+    for (i in 1:loopStop){
+      summary[i+1] <- paste(pureTop[i,1],": ",pureTop[i,2],"%",sep="")
+    }
+    summary_stats[nrow(summary_stats) + 1,] <- summary
+  }
+  return(summary_stats)
+}
+
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # Utility function for subplot support, Source: http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
