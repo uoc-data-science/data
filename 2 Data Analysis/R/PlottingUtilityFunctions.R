@@ -7,7 +7,8 @@ library(tidyr)
 library(ineq)
 library(ggrepel) #for advanced labeling possibilities
 
-
+#fontSize
+centralSize = 12
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 #functions
@@ -164,7 +165,8 @@ plotBarAndLorenz <- function(df, ColumnName) {
   largest_amount <- top[1,"amount"]
   
   ggplot(data=top) +
-    geom_bar(aes_string(ColumnName, "amount"), width=.8, stat="identity") +
+    theme_classic() +
+    geom_bar(aes_string(ColumnName, "amount"), fill = "#BDBDBD", width=.8, stat="identity") +
     geom_point(aes_string(x=ColumnName, y=top$percentage*largest_amount, group=1)) +
     geom_line(aes_string(x=ColumnName, y=top$percentage*largest_amount, group=1)) +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
@@ -220,7 +222,15 @@ summarizeFactorColumns <- function(df){
   }
   return(summary_stats)
 }
-
+#-----------------------------------------------------------------------------------
+# beautify plots
+beautify <- function(plot){
+  plot <- plot +
+          theme_classic() +
+          theme(axis.text=element_text(size=12),
+                axis.title=element_text(size=12,face="bold"))
+  return(plot)
+}
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # Utility function for subplot support, Source: http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
