@@ -3,6 +3,7 @@ library(dplyr)
 library(janitor)
 library(ggplot2)
 library(ineq)
+library(chron)
 source("./2 Data Analysis/R/PlottingUtilityFunctions.R")
 
 useSmallVersions <- FALSE
@@ -87,10 +88,10 @@ write.table(numCol, file = paste(pathTableFolder,"ClickstreamData_Numerical.csv"
 #-----------------------------------------------------------------------------------
 #Lorenz curve plots
 plotBarAndLorenz(clicks, "BrandName")
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzBrandName.png",sep=""), width=12, height=13)
+
 
 plotBarAndLorenz(clicks, "Product")
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzProduct.png",sep=""), width=15, height=12)
+
 
 #Density Hour of Day
 beautify(ggplot(clicks, aes(x=REQUEST_HOUR_OF_DAY)) +
@@ -99,6 +100,49 @@ beautify(ggplot(clicks, aes(x=REQUEST_HOUR_OF_DAY)) +
   ggtitle("Density of Clicks over Hour of Day")
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Click Time.png",sep=""), width=10)
 
+
 #Density of time between first and recent click
+SeqAndTime <- clicks %>% # select sequence and time
+  select("Request.Date_Time", "Request.Sequence")
+
+SeqPos <- 0 # the position in the click sequence
+Index <- 1 # current index
+FirstVisit <- 1 # position of first click
+vector <- character(0) # empty helper vector
+
+# search for start and and of click sequences and get the matching times
+  for (val in SeqAndTime$Request.Sequence) {
+    if(val>SeqPos) {
+      SeqPos <- val
+    }
+    if(val<SeqPos) {
+      vector <- c(vector, SeqAndTime[FirstVisit, "Request.Date_Time"] %>%
+                    as.character())
+      vector <- c(vector, SeqAndTime[Index-1, "Request.Date_Time"] %>%
+                    as.character())
+      FirstVisit <- Index
+      SeqPos <- 1
+    }
+    Index <- Index+1
+  }
+
+vector <- chron(times=vector) # convert the times into chron objects
+diffV <- diff(vector) %>%
+  as.data.frame # compute the difference between sequential times
+diffV <- diffV[seq(1, nrow(diffV), 2), 1] %>%
+  as.data.frame # only select every second entry
+diffV$hours <- hours(diffV$.) # add columns for hours, minutes and seconds
+diffV$minutes <- minutes(diffV$.)
+diffV$seconds <- seconds(diffV$.)
+diffV$totalMinutes <- diffV$hours*60 + #calculate the total minutes
+  diffV$minutes +
+  diffV$seconds/60
+diffV <- subset(diffV, totalMinutes<40) # only select rows with less than 40 mins
+                                        # for visual reasons
+# plot the data
+beautify(ggplot(diffV, aes(totalMinutes)) +
+  geom_density() +
+  ggtitle("Density of time passed between start and end of session"))
+
 
 #History of Clicks
