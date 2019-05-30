@@ -72,7 +72,8 @@ interestingColumns <- c("BrandName",
                         "Product",
                         "Cat2Sub1",
                         "ActionCode",
-                        "Pattern"
+                        "Pattern",
+                        "REQUEST_HOUR_OF_DAY"
 )
 subset <- subset(clicks, select=interestingColumns)
 facCol <- summarizeFactorColumns(subset)
@@ -84,36 +85,20 @@ write.table(numCol, file = paste(pathTableFolder,"ClickstreamData_Numerical.csv"
 #-----------------------------------------------------------------------------------
 #Plotting
 #-----------------------------------------------------------------------------------
-#Plots for product-related columns
-p2 <- plotOrderedBarChart(clicks, "Look")
-
-p3 <- plotOrderedBarChart(clicks, "BasicOrFashion")
-
-p4 <- plotOrderedBarChart(clicks, "ColorOrScent")
-
-p5 <- plotOrderedBarChart(clicks, "Texture")
-
-p6 <- plotOrderedBarChart(clicks, "ToeFeature")
-
-p7 <- plotOrderedBarChart(clicks, "Material")
-
-p8 <- plotOrderedBarChart(clicks, "BodyFeature")
-
-p9 <- plotOrderedBarChart(clicks, "Product")
-
-p10 <- plotOrderedBarChart(clicks, "BrandName")
-
-p11 <- plotOrderedBarChart(clicks, "Pattern")
-
-p12 <- plotOrderedBarChart(clicks, "Manufacturer")
-
-multiplot(p2, p3, p4, p5, p6, p8, p11, cols=2)
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickstreamColumns.png",sep="")
-       ,multiplot(p2, p3, p4, p5, p6, p8, p11, cols=2), width=10, height=15)
-
 #Lorenz curve plots
-plotLorenzCurve(clicks, "BrandName")
+plotBarAndLorenz(clicks, "BrandName")
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzBrandName.png",sep=""), width=12, height=13)
 
 plotBarAndLorenz(clicks, "Product")
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzProduct.png",sep=""), width=15, height=12)
+
+#Density Hour of Day
+beautify(ggplot(clicks, aes(x=REQUEST_HOUR_OF_DAY)) +
+           geom_density() +
+           scale_x_continuous(name="Hour of Day")) +
+  ggtitle("Density of Clicks over Hour of Day")
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Click Time.png",sep=""), width=10)
+
+#Density of time between first and recent click
+
+#History of Clicks

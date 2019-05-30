@@ -161,7 +161,7 @@ p6 <- beautify(p6)
 
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p2, p3, p4, p5, p6, cols=2), width=15, height=12)
 #-----------------------------------------------------------------------------------
-# Distribution of order day of week and hour of day
+# Distribution of hour of day
 beautify(ggplot(orders, aes(x=Order.Line.Hour.of.Day)) +
   geom_density() +
   scale_x_continuous(name="Hour of Day")) +
