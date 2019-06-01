@@ -86,21 +86,21 @@ write.table(numCol, file = paste(pathTableFolder,"ClickstreamData_Numerical.csv"
 #-----------------------------------------------------------------------------------
 #Plotting
 #-----------------------------------------------------------------------------------
-#Lorenz curve plots
+#Lorenz Curve Brands
 plotBarAndLorenz(clicks, "BrandName")
-
-
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Lorenz Brands.png",sep=""), width=12, height=13)
+#-----------------------------------------------------------------------------------
+#Lorenz Curve Products
 plotBarAndLorenz(clicks, "Product")
-
-
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Lorenz Products.png",sep=""), width=15, height=12)
+#-----------------------------------------------------------------------------------
 #Density Hour of Day
 beautify(ggplot(clicks, aes(x=REQUEST_HOUR_OF_DAY)) +
            geom_density() +
            scale_x_continuous(name="Hour of Day")) +
   ggtitle("Density of Clicks over Hour of Day")
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Click Time.png",sep=""), width=10)
-
-
+#-----------------------------------------------------------------------------------
 #Density of time between first and recent click
 SeqAndTime <- clicks %>% # select sequence and time
   select("Request.Date_Time", "Request.Sequence")
@@ -142,9 +142,9 @@ diffV <- subset(diffV, totalMinutes<40) # only select rows with less than 40 min
 # plot the data
 beautify(ggplot(diffV, aes(totalMinutes)) +
   geom_density() +
-  ggtitle("Density of time passed between start and end of session"))
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Sessions length in min.png",sep=""), width=10)
-
+  ggtitle("Density of Session Duration (under 40 minutes)"))
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Session Duration.png",sep=""), width=10)
+#-----------------------------------------------------------------------------------
 #History of Clicks
 hourGroup <- clicks %>%
   select(Request.Date, REQUEST_HOUR_OF_DAY) %>%
@@ -157,5 +157,5 @@ hourGroup$datetime <- as.POSIXct(hourGroup$datetime, format = "%Y-%m-%d %H:%M:%S
    
 beautify(ggplot(hourGroup, aes(x = datetime, y=count)) +
   geom_line() +
-  ggtitle("Clicks per hour over time"))
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Clicks over Time.png",sep=""), width=10)
+  ggtitle("History of Clicks per Hour"))
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Click History.png",sep=""), width=10)
