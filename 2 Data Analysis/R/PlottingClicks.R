@@ -143,6 +143,19 @@ diffV <- subset(diffV, totalMinutes<40) # only select rows with less than 40 min
 beautify(ggplot(diffV, aes(totalMinutes)) +
   geom_density() +
   ggtitle("Density of time passed between start and end of session"))
-
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Sessions length in min.png",sep=""), width=10)
 
 #History of Clicks
+hourGroup <- clicks %>%
+  select(Request.Date, REQUEST_HOUR_OF_DAY) %>%
+  group_by(Request.Date, REQUEST_HOUR_OF_DAY) %>%
+  summarize(count = n())
+
+hourGroup$datetime <- paste0(hourGroup$REQUEST_HOUR_OF_DAY, ":00:00")
+hourGroup$datetime <- paste(hourGroup$Request.Date, hourGroup$datetime)
+hourGroup$datetime <- as.POSIXct(hourGroup$datetime, format = "%Y-%m-%d %H:%M:%S")  
+   
+beautify(ggplot(hourGroup, aes(x = datetime, y=count)) +
+  geom_line() +
+  ggtitle("Clicks per hour over time"))
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Clicks over Time.png",sep=""), width=10)
