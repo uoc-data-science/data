@@ -20,7 +20,6 @@ pathTableFolder <- "./4 Data Overview/Tables/"
 
 # read data
 clicks <- read.csv(file=pathClicks)
-
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # Overview table of interestng columns
@@ -137,8 +136,12 @@ diffV$seconds <- seconds(diffV$.)
 diffV$totalMinutes <- diffV$hours*60 + #calculate the total minutes
   diffV$minutes +
   diffV$seconds/60
+calc <- data.frame("Session Duration" = diffV$totalMinutes)
 diffV <- subset(diffV, totalMinutes<40) # only select rows with less than 40 mins
                                         # for visual reasons
+print(diffV)
+
+
 # plot the data
 beautify(ggplot(diffV, aes(totalMinutes)) +
   geom_density() +
@@ -159,3 +162,8 @@ beautify(ggplot(hourGroup, aes(x = datetime, y=count)) +
   geom_line() +
   ggtitle("History of Clicks per Hour"))
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Click History.png",sep=""), width=10)
+#-----------------------------------------------------------------------------------
+#print calc columns
+calcCol <- summarizeNumericalColumns(calc)
+print(calcCol)
+write.table(calcCol, file = paste(pathTableFolder,"ClickstreamData_Calc.csv"), sep=",", row.names=FALSE)
