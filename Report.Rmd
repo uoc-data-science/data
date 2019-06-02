@@ -1,0 +1,330 @@
+---
+title: "Group 1 Report"
+author: "Kim Ferres, Julian Cornea, Jan Löffelmann"
+date: "23-05-2019"
+output:
+  bookdown::html_document2:
+    toc: yes
+    toc_float: true
+    theme: flatly
+---
+
+```{r importingMyLibraries, echo=F, results = "hide", message=F, warning=F}
+  #    ^ only output, not coding
+  #cmd+alt+i --> for r coding
+  #load libraries
+  library(diffobj)
+  library(gridExtra)
+  library(dplyr)
+  library(janitor)
+  library(ggplot2)
+  library(ineq)
+  library(chron)
+  library(maps)
+  library(tidyr)
+  library(plyr)
+  library(ggrepel)
+  library(knitr)
+```
+#About of the Data {#data}
+
+The data comes from an online shop that sells beauty products. There are two datasets: one with data about customer orders and one with data about customer clicks on the website.
+
+The customer orders dataset contains data such as the number of product units ordered, the total order amount, payment information, the manufacturer and brand names of the ordered product and social data about the customer, like his location and age. The dataset contains one row for each order.
+
+The customer clicks dataset contains data such as the timestamp of a click, the session length and the name of the product that was clicked as well as the product category it belongs to. The dataset contains one row for each click.
+
+Both datasets share a considerable amount of columns, however since not every click results in an order and since a session can be made up of more than one click, the contents differ significantly.
+
+#Task Description {#task}
+
+The task of this project was to analyze the dataset and create plots and statistical tables for the data, that is suspected to be relevant for the online shop. 
+
+<!-- TODO: Task description of the modelling task -->
+Additionally a model has to be constructed to predict 
+
+#Cleaning the Data {#cleaning}
+
+Before we started cleaning the data we copied the data to the folder "0 Data". The reason behind this is that we want to avoid altering the original datasets. The cleaned data was also saved in this folder. Before explaining the cleaning process it makes sense to get an overview of the content of the aforementioned folder. It can be described as follows:
+
+* Each file has a suffix depending on what language was used for creating it. Files created with a Python script have the suffix "_P". Files created with R have the suffix "_R". 
+* For both datasets three types of files are created: 
+    + A copy of the original dataset (e.g. "order_data_R.csv")
+    + A cleaned version of that dataset (e.g. "order_data_cleaned_R.csv")
+    + A smaller version of the clean version to allow quick testing of the technical functionality of code (e.g. "order_data_small_R.csv")
+    
+The cleaning process consists of the following steps:
+
+1. Copy the original datasets to the folder "0 Data"
+
+```{r copyFiles, eval=F}
+# Path of original file
+pathOrders <- "orders/order_data.csv"
+# Path of original file to be pasted into the Data folder
+newPathOrders <- "0 Data/order_data_R.csv"
+# Path of the cleaned file
+pathOrdersClean <- "0 Data/order_data_cleaned_R.csv"
+# Path of the small version of the clean file
+pathOrdersSmall = "0 Data/order_data_small_R.csv"
+# Path of the headers
+pathOrderHeaders <- "orders/order_columns.txt"
+
+pathClicks <- "clickstream/clickstream_data.csv"
+pathClicks2 <- "clickstream/clickstream_data_part_2.csv"
+newPathClicks <- "0 Data/clickstream_data_R.csv"
+newPathClicks2 <-"0 Data/clickstream_data_part_2_R.csv"
+pathClicksClean  <- "0 Data/clickstream_data_cleaned_R.csv"
+pathClicksSmall = "0 Data/clickstream_data_small_R.csv"
+pathClicksHeaders <- "clickstream/clickstream_columns.txt"
+
+# 1) Copy csv to data folder
+file.copy(pathClicks, newPathClicks, overwrite = TRUE )
+file.copy(pathClicks2, newPathClicks2, overwrite = TRUE )
+file.copy(pathOrders, newPathOrders, overwrite = TRUE )
+pathOrders <- newPathOrders
+pathClicks <- newPathClicks
+pathClicks2 <- newPathClicks2
+```
+
+2. Read the data, add headers (i.e. column labels), replace "?" and "NULL" with NA, drop columns which have a 100% ratio of missing data, reformat datetime cells and save the result (e.g. as "order_data_cleaned_R.csv")
+
+```{r cleanFiles, eval=F}
+# 2) read files, set headers and replace ? with NA
+
+# Function to get headers from header.txt
+getHeaders = function(filepath) {
+    headers <- list()
+    i <-1
+    con <- file(filepath, "r")
+    while ( TRUE ) {
+        line <- readLines(con, n = 1)
+        header <- gsub(":.*$","",line)
+        if ( length(line) == 0 ) {
+            break
+        }
+        headers[[i]] <- header
+        i <- i+1
+    }
+    close(con)
+    return(headers)
+}
+
+# get headers in an array
+orderHeaders <- getHeaders(pathOrderHeaders)
+clickHeaders <- getHeaders(pathClicksHeaders)
+
+# read files, set headers, replace ? with NA and reformat time and date
+orders <- read.csv(file=pathOrders, header=FALSE)
+
+orders[orders=="?"]<-NA
+orders[orders=="NULL"]<-NA
+colnames(orders) <- orderHeaders
+# drop columns which have only NA values
+orders <- orders[,colSums(is.na(orders))<nrow(orders)]
+# reformate date and time
+for (col in names(orders)){
+  if (grepl("Time",col)==TRUE){
+    orders[,col]=gsub("\\\\", "", orders[,col])
+  }
+}
+# save as new csv
+write.table(orders, file = pathOrdersClean, sep=",", row.names=FALSE)
+
+clicks <- read.csv(file=pathClicks, header=FALSE)
+clicks2 <- read.csv(file=pathClicks2, header=FALSE)
+clicks <- rbind(clicks,clicks2) 
+clicks[clicks=="?"]<-NA
+clicks[clicks=="NULL"]<-NA
+colnames(clicks) <- clickHeaders
+clicks <- clicks[,colSums(is.na(clicks))<nrow(clicks)]
+for (col in names(clicks)){
+  if (grepl("Time",col)==TRUE){
+    clicks[,col]=gsub("\\\\", "", clicks[,col])
+  }
+}
+write.table(clicks, file = pathClicksClean, sep=",", row.names=FALSE)
+```
+
+3. Create a subset of the cleaned data, containing only 1000 rows, and save it (e.g. as "order_data_small_R.csv")
+
+```{r smallFiles, eval=F}
+# 3) Save smaller versions for readability and dev purposes
+small_size = min(1000,nrow(orders))
+orders_small = orders[1:small_size,]
+write.table(orders_small, file = pathOrdersSmall, sep=",", row.names=FALSE)
+
+small_size = min(1000,nrow(clicks))
+clicks_small = clicks[1:small_size,]
+write.table(clicks_small, file = pathClicksSmall, sep=",", row.names=FALSE)
+```
+
+The same cleaning process has been implemented in Python. In the following block you can see a commented version of the python code. To execute it copy the content to your preferred Python IDE (e.g. Visual Studio Code, PyCharm, Atom), uncomment it and execute it. 
+
+Note: The original script was located in the folder "./1 Data Preprocessing/Python/", as such the paths have to be adjusted if you created your script in another location. 
+
+```{r pythonCode, eval=F}
+# import shutil
+# import pandas as pd
+# 
+# #paths
+# pathOrders = "../../orders/order_data.csv"
+# newPathOrders = "../../0 Data/order_data_P.csv"
+# pathOrdersClean = "../../0 Data/order_data_cleaned_P.csv"
+# pathOrdersSmall = "../../0 Data/order_data_small_P.csv"
+# pathOrdersHeaders = "../../orders/order_columns.txt"
+# 
+# pathClicks = "../../clickstream/clickstream_data.csv"
+# pathClicks2 = "../../clickstream/clickstream_data_part_2.csv"
+# newPathClicks = "../../0 Data/clickstream_data_P.csv"
+# pathClicksClean = "../../0 Data/clickstream_data_cleaned_P.csv"
+# pathClicksSmall = "../../0 Data/clickstream_data_small_P.csv"
+# pathClicksHeaders = "../../clickstream/clickstream_columns.txt"
+# 
+# pathMerge = "../../0 Data/merged_P.csv"
+# pathMergeSmall = "../../0 Data/merged_small_P.csv"
+# 
+# #null values
+# nan = float('nan')
+# 
+# def headers(path):
+#     headers = open(path).\
+#               read().\
+#               split("\n")
+#     for counter, header in enumerate(headers):
+#         headers[counter] = (header.split(":"))[0]
+#         if not header: #for empty rows
+#             headers.pop(counter)
+#     return headers
+# 
+# def clean(df):
+#     #write NANs, delete empty columns
+#     df = df. \
+#          replace(to_replace="?", value=nan). \
+#          replace(to_replace="NULL", value=nan). \
+#          dropna(axis=1, how="all")
+#     #Clean Time and Date
+#     for column in df.columns:
+#         if "Time" in column:
+#             df[column] = df[column].\
+#                          str.\
+#                          replace('\\', '', regex=True)
+#     return df
+# 
+# # Copy files
+# shutil.copy(pathClicks, newPathClicks)
+# shutil.copy(pathOrders, newPathOrders)
+# 
+# pathOrders = newPathOrders
+# pathClicks = newPathClicks
+# 
+# # Read headers
+# clicksHeaders = headers(pathClicksHeaders)
+# ordersHeaders = headers(pathOrdersHeaders)
+# 
+# # Read data
+# clicks = pd.read_csv(pathClicks, sep=",", names=clicksHeaders, dtype=str, encoding="ISO-8859-1")
+# clicks2 = pd.read_csv(pathClicks2, sep=",", names=clicksHeaders, dtype=str, encoding="ISO-8859-1")
+# clicks = clean(clicks.append(clicks2))
+# orders = clean(pd.read_csv(pathOrders, sep=",", names=ordersHeaders, dtype=str, encoding="utf-8"))
+# 
+# # Save to CSV
+# clicks.to_csv(path_or_buf=pathClicksClean, index=False)
+# (clicks.head(1000)).to_csv(path_or_buf=pathClicksSmall, index=False)
+# print("Clickstream:" + str(clicks.shape))
+# orders.to_csv(path_or_buf=pathOrdersClean, index=False)
+# (orders.head(1000)).to_csv(path_or_buf=pathOrdersSmall, index=False)
+# print("Orders:" + str(orders.shape))
+# 
+# #Merging
+# mergedData = pd.merge(clicks, orders,  how='inner', left_on=['Session ID'], right_on=['Order Session ID'])
+# print(list(mergedData.columns.values))
+# print(list(mergedData.shape))
+# mergedData.to_csv(path_or_buf=pathMerge, index=False)
+# (mergedData.head(10000)).to_csv(path_or_buf=pathMergeSmall, index=False)
+```
+
+##Testing the Difference Between Data Cleaned with Python and R {#diff}
+To test if the cleaning scripts in Python and R result in the same file, execute the following code in RStudio. The package creates a diff view 
+
+```{r diffFiles, eval=F}
+library(diffobj)
+pathOrders <- "0 Data/order_data_cleaned_R.csv"
+pathClicks  <- "0 Data/clickstream_data_cleaned_R.csv"
+pathOrdersPython <- "0 Data/order_data_cleaned_P.csv"
+pathClicksPython  <- "0 Data/clickstream_data_cleaned_P.csv"
+
+orders <- read.csv(file=pathOrders)
+clicks <- read.csv(file=pathClicks)
+clicksP = read.csv(file=pathClicksPython,na.strings=c("","NA"))
+diffPrint(target=clicksP,current=clicks)
+ordersP = read.csv(file=pathOrdersPython,na.strings=c("","NA"))
+diffPrint(target=ordersP,current=orders)
+```
+
+#Analyzing the Data {#analysis}
+
+The aim of the data analysis is to extract information, which is suspected to be valuable to the online shop, and prepare it in a way that makes it easily "digestible". The overview of the information is presented in one of two ways:
+
+* A statistical table. Given a subset of interesting columns we create two statistical tables: one for numerical columns in the subset and one for factors. The statistical table for the numerical columns contains the maximum value, minimum value, mean, median and standard deviation for each numerical column. The other one contains the five most frequent factors as well as the percentage of NAs and other factors for each factor column.
+* A plot. Some information is too complex to be compressed into a single table without making it too confusing, or it's simply easier to understand if presented as a plot. Some of the plot types used are time series plots, stacked bar plots, lorenz curve plots and maps.
+
+##How much Data is Missing? {#missingData}
+
+Before creating overview tables or plots for columns it makes sense to look which columns actually contain a large quantity of information and which dont. To do that we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. The resulting rankings can be seen in the following two code blocks.
+
+```{r NARankingOrders}
+pathOrders <- "0 Data/order_data_cleaned_R.csv"
+pathClicks  <- "0 Data/clickstream_data_cleaned_R.csv"
+pathOrdersPython <- "0 Data/order_data_cleaned_P.csv"
+pathClicksPython  <- "0 Data/clickstream_data_cleaned_P.csv"
+
+pathNULLAnalysisOrders <- "2 Data Analysis/NAorders.csv"
+pathNULLAnalysisClicks <- "2 Data Analysis/NAclicks.csv"
+
+orders <- read.csv(file=pathOrders)
+clicks <- read.csv(file=pathClicks)
+
+# Create a DF to save the column names and appropriate NA percentage values
+NAorders <- data.frame(matrix(ncol = 2, nrow = 0))
+x <- c("Column_Name", "NA_percentage")
+colnames(NAorders) <- x
+
+# Get the NA percentage errors
+for (column in names(orders)){
+    percentageNA <- round(sum(is.na(orders[,column]))/length(orders[,column]),digits=4)
+    NAorders[nrow(NAorders) + 1,] = list(column,percentageNA)
+}
+# Sort by NA percentage ascending
+NAorders <- NAorders[with(NAorders, order(NAorders$NA_percentage)),]
+kable(NAorders, row.names = FALSE)
+```
+
+```{r NARankingClicks}
+# Create a DF to save the column names and appropriate NA percentage values
+NAclicks <- data.frame(matrix(ncol = 2, nrow = 0))
+x <- c("Column_Name", "NA_percentage")
+colnames(NAclicks) <- x
+
+# Get the NA percentage errors
+for (column in names(clicks)){
+    percentageNA <- round(sum(is.na(clicks[,column]))/length(clicks[,column]),digits=4)
+    NAclicks[nrow(NAclicks) + 1,] = list(column,percentageNA)
+}
+# Sort by NA percentage ascending
+NAclicks <- NAclicks[with(NAclicks, order(NAclicks$NA_percentage)),]
+write.table(NAclicks, file = pathNULLAnalysisClicks, sep=",", row.names=FALSE)
+kable(NAclicks, row.names = FALSE)
+```
+
+##Looking at the Orders Data {#analysisOrders}
+##Looking at the Clicks Data {#analysisClicks}
+
+#Creating a Model {#model}
+
+#Summary {#summary}
+
+
+
+
+
+
