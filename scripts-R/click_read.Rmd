@@ -120,9 +120,13 @@ You can also embed plots, for example:
 
 ```{r}
 
+test <- dataframe %>%
+  group_by(Session_ID)
 
-ggplot(dataframe)+
-  geom_point(mapping = aes(x=Session_ID,y=REQUEST_DAY_OF_WEEK))
+ggplot(test)+
+  geom_point(mapping = aes(x=Session_ID,y=BrandName))
+
+git 
 
 
 ```
