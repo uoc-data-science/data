@@ -9,7 +9,7 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="Kim Ferres, Julian Cornea, Jan Löffelmann" />
+<meta name="author" content="Julian Cornea, Kim Ferres, Jan Löffelmann" />
 
 
 <title>Group 1 Report</title>
@@ -289,37 +289,38 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Group 1 Report</h1>
-<h4 class="author">Kim Ferres, Julian Cornea, Jan Löffelmann</h4>
+<h4 class="author">Julian Cornea, Kim Ferres, Jan Löffelmann</h4>
 <h4 class="date">23-05-2019</h4>
 
 </div>
 
 
 <div id="data" class="section level1">
-<h1><span class="header-section-number">1</span> About of the Data</h1>
-<p>The data comes from an online shop that sells beauty products. There are two datasets: one with data about customer orders and one with data about customer clicks on the website.</p>
-<p>The customer orders dataset contains data such as the number of product units ordered, the total order amount, payment information, the manufacturer and brand names of the ordered product and social data about the customer, like his location and age. The dataset contains one row for each order.</p>
-<p>The customer clicks dataset contains data such as the timestamp of a click, the session length and the name of the product that was clicked as well as the product category it belongs to. The dataset contains one row for each click.</p>
-<p>Both datasets share a considerable amount of columns, however since not every click results in an order and since a session can be made up of more than one click, the contents differ significantly.</p>
+<h1><span class="header-section-number">1</span> About the Data</h1>
+<p>The available data comes from an online shop, which sells beauty products. There are two datasets given: One with data about customer orders and another with data about customer clicks on the website.</p>
+<p>The orders dataset consists of one row for each customer order in the time periode from the 28. January 2000 to the 3. March 2000. The data contains values such as the number of product units ordered, the total order amount, payment information, the manufacturer and brand names of the ordered products and social data about the customer, as by example his location or age.</p>
+<p>The clicks dataset contains data referring to customer clicks on the website of the given company. Therefore, it is composed of data such as the timestamp of a click, the session length and the name of the clicked product, as well as the product category it belongs to. In this way the whole session course of a customer can be illustrated through the data.</p>
+<p>Both datasets share a considerable amount of columns. However, since not every click results in an order and since a session consists normally of more than one click, the contents differ significantly.</p>
 </div>
 <div id="task" class="section level1">
 <h1><span class="header-section-number">2</span> Task Description</h1>
-<p>The task of this project was to analyze the dataset and create plots and statistical tables for the data, that is suspected to be relevant for the online shop.</p>
+<p>The project’s task is to analyze the dataset, especially by creating plots and statistical tables for the data, that is suspected to be relevant for the online shop in some way.</p>
 <!-- TODO: Task description of the modelling task -->
-<p>Additionally a model has to be constructed to predict</p>
+<p>Additionally, a model has to be constructed to predict…</p>
 </div>
 <div id="cleaning" class="section level1">
 <h1><span class="header-section-number">3</span> Cleaning the Data</h1>
-<p>Before we started cleaning the data we copied the data to the folder “0 Data”. The reason behind this is that we want to avoid altering the original datasets. The cleaned data was also saved in this folder. Before explaining the cleaning process it makes sense to get an overview of the content of the aforementioned folder. It can be described as follows:</p>
+<p>Before we started cleaning the data, we copied it to the folder “0 Data”. The reason for this was to avoid accidentally altering the original dataset due to the clear logistical separation of the edited datasets from the original ones. The cleaned data and further forms of the datasets were also saved to this folder. Before explaining the cleaning process, it makes sense to get an overview of the content of the aforementioned folder. It can be described as follows:</p>
 <ul>
-<li>Each file has a suffix depending on what language was used for creating it. Files created with a Python script have the suffix “_P“. Files created with R have the suffix”_R“.</li>
+<li>Each file has a suffix depending on what language was used for creating it. Files created with a Python script have the suffix “_P“, while files created with R have the suffix”_R“.</li>
 <li>For both datasets three types of files are created:
 <ul>
 <li>A copy of the original dataset (e.g. “order_data_R.csv”)</li>
 <li>A cleaned version of that dataset (e.g. “order_data_cleaned_R.csv”)</li>
-<li>A smaller version of the clean version to allow quick testing of the technical functionality of code (e.g. “order_data_small_R.csv”)</li>
+<li>A smaller version of the cleaned data, which allows quick viewing and testing of the technical functionality of the coding (e.g. “order_data_small_R.csv”)</li>
 </ul></li>
 </ul>
+<!-- TODO: Task description of the modelling task -->
 <p>The cleaning process consists of the following steps:</p>
 <ol style="list-style-type: decimal">
 <li>Copy the original datasets to the folder “0 Data”</li>
@@ -517,14 +518,14 @@ diffPrint(target=ordersP,current=orders)</code></pre>
 </div>
 <div id="analysis" class="section level1">
 <h1><span class="header-section-number">4</span> Analyzing the Data</h1>
-<p>The aim of the data analysis is to extract information, which is suspected to be valuable to the online shop, and prepare it in a way that makes it easily “digestible”. The overview of the information is presented in one of two ways:</p>
+<p>The aim of the data analysis is to extract information, which is suspected to be valuable to the online shop, and prepare it in a way that makes it easily “digestible”. The overview of the information is presented in one of the following two ways:</p>
 <ul>
-<li>A statistical table. Given a subset of interesting columns we create two statistical tables: one for numerical columns in the subset and one for factors. The statistical table for the numerical columns contains the maximum value, minimum value, mean, median and standard deviation for each numerical column. The other one contains the five most frequent factors as well as the percentage of NAs and other factors for each factor column.</li>
-<li>A plot. Some information is too complex to be compressed into a single table without making it too confusing, or it’s simply easier to understand if presented as a plot. Some of the plot types used are time series plots, stacked bar plots, lorenz curve plots and maps.</li>
+<li>A statistical table: Given a subset of interesting columns we create two statistical tables: One table for numerical columns in the subset and another for factors. The statistical table for the numerical columns contains the maximum value, minimum value, mean, median and standard deviation for each numerical column. The other one contains the five most frequent factors as well as the percentage of NAs and other factors for each factor column.</li>
+<li>A plot: Some information is too complex to be compressed into a single table without making it too confusing, or it’s simply easier to understand if presented as a plot. The plot types used are time series plots, stacked bar plots, distribution curves, lorenz curves and maps.</li>
 </ul>
 <div id="missingData" class="section level2">
 <h2><span class="header-section-number">4.1</span> How much Data is Missing?</h2>
-<p>Before creating overview tables or plots for columns it makes sense to look which columns actually contain a large quantity of information and which dont. To do that we created a ranking for both datasets containing column names and the percentage of missing data for each column. The resulting rankings can be seen in the following two code blocks.</p>
+<p>Before creating overview tables or plots for columns, it makes sense to look which columns actually contain a large quantity of information and which do not. To do a check up on the ratio of filled cells, we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. The resulting rankings can be seen in the following two code blocks.</p>
 <pre class="r"><code>pathOrders &lt;- &quot;0 Data/order_data_cleaned_R.csv&quot;
 pathClicks  &lt;- &quot;0 Data/clickstream_data_cleaned_R.csv&quot;
 pathOrdersPython &lt;- &quot;0 Data/order_data_cleaned_P.csv&quot;
@@ -2338,6 +2339,30 @@ kable(NAclicks, row.names = FALSE)</code></pre>
 </div>
 <div id="analysisOrders" class="section level2">
 <h2><span class="header-section-number">4.2</span> Looking at the Orders Data</h2>
+<p>The order data can be mainly devided into 4 sections:</p>
+<ul>
+<li>Customer Data: For this section we regard all information referring to the customer as an individual.</li>
+</ul>
+<pre><code>## - City
+## - Country
+## - US.State
+## - Age
+## - Marital.Status
+## - Gender
+## - Audience
+## - Truck.Owner
+## - RV.Owner
+## - Motorcycle.Owner
+## - Working.Woman
+## - Presence.Of.Children
+## - Speciality.Store.Retail
+## - Oil.Retail.Activity
+## - Bank.Retail.Activity
+## - Finance.Retail.Activity
+## - Miscellaneous.Retail.Activity
+## - Upscale.Retail
+## - Upscale.Speciality.Retail
+## - Retail.Activity</code></pre>
 </div>
 <div id="analysisClicks" class="section level2">
 <h2><span class="header-section-number">4.3</span> Looking at the Clicks Data</h2>
