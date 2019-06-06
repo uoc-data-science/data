@@ -1,0 +1,94 @@
+---
+title: "Programming Data Science Report"
+author: "Philipp Peter, Laurenz Harnischmacher, Nico Lindert"
+date: "24 Mai 2019"
+output: 
+  bookdown::html_document2:
+    toc: yes 
+    toc_float: true
+---
+```{r importLibs, include=FALSE}
+# load libraries
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(stringi)
+library(hms)
+library(knitr)
+```
+
+```{r furtherPrep, include=FALSE}
+require("knitr")
+
+# Set root directory
+knitr::opts_knit$set(root.dir = "C:/Github/data")
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
+headersPath2 <- paste(rootDir, "01_data_understanding/clickstream_columns.txt", sep="/")
+dataPath <- paste(rootDir, "00_raw_data/order_data.csv", sep="/")
+dataPath2 <- paste(rootDir, "00_raw_data/clickstream_data.csv", sep="/")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+The course is about...
+
+## Motivation
+In times of big data and the importance of evaluating company's data to stay competible on a highly digitized market, data science provides powerful tools to handle these challenges. <br />
+Within this course, a webshop's dataset from 2000 will be imported, cleaned, analyzed and evaluated.
+
+## Data Import
+At first, the csv-files containting data will be imported.
+
+```{r dataImport, echo=FALSE, warning=FALSE, message=FALSE}
+# prepare column name list
+headersFile = file(headersPath, "r")
+headersFile2 = file(headersPath2, "r")
+#headerNames <- list()
+#http://r.789695.n4.nabble.com/How-to-read-plain-text-documents-into-a-vector-td901794.html
+obj_list <- readLines(headersFile)
+obj_list2 <- readLines(headersFile2)
+
+#To convert to a vector, do the following:
+result <- stri_extract_first(obj_list, regex="[A-z ,]+")
+result2 <- stri_extract_first(obj_list2, regex="[A-z ,]+")
+dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
+result <- gsub(" ", "_", result)
+result2 <- gsub(" ", "_", result2)
+
+order_df <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+#Schafft Laptop nicht
+#click_df <- read_csv(dataPath2, col_names = result2, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+
+# Parse Order Time
+order_df$Order_Time <- parse_time(order_df$"Order_Line_Date_Time","%H\\:%M\\:%S")
+```
+
+# Analysis
+## Data Manipulation
+Due to the huge size of the datasets, the columns will be reduced to the relevant ones.
+```{r dataClean, echo=FALSE}
+# Selected Column Indices
+sel <- c(115,116,120,189,233,121,39,101,107,130,135,58,25,30,32,35)
+
+order_df <- select(order_df,sel)
+```
+
+## First Look
+On a first look, the data provides the following information.
+```{r firstLook, echo = FALSE, warning = FALSE}
+summary_stats <- order_df %>% # start with data frame, and then ...
+  summarize_at(
+    .vars = c("Order_Date", "Order_Time", "Order_Amount"), # select variables, that should be in the table
+    .funs = funs(min, max, mean, median, sd) # which summary statistics do you want
+  ) %>%
+  gather (key, value) %>% # transpose everthing, and then ...
+  separate(col=key, sep="_", c("object", "feature", "stat")) %>% # make the two columns out of var name
+  spread(key=stat, value=value) %>% # repeated obs into multiple columns
+  select(-"object")
+kable(summary_stats)
+```
+Thereby, date and time are less useful, as the time-format is transformed into double values that provide no information on a first look.
+

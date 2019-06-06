@@ -80,7 +80,11 @@ for (i in 1:ncol(dataframe)) {
   }
 }
 print(drop)
+<<<<<<< HEAD
 # Lösche doppelte Spalten (immer die 2.)
+=======
+# Lvsche doppelte Spalten (immer die 2.)
+>>>>>>> master
 dataframe <- subset(dataframe, select = -drop)
 head(dataframe)
 ```
