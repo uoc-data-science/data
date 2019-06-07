@@ -15,9 +15,6 @@ pathClicksClean = "../../0 Data/clickstream_data_cleaned_P.csv"
 pathClicksSmall = "../../0 Data/clickstream_data_small_P.csv"
 pathClicksHeaders = "../../clickstream/clickstream_columns.txt"
 
-pathMerge = "../../0 Data/merged_P.csv"
-pathMergeSmall = "../../0 Data/merged_small_P.csv"
-
 #null values
 nan = float('nan')
 
@@ -69,10 +66,3 @@ print("Clickstream:" + str(clicks.shape))
 orders.to_csv(path_or_buf=pathOrdersClean, index=False)
 (orders.head(1000)).to_csv(path_or_buf=pathOrdersSmall, index=False)
 print("Orders:" + str(orders.shape))
-
-#Merging
-mergedData = pd.merge(clicks, orders,  how='inner', left_on=['Session ID'], right_on=['Order Session ID'])
-print(list(mergedData.columns.values))
-print(list(mergedData.shape))
-mergedData.to_csv(path_or_buf=pathMerge, index=False)
-(mergedData.head(10000)).to_csv(path_or_buf=pathMergeSmall, index=False)
