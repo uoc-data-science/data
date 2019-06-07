@@ -26,6 +26,8 @@ output:
   library(ggrepel)
   library(knitr)
   library(stringr)
+  library(reticulate)
+  library(pander)
 ```
 
 #About the Data {#data}
@@ -38,12 +40,18 @@ The clicks dataset contains data referring to customer clicks on the website of 
 
 Both datasets share a considerable amount of columns. However, since not every click results in an order and since a session consists normally of more than one click, the contents differ significantly.
 
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+
 #Task Description {#task}
 
 The project's task is to analyze the dataset, especially by creating plots and statistical tables for the data, that is suspected to be relevant for the online shop in some way. 
 
 <!-- TODO: Task description of the modelling task -->
 Additionally, a model has to be constructed to predict...
+
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 #Cleaning the Data {#cleaning}
 
@@ -56,6 +64,11 @@ Before we started cleaning the data, we copied it to the folder "0 Data". The re
     + A smaller version of the cleaned data, which allows quick viewing and testing of the technical functionality of the coding (e.g. "order_data_small_R.csv")
 
 <!-- TODO: Task description of the modelling task -->
+
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+
+##Cleaning with R
     
 The cleaning process consists of the following steps:
 
@@ -161,93 +174,85 @@ small_size = min(1000,nrow(clicks))
 clicks_small = clicks[1:small_size,]
 write.table(clicks_small, file = pathClicksSmall, sep=",", row.names=FALSE)
 ```
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-The same cleaning process has been implemented in Python. In the following block you can see a commented version of the python code. To execute it copy the content to your preferred Python IDE (e.g. Visual Studio Code, PyCharm, Atom), uncomment it and execute it. 
+## Cleaning with Python
 
-Note: The original script was located in the folder "./1 Data Preprocessing/Python/", as such the paths have to be adjusted if you created your script in another location. 
+A similar cleaning process to the one explained above has been implemented in Python. In the following block you can see the version in Python coding.
 
-```{r pythonCode, eval=F}
-# import shutil
-# import pandas as pd
-# 
-# #paths
-# pathOrders = "../../orders/order_data.csv"
-# newPathOrders = "../../0 Data/order_data_P.csv"
-# pathOrdersClean = "../../0 Data/order_data_cleaned_P.csv"
-# pathOrdersSmall = "../../0 Data/order_data_small_P.csv"
-# pathOrdersHeaders = "../../orders/order_columns.txt"
-# 
-# pathClicks = "../../clickstream/clickstream_data.csv"
-# pathClicks2 = "../../clickstream/clickstream_data_part_2.csv"
-# newPathClicks = "../../0 Data/clickstream_data_P.csv"
-# pathClicksClean = "../../0 Data/clickstream_data_cleaned_P.csv"
-# pathClicksSmall = "../../0 Data/clickstream_data_small_P.csv"
-# pathClicksHeaders = "../../clickstream/clickstream_columns.txt"
-# 
-# pathMerge = "../../0 Data/merged_P.csv"
-# pathMergeSmall = "../../0 Data/merged_small_P.csv"
-# 
-# #null values
-# nan = float('nan')
-# 
-# def headers(path):
-#     headers = open(path).\
-#               read().\
-#               split("\n")
-#     for counter, header in enumerate(headers):
-#         headers[counter] = (header.split(":"))[0]
-#         if not header: #for empty rows
-#             headers.pop(counter)
-#     return headers
-# 
-# def clean(df):
-#     #write NANs, delete empty columns
-#     df = df. \
-#          replace(to_replace="?", value=nan). \
-#          replace(to_replace="NULL", value=nan). \
-#          dropna(axis=1, how="all")
-#     #Clean Time and Date
-#     for column in df.columns:
-#         if "Time" in column:
-#             df[column] = df[column].\
-#                          str.\
-#                          replace('\\', '', regex=True)
-#     return df
-# 
-# # Copy files
-# shutil.copy(pathClicks, newPathClicks)
-# shutil.copy(pathOrders, newPathOrders)
-# 
-# pathOrders = newPathOrders
-# pathClicks = newPathClicks
-# 
-# # Read headers
-# clicksHeaders = headers(pathClicksHeaders)
-# ordersHeaders = headers(pathOrdersHeaders)
-# 
-# # Read data
-# clicks = pd.read_csv(pathClicks, sep=",", names=clicksHeaders, dtype=str, encoding="ISO-8859-1")
-# clicks2 = pd.read_csv(pathClicks2, sep=",", names=clicksHeaders, dtype=str, encoding="ISO-8859-1")
-# clicks = clean(clicks.append(clicks2))
-# orders = clean(pd.read_csv(pathOrders, sep=",", names=ordersHeaders, dtype=str, encoding="utf-8"))
-# 
-# # Save to CSV
-# clicks.to_csv(path_or_buf=pathClicksClean, index=False)
-# (clicks.head(1000)).to_csv(path_or_buf=pathClicksSmall, index=False)
-# print("Clickstream:" + str(clicks.shape))
-# orders.to_csv(path_or_buf=pathOrdersClean, index=False)
-# (orders.head(1000)).to_csv(path_or_buf=pathOrdersSmall, index=False)
-# print("Orders:" + str(orders.shape))
-# 
-# #Merging
-# mergedData = pd.merge(clicks, orders,  how='inner', left_on=['Session ID'], right_on=['Order Session ID'])
-# print(list(mergedData.columns.values))
-# print(list(mergedData.shape))
-# mergedData.to_csv(path_or_buf=pathMerge, index=False)
-# (mergedData.head(10000)).to_csv(path_or_buf=pathMergeSmall, index=False)
+Note: Python coding chunks are excutable in RMarkdown in general, but the Python environment is not persistent across different python chunks for the preview function ro run coding. Despite this, the chunks are compiled together, when the document is knitted.
+
+```{python pythonCleaning, eval=F}
+import shutil
+import pandas as pd
+ 
+#paths
+pathOrders = "orders/order_data.csv"
+newPathOrders = "0 Data/order_data_P.csv"
+pathOrdersClean = "0 Data/order_data_cleaned_P.csv"
+pathOrdersSmall = "0 Data/order_data_small_P.csv"
+pathOrdersHeaders = "orders/order_columns.txt"
+ 
+pathClicks = "clickstream/clickstream_data.csv"
+pathClicks2 = "clickstream/clickstream_data_part_2.csv"
+newPathClicks = "0 Data/clickstream_data_P.csv"
+pathClicksClean = "0 Data/clickstream_data_cleaned_P.csv"
+pathClicksSmall = "0 Data/clickstream_data_small_P.csv"
+pathClicksHeaders = "clickstream/clickstream_columns.txt"
+
+#null values
+nan = float('nan')
+
+def headers(path):
+    headers = open(path).\
+              read().\
+              split("\n")
+    for counter, header in enumerate(headers):
+        headers[counter] = (header.split(":"))[0]
+        if not header: #for empty rows
+            headers.pop(counter)
+    return headers
+
+def clean(df):
+    #write NANs, delete empty columns
+    df = df. \
+         replace(to_replace="?", value=nan). \
+         replace(to_replace="NULL", value=nan). \
+         dropna(axis=1, how="all")
+    #Clean Time and Date
+    for column in df.columns:
+        if "Time" in column:
+            df[column] = df[column].\
+                         str.\
+                         replace('\\', '', regex=True)
+    return df
+
+# Copy files
+shutil.copy(pathClicks, newPathClicks)
+shutil.copy(pathOrders, newPathOrders)
+
+pathOrders = newPathOrders
+pathClicks = newPathClicks
+
+# Read headers
+clicksHeaders = headers(pathClicksHeaders)
+ordersHeaders = headers(pathOrdersHeaders)
+
+# Read data
+clicks = pd.read_csv(pathClicks, sep=",", names=clicksHeaders, dtype=str, encoding="ISO-8859-1")
+clicks2 = pd.read_csv(pathClicks2, sep=",", names=clicksHeaders, dtype=str, encoding="ISO-8859-1")
+clicks = clean(clicks.append(clicks2))
+orders = clean(pd.read_csv(pathOrders, sep=",", names=ordersHeaders, dtype=str, encoding="utf-8"))
+
+# Save to CSV
+clicks.to_csv(path_or_buf=pathClicksClean, index=False, encoding='utf-8')
+(clicks.head(1000)).to_csv(path_or_buf=pathClicksSmall, index=False, encoding='utf-8')
+orders.to_csv(path_or_buf=pathOrdersClean, index=False, encoding='utf-8')
+(orders.head(1000)).to_csv(path_or_buf=pathOrdersSmall, index=False, encoding='utf-8')
 ```
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-##Testing the Difference Between Data Cleaned with Python and R {#diff}
+##Cleaning differences of Python and R {#diff}
 To test if the cleaning scripts in Python and R result in the same file, execute the following code in RStudio. The package creates a diff view 
 
 ```{r diffFiles, eval=F}
@@ -265,14 +270,43 @@ ordersP = read.csv(file=pathOrdersPython,na.strings=c("","NA"))
 diffPrint(target=ordersP,current=orders)
 ```
 
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+
+##Merging
+Furthermore, we tried to merge the click and order data in Python by trying different ID combinations that occure in both datasets. For testing the different combinations we used an inner join in order to be able of recognizing easier whether a merging try had success. Therefore, we used the following Coding. The example shows the try to merge on 'Session ID' for the clickstream data and on 'Order Session ID' for the order data.
+
+```{python pythonMerge, eval=F}
+import pandas as pd
+
+pathOrders = '0 Data/order_data_cleaned_P.csv'
+pathClicks = '0 Data/clickstream_data_cleaned_P.csv'
+
+orders =  pd.read_csv(pathOrders, sep=",", dtype=str)
+clicks = pd.read_csv(pathClicks, sep=",", dtype=str)
+
+#Merging
+mergedData = pd.merge(clicks, orders,  how='inner', left_on=['Session ID'], right_on=['Order Session ID'])
+```
+
+We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
+
+```{r mergingTries, echo=FALSE}
+pathIds  <- "1 Data Preprocessing/mergeIDs.csv"
+ids <- read.csv(file=pathIds)
+
+kable(ids, row.names = FALSE)
+```
+
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+
 #Analyzing the Data {#analysis}
 
-The aim of the data analysis is to extract information, which is suspected to be valuable to the online shop, and prepare it in a way that makes it easily "digestible". The overview of the information is presented in one of the following two ways:
+The aim of the data analysis is to extract information, which is suspected to be valuable to the online shop, and prepare it in a way that makes it easily "digestible". The overview of the information is presented in statistical tables and plots.
 
-* A statistical table: Given a subset of interesting columns we create two statistical tables: One table for numerical columns in the subset and another for factors. The statistical table for the numerical columns contains the maximum value, minimum value, mean, median and standard deviation for each numerical column. The other one contains the five most frequent factors as well as the percentage of NAs and other factors for each factor column.
-* A plot: Some information is too complex to be compressed into a single table without making it too confusing, or it's simply easier to understand if presented as a plot. The plot types used are time series plots, stacked bar plots, distribution curves, lorenz curves and maps.
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-##How much Data is Missing? {#missingData}
+##Missing Data{#missingData}
 
 Before creating overview tables or plots for columns, it makes sense to look which columns actually contain a large quantity of information and which do not. To do a check up on the ratio of filled cells, we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. The resulting rankings can be seen in the following two code blocks.
 
@@ -320,13 +354,17 @@ write.table(NAclicks, file = pathNULLAnalysisClicks, sep=",", row.names=FALSE)
 kable(NAclicks, row.names = FALSE)
 ```
 
-##Looking at the Orders Data {#analysisOrders}
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+
+##Structure and Content
+
+###Order Data
 
 The order data can be mainly devided into 4 sections:
 
-* Customer Data: For this section we regard all information referring to the customer as an individual. 
-```{r ordersCustomers, echo=FALSE}
-interestingColumns <- c("City",
+1) **Customer Data**: For this section we regard all information referring to the customer as an individual. This data contains information such as the customer gender, location, family status and retail activities.
+```{r ordersCustomers, echo=FALSE, results = 'asis'}
+interestingCustomers <- c("City",
                         "Country",
                         "US.State",
                         "Age",
@@ -345,19 +383,90 @@ interestingColumns <- c("City",
                         "Miscellaneous.Retail.Activity",
                         "Upscale.Retail",
                         "Upscale.Speciality.Retail",
-                        "Retail.Activity")
-cat(paste('-',interestingColumns), sep = '\n') 
+                        "Retail.Activity"
+                        )
+cat("\n")
+for (title in interestingCustomers) {
+  cat(paste("\t *", title, "\n")) 
+}
 ```
-    
 
-##Looking at the Clicks Data {#analysisClicks}
+2) **Product Data**: The following data columns describe features of the ordered products.
+```{r ordersProducts, echo=FALSE, results = 'asis'}
+interestingProducts <- c("StockType",
+                        "Manufacturer",
+                        "BrandName"
+                        )
+cat("\n")
+for (title in interestingProducts) {
+  cat(paste("\t *", title, "\n")) 
+}
+```
+
+3) **Payment Data**: This sections contains columns which describe the payment methods used by the customers.
+```{r ordersPayment, echo=FALSE, results = 'asis'}
+interestingPayments <- c("Order.Credit.Card.Brand",
+                        "Bank.Card.Holder",
+                        "Gas.Card.Holder",
+                        "Upscale.Card.Holder",
+                        "Unknown.Card.Type",
+                        "TE.Card.Holder",
+                        "Premium.Card.Holder",
+                        "New.Bank.Card"
+                        )
+cat("\n")
+for (title in interestingPayments) {
+  cat(paste("\t *", title, "\n")) 
+}
+```
+
+4) **Order Data**: The order data section contains information describing the order process itself, such as order quantity and price data.
+```{r ordersOrders, echo=FALSE, results = 'asis'}
+interestingOrders <- c("Order.Line.Quantity",
+                        "Order.Line.Unit.List.Price",
+                        "Order.Line.Amount",
+                        "Spend.Over..12.Per.Order.On.Average",
+                        "Order.Line.Day.of.Week",
+                        "Order.Line.Hour.of.Day",
+                        "Order.Promotion.Code",
+                        "Order.Discount.Amount"
+                       )
+cat("\n")
+for (title in interestingOrders) {
+  cat(paste("\t *", title, "\n")) 
+}
+```
+
+###Clickstream Data
+
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+
+##Statistical Tables
+
+Given a subset of interesting columns we create two types of statistical tables for each: One table for numerical columns in the subset and another for factors. The statistical table for the numerical data contains the maximum value, minimum value, mean, median and standard deviation for each column. Whereas the factorial tables contain the five most frequent factors as well as their percentage, the ratio of NAs and other factors for each column.
+
+###Order Data
+
+###Clickstream Data
+
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+
+##Plotting
+Some information is too complex to be compressed into a single table without making it too confusing or it's simply easier to understand if presented as a plot. The plot types used are time series plots, stacked bar plots, distribution curves, lorenz curves and maps.
+
+###Order Data
+
+###Clickstream Data
+
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 #Creating a Model {#model}
 
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+
 #Summary {#summary}
-
-
-
 
 
 

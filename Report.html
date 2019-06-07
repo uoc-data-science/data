@@ -301,12 +301,16 @@ div.tocify {
 <p>The orders dataset consists of one row for each customer order in the time periode from the 28. January 2000 to the 3. March 2000. The data contains values such as the number of product units ordered, the total order amount, payment information, the manufacturer and brand names of the ordered products and social data about the customer, as by example his location or age.</p>
 <p>The clicks dataset contains data referring to customer clicks on the website of the given company. Therefore, it is composed of data such as the timestamp of a click, the session length and the name of the clicked product, as well as the product category it belongs to. In this way the whole session course of a customer can be illustrated through the data.</p>
 <p>Both datasets share a considerable amount of columns. However, since not every click results in an order and since a session consists normally of more than one click, the contents differ significantly.</p>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 </div>
 <div id="task" class="section level1">
 <h1><span class="header-section-number">2</span> Task Description</h1>
 <p>The project’s task is to analyze the dataset, especially by creating plots and statistical tables for the data, that is suspected to be relevant for the online shop in some way.</p>
 <!-- TODO: Task description of the modelling task -->
 <p>Additionally, a model has to be constructed to predict…</p>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 </div>
 <div id="cleaning" class="section level1">
 <h1><span class="header-section-number">3</span> Cleaning the Data</h1>
@@ -321,6 +325,10 @@ div.tocify {
 </ul></li>
 </ul>
 <!-- TODO: Task description of the modelling task -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<div id="cleaning-with-r" class="section level2">
+<h2><span class="header-section-number">3.1</span> Cleaning with R</h2>
 <p>The cleaning process consists of the following steps:</p>
 <ol style="list-style-type: decimal">
 <li>Copy the original datasets to the folder “0 Data”</li>
@@ -419,88 +427,82 @@ write.table(orders_small, file = pathOrdersSmall, sep=&quot;,&quot;, row.names=F
 small_size = min(1000,nrow(clicks))
 clicks_small = clicks[1:small_size,]
 write.table(clicks_small, file = pathClicksSmall, sep=&quot;,&quot;, row.names=FALSE)</code></pre>
-<p>The same cleaning process has been implemented in Python. In the following block you can see a commented version of the python code. To execute it copy the content to your preferred Python IDE (e.g. Visual Studio Code, PyCharm, Atom), uncomment it and execute it.</p>
-<p>Note: The original script was located in the folder “./1 Data Preprocessing/Python/”, as such the paths have to be adjusted if you created your script in another location.</p>
-<pre class="r"><code># import shutil
-# import pandas as pd
-# 
-# #paths
-# pathOrders = &quot;../../orders/order_data.csv&quot;
-# newPathOrders = &quot;../../0 Data/order_data_P.csv&quot;
-# pathOrdersClean = &quot;../../0 Data/order_data_cleaned_P.csv&quot;
-# pathOrdersSmall = &quot;../../0 Data/order_data_small_P.csv&quot;
-# pathOrdersHeaders = &quot;../../orders/order_columns.txt&quot;
-# 
-# pathClicks = &quot;../../clickstream/clickstream_data.csv&quot;
-# pathClicks2 = &quot;../../clickstream/clickstream_data_part_2.csv&quot;
-# newPathClicks = &quot;../../0 Data/clickstream_data_P.csv&quot;
-# pathClicksClean = &quot;../../0 Data/clickstream_data_cleaned_P.csv&quot;
-# pathClicksSmall = &quot;../../0 Data/clickstream_data_small_P.csv&quot;
-# pathClicksHeaders = &quot;../../clickstream/clickstream_columns.txt&quot;
-# 
-# pathMerge = &quot;../../0 Data/merged_P.csv&quot;
-# pathMergeSmall = &quot;../../0 Data/merged_small_P.csv&quot;
-# 
-# #null values
-# nan = float('nan')
-# 
-# def headers(path):
-#     headers = open(path).\
-#               read().\
-#               split(&quot;\n&quot;)
-#     for counter, header in enumerate(headers):
-#         headers[counter] = (header.split(&quot;:&quot;))[0]
-#         if not header: #for empty rows
-#             headers.pop(counter)
-#     return headers
-# 
-# def clean(df):
-#     #write NANs, delete empty columns
-#     df = df. \
-#          replace(to_replace=&quot;?&quot;, value=nan). \
-#          replace(to_replace=&quot;NULL&quot;, value=nan). \
-#          dropna(axis=1, how=&quot;all&quot;)
-#     #Clean Time and Date
-#     for column in df.columns:
-#         if &quot;Time&quot; in column:
-#             df[column] = df[column].\
-#                          str.\
-#                          replace('\\', '', regex=True)
-#     return df
-# 
-# # Copy files
-# shutil.copy(pathClicks, newPathClicks)
-# shutil.copy(pathOrders, newPathOrders)
-# 
-# pathOrders = newPathOrders
-# pathClicks = newPathClicks
-# 
-# # Read headers
-# clicksHeaders = headers(pathClicksHeaders)
-# ordersHeaders = headers(pathOrdersHeaders)
-# 
-# # Read data
-# clicks = pd.read_csv(pathClicks, sep=&quot;,&quot;, names=clicksHeaders, dtype=str, encoding=&quot;ISO-8859-1&quot;)
-# clicks2 = pd.read_csv(pathClicks2, sep=&quot;,&quot;, names=clicksHeaders, dtype=str, encoding=&quot;ISO-8859-1&quot;)
-# clicks = clean(clicks.append(clicks2))
-# orders = clean(pd.read_csv(pathOrders, sep=&quot;,&quot;, names=ordersHeaders, dtype=str, encoding=&quot;utf-8&quot;))
-# 
-# # Save to CSV
-# clicks.to_csv(path_or_buf=pathClicksClean, index=False)
-# (clicks.head(1000)).to_csv(path_or_buf=pathClicksSmall, index=False)
-# print(&quot;Clickstream:&quot; + str(clicks.shape))
-# orders.to_csv(path_or_buf=pathOrdersClean, index=False)
-# (orders.head(1000)).to_csv(path_or_buf=pathOrdersSmall, index=False)
-# print(&quot;Orders:&quot; + str(orders.shape))
-# 
-# #Merging
-# mergedData = pd.merge(clicks, orders,  how='inner', left_on=['Session ID'], right_on=['Order Session ID'])
-# print(list(mergedData.columns.values))
-# print(list(mergedData.shape))
-# mergedData.to_csv(path_or_buf=pathMerge, index=False)
-# (mergedData.head(10000)).to_csv(path_or_buf=pathMergeSmall, index=False)</code></pre>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+</div>
+<div id="cleaning-with-python" class="section level2">
+<h2><span class="header-section-number">3.2</span> Cleaning with Python</h2>
+<p>A similar cleaning process to the one explained above has been implemented in Python. In the following block you can see the version in Python coding.</p>
+<p>Note: Python coding chunks are excutable in RMarkdown in general, but the Python environment is not persistent across different python chunks for the preview function ro run coding. Despite this, the chunks are compiled together, when the document is knitted.</p>
+<pre class="python"><code>import shutil
+import pandas as pd
+ 
+#paths
+pathOrders = &quot;orders/order_data.csv&quot;
+newPathOrders = &quot;0 Data/order_data_P.csv&quot;
+pathOrdersClean = &quot;0 Data/order_data_cleaned_P.csv&quot;
+pathOrdersSmall = &quot;0 Data/order_data_small_P.csv&quot;
+pathOrdersHeaders = &quot;orders/order_columns.txt&quot;
+ 
+pathClicks = &quot;clickstream/clickstream_data.csv&quot;
+pathClicks2 = &quot;clickstream/clickstream_data_part_2.csv&quot;
+newPathClicks = &quot;0 Data/clickstream_data_P.csv&quot;
+pathClicksClean = &quot;0 Data/clickstream_data_cleaned_P.csv&quot;
+pathClicksSmall = &quot;0 Data/clickstream_data_small_P.csv&quot;
+pathClicksHeaders = &quot;clickstream/clickstream_columns.txt&quot;
+
+#null values
+nan = float('nan')
+
+def headers(path):
+    headers = open(path).\
+              read().\
+              split(&quot;\n&quot;)
+    for counter, header in enumerate(headers):
+        headers[counter] = (header.split(&quot;:&quot;))[0]
+        if not header: #for empty rows
+            headers.pop(counter)
+    return headers
+
+def clean(df):
+    #write NANs, delete empty columns
+    df = df. \
+         replace(to_replace=&quot;?&quot;, value=nan). \
+         replace(to_replace=&quot;NULL&quot;, value=nan). \
+         dropna(axis=1, how=&quot;all&quot;)
+    #Clean Time and Date
+    for column in df.columns:
+        if &quot;Time&quot; in column:
+            df[column] = df[column].\
+                         str.\
+                         replace('\\', '', regex=True)
+    return df
+
+# Copy files
+shutil.copy(pathClicks, newPathClicks)
+shutil.copy(pathOrders, newPathOrders)
+
+pathOrders = newPathOrders
+pathClicks = newPathClicks
+
+# Read headers
+clicksHeaders = headers(pathClicksHeaders)
+ordersHeaders = headers(pathOrdersHeaders)
+
+# Read data
+clicks = pd.read_csv(pathClicks, sep=&quot;,&quot;, names=clicksHeaders, dtype=str, encoding=&quot;ISO-8859-1&quot;)
+clicks2 = pd.read_csv(pathClicks2, sep=&quot;,&quot;, names=clicksHeaders, dtype=str, encoding=&quot;ISO-8859-1&quot;)
+clicks = clean(clicks.append(clicks2))
+orders = clean(pd.read_csv(pathOrders, sep=&quot;,&quot;, names=ordersHeaders, dtype=str, encoding=&quot;utf-8&quot;))
+
+# Save to CSV
+clicks.to_csv(path_or_buf=pathClicksClean, index=False, encoding='utf-8')
+(clicks.head(1000)).to_csv(path_or_buf=pathClicksSmall, index=False, encoding='utf-8')
+orders.to_csv(path_or_buf=pathOrdersClean, index=False, encoding='utf-8')
+(orders.head(1000)).to_csv(path_or_buf=pathOrdersSmall, index=False, encoding='utf-8')</code></pre>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+</div>
 <div id="diff" class="section level2">
-<h2><span class="header-section-number">3.1</span> Testing the Difference Between Data Cleaned with Python and R</h2>
+<h2><span class="header-section-number">3.3</span> Cleaning differences of Python and R</h2>
 <p>To test if the cleaning scripts in Python and R result in the same file, execute the following code in RStudio. The package creates a diff view</p>
 <pre class="r"><code>library(diffobj)
 pathOrders &lt;- &quot;0 Data/order_data_cleaned_R.csv&quot;
@@ -514,17 +516,68 @@ clicksP = read.csv(file=pathClicksPython,na.strings=c(&quot;&quot;,&quot;NA&quot
 diffPrint(target=clicksP,current=clicks)
 ordersP = read.csv(file=pathOrdersPython,na.strings=c(&quot;&quot;,&quot;NA&quot;))
 diffPrint(target=ordersP,current=orders)</code></pre>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+</div>
+<div id="merging" class="section level2">
+<h2><span class="header-section-number">3.4</span> Merging</h2>
+<p>Furthermore, we tried to merge the click and order data in Python by trying different ID combinations that occure in both datasets. For testing the different combinations we used an inner join in order to be able of recognizing easier whether a merging try had success. Therefore, we used the following Coding. The example shows the try to merge on ‘Session ID’ for the clickstream data and on ‘Order Session ID’ for the order data.</p>
+<pre class="python"><code>import pandas as pd
+
+pathOrders = '0 Data/order_data_cleaned_P.csv'
+pathClicks = '0 Data/clickstream_data_cleaned_P.csv'
+
+orders =  pd.read_csv(pathOrders, sep=&quot;,&quot;, dtype=str)
+clicks = pd.read_csv(pathClicks, sep=&quot;,&quot;, dtype=str)
+
+#Merging
+mergedData = pd.merge(clicks, orders,  how='inner', left_on=['Session ID'], right_on=['Order Session ID'])</code></pre>
+<p>We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Clicks</th>
+<th align="left">Orders</th>
+<th align="left">Shape</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Session ID</td>
+<td align="left">Order Line Session ID</td>
+<td align="left">[0, 438]</td>
+</tr>
+<tr class="even">
+<td align="left">Session ID</td>
+<td align="left">Order Session ID</td>
+<td align="left">[0, 438]</td>
+</tr>
+<tr class="odd">
+<td align="left">Customer ID</td>
+<td align="left">Customer ID</td>
+<td align="left">[6906, 437]</td>
+</tr>
+<tr class="even">
+<td align="left">Session Cookie ID</td>
+<td align="left">Order Line Session ID</td>
+<td align="left">[0, 438]</td>
+</tr>
+<tr class="odd">
+<td align="left">Session Cookie ID</td>
+<td align="left">Order Session ID</td>
+<td align="left">[0, 438]</td>
+</tr>
+</tbody>
+</table>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 </div>
 </div>
 <div id="analysis" class="section level1">
 <h1><span class="header-section-number">4</span> Analyzing the Data</h1>
-<p>The aim of the data analysis is to extract information, which is suspected to be valuable to the online shop, and prepare it in a way that makes it easily “digestible”. The overview of the information is presented in one of the following two ways:</p>
-<ul>
-<li>A statistical table: Given a subset of interesting columns we create two statistical tables: One table for numerical columns in the subset and another for factors. The statistical table for the numerical columns contains the maximum value, minimum value, mean, median and standard deviation for each numerical column. The other one contains the five most frequent factors as well as the percentage of NAs and other factors for each factor column.</li>
-<li>A plot: Some information is too complex to be compressed into a single table without making it too confusing, or it’s simply easier to understand if presented as a plot. The plot types used are time series plots, stacked bar plots, distribution curves, lorenz curves and maps.</li>
-</ul>
+<p>The aim of the data analysis is to extract information, which is suspected to be valuable to the online shop, and prepare it in a way that makes it easily “digestible”. The overview of the information is presented in statistical tables and plots.</p>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <div id="missingData" class="section level2">
-<h2><span class="header-section-number">4.1</span> How much Data is Missing?</h2>
+<h2><span class="header-section-number">4.1</span> Missing Data</h2>
 <p>Before creating overview tables or plots for columns, it makes sense to look which columns actually contain a large quantity of information and which do not. To do a check up on the ratio of filled cells, we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. The resulting rankings can be seen in the following two code blocks.</p>
 <pre class="r"><code>pathOrders &lt;- &quot;0 Data/order_data_cleaned_R.csv&quot;
 pathClicks  &lt;- &quot;0 Data/clickstream_data_cleaned_R.csv&quot;
@@ -2336,40 +2389,100 @@ kable(NAclicks, row.names = FALSE)</code></pre>
 </tr>
 </tbody>
 </table>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 </div>
-<div id="analysisOrders" class="section level2">
-<h2><span class="header-section-number">4.2</span> Looking at the Orders Data</h2>
+<div id="structure-and-content" class="section level2">
+<h2><span class="header-section-number">4.2</span> Structure and Content</h2>
+<div id="order-data" class="section level3">
+<h3><span class="header-section-number">4.2.1</span> Order Data</h3>
 <p>The order data can be mainly devided into 4 sections:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>Customer Data</strong>: For this section we regard all information referring to the customer as an individual. This data contains information such as the customer gender, location, family status and retail activities.</p>
 <ul>
-<li>Customer Data: For this section we regard all information referring to the customer as an individual.</li>
-</ul>
-<pre><code>## - City
-## - Country
-## - US.State
-## - Age
-## - Marital.Status
-## - Gender
-## - Audience
-## - Truck.Owner
-## - RV.Owner
-## - Motorcycle.Owner
-## - Working.Woman
-## - Presence.Of.Children
-## - Speciality.Store.Retail
-## - Oil.Retail.Activity
-## - Bank.Retail.Activity
-## - Finance.Retail.Activity
-## - Miscellaneous.Retail.Activity
-## - Upscale.Retail
-## - Upscale.Speciality.Retail
-## - Retail.Activity</code></pre>
+<li>City</li>
+<li>Country</li>
+<li>US.State</li>
+<li>Age</li>
+<li>Marital.Status</li>
+<li>Gender</li>
+<li>Audience</li>
+<li>Truck.Owner</li>
+<li>RV.Owner</li>
+<li>Motorcycle.Owner</li>
+<li>Working.Woman</li>
+<li>Presence.Of.Children</li>
+<li>Speciality.Store.Retail</li>
+<li>Oil.Retail.Activity</li>
+<li>Bank.Retail.Activity</li>
+<li>Finance.Retail.Activity</li>
+<li>Miscellaneous.Retail.Activity</li>
+<li>Upscale.Retail</li>
+<li>Upscale.Speciality.Retail</li>
+<li>Retail.Activity</li>
+</ul></li>
+<li><p><strong>Product Data</strong>: The following data columns describe features of the ordered products.</p>
+<ul>
+<li>StockType</li>
+<li>Manufacturer</li>
+<li>BrandName</li>
+</ul></li>
+<li><p><strong>Payment Data</strong>: This sections contains columns which describe the payment methods used by the customers.</p>
+<ul>
+<li>Order.Credit.Card.Brand</li>
+<li>Bank.Card.Holder</li>
+<li>Gas.Card.Holder</li>
+<li>Upscale.Card.Holder</li>
+<li>Unknown.Card.Type</li>
+<li>TE.Card.Holder</li>
+<li>Premium.Card.Holder</li>
+<li>New.Bank.Card</li>
+</ul></li>
+<li><p><strong>Order Data</strong>: The order data section contains information describing the order process itself, such as order quantity and price data.</p>
+<ul>
+<li>Order.Line.Quantity</li>
+<li>Order.Line.Unit.List.Price</li>
+<li>Order.Line.Amount</li>
+<li>Spend.Over..12.Per.Order.On.Average</li>
+<li>Order.Line.Day.of.Week</li>
+<li>Order.Line.Hour.of.Day</li>
+<li>Order.Promotion.Code</li>
+<li>Order.Discount.Amount</li>
+</ul></li>
+</ol>
 </div>
-<div id="analysisClicks" class="section level2">
-<h2><span class="header-section-number">4.3</span> Looking at the Clicks Data</h2>
+<div id="clickstream-data" class="section level3">
+<h3><span class="header-section-number">4.2.2</span> Clickstream Data</h3>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+</div>
+</div>
+<div id="statistical-tables" class="section level2">
+<h2><span class="header-section-number">4.3</span> Statistical Tables</h2>
+<p>Given a subset of interesting columns we create two types of statistical tables for each: One table for numerical columns in the subset and another for factors. The statistical table for the numerical data contains the maximum value, minimum value, mean, median and standard deviation for each column. Whereas the factorial tables contain the five most frequent factors as well as their percentage, the ratio of NAs and other factors for each column.</p>
+<div id="order-data-1" class="section level3">
+<h3><span class="header-section-number">4.3.1</span> Order Data</h3>
+</div>
+<div id="clickstream-data-1" class="section level3">
+<h3><span class="header-section-number">4.3.2</span> Clickstream Data</h3>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+</div>
+</div>
+<div id="plotting" class="section level2">
+<h2><span class="header-section-number">4.4</span> Plotting</h2>
+<p>Some information is too complex to be compressed into a single table without making it too confusing or it’s simply easier to understand if presented as a plot. The plot types used are time series plots, stacked bar plots, distribution curves, lorenz curves and maps.</p>
+<div id="order-data-2" class="section level3">
+<h3><span class="header-section-number">4.4.1</span> Order Data</h3>
+</div>
+<div id="clickstream-data-2" class="section level3">
+<h3><span class="header-section-number">4.4.2</span> Clickstream Data</h3>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+</div>
 </div>
 </div>
 <div id="model" class="section level1">
 <h1><span class="header-section-number">5</span> Creating a Model</h1>
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 </div>
 <div id="summary" class="section level1">
 <h1><span class="header-section-number">6</span> Summary</h1>
