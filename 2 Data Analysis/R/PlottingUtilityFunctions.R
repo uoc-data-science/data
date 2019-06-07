@@ -180,7 +180,7 @@ summarizeNumericalColumns <- function(df){
   df <- select_if(df, is.numeric)
   
   summary_stats <- data.frame(matrix(ncol = 6, nrow = 0))
-  x <- c("variable","max", "mean", "median", "min", "sd")
+  x <- c("Variable","Max", "Mean", "Median", "Min", "SD")
   colnames(summary_stats) <- x
   
   for (column in names(df)){
@@ -194,7 +194,6 @@ summarizeNumericalColumns <- function(df){
   
   return(summary_stats)
 }
-
 #-----------------------------------------------------------------------------------
 #summary function for factor columns of tables
 summarizeFactorColumns <- function(df){

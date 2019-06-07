@@ -1,4 +1,4 @@
-"variable","max","mean","median","min","sd"
+"Variable","Max","Mean","Median","Min","SD"
 "Order.Line.Quantity",18,1.31024531024531,1,-2,0.954127760793263
 "Order.Line.Unit.List.Price",72,9.25843578643579,7.5,0,6.45737581393666
 "Order.Line.Amount",234,11.6208427128427,10,-40,11.5137312783536

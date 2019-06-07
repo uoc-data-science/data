@@ -10,24 +10,32 @@ output:
 ---
 
 ```{r importingMyLibraries, echo=F, results = "hide", message=F, warning=F}
-  #    ^ only output, not coding
-  #cmd+alt+i --> for r coding
-  #load libraries
-  library(diffobj)
-  library(gridExtra)
-  library(dplyr)
-  library(janitor)
-  library(ggplot2)
-  library(ineq)
-  library(chron)
-  library(maps)
-  library(tidyr)
-  library(plyr)
-  library(ggrepel)
-  library(knitr)
-  library(stringr)
-  library(reticulate)
-  library(pander)
+#    ^ only output, not coding
+#cmd+alt+i --> for r coding
+#load libraries
+library(diffobj)
+library(gridExtra)
+library(dplyr)
+library(janitor)
+library(ggplot2)
+library(ineq)
+library(chron)
+library(maps)
+library(tidyr)
+library(plyr)
+library(ggrepel)
+library(knitr)
+library(stringr)
+library(reticulate)
+library(pander)
+library(kableExtra)
+
+#function for reading csv and plotting it as table
+knitTable <- function(path){
+  df =  read.csv(file=path)
+  kable(df, row.names = FALSE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
+}
 ```
 
 #About the Data {#data}
@@ -180,7 +188,7 @@ write.table(clicks_small, file = pathClicksSmall, sep=",", row.names=FALSE)
 
 A similar cleaning process to the one explained above has been implemented in Python. In the following block you can see the version in Python coding.
 
-Note: Python coding chunks are excutable in RMarkdown in general, but the Python environment is not persistent across different python chunks for the preview function ro run coding. Despite this, the chunks are compiled together, when the document is knitted.
+*Note: Python coding chunks are excutable in RMarkdown in general, but the Python environment is not persistent across different python chunks for the preview function ro run coding. Despite this, the chunks are compiled together, when the document is knitted.*
 
 ```{python pythonCleaning, eval=F}
 import shutil
@@ -443,9 +451,122 @@ for (title in interestingOrders) {
 
 ##Statistical Tables
 
-Given a subset of interesting columns we create two types of statistical tables for each: One table for numerical columns in the subset and another for factors. The statistical table for the numerical data contains the maximum value, minimum value, mean, median and standard deviation for each column. Whereas the factorial tables contain the five most frequent factors as well as their percentage, the ratio of NAs and other factors for each column.
+Given a subset of interesting columns, we create two types of statistical tables for each: One table for numerical columns in the subset and another for factors. The statistical table for the numerical data contains the maximum value, minimum value, mean, median and standard deviation for each column. Whereas the factorial tables contain the five most frequent factors as well as their percentage, the ratio of NAs and other factors for each column.
+
+<!-- Describe stat table coding here -->
+
+```{r NumTable, eval=F}
+#summary function for numerical columns of tables
+summarizeNumericalColumns <- function(df){
+  df <- select_if(df, is.numeric)
+    
+  summary_stats <- data.frame(matrix(ncol = 6, nrow = 0))
+  x <- c("Variable","Max", "Mean", "Median", "Min", "SD")
+  colnames(summary_stats) <- x
+    
+  for (column in names(df)){
+      maxValue <- max(df[[column]], na.rm = TRUE)
+      meanValue <- mean(df[[column]], na.rm = TRUE)
+      medianValue <- median(df[[column]], na.rm = TRUE)
+      minValue <- min(df[[column]], na.rm = TRUE)
+      sdValue <- sd(df[[column]], na.rm = TRUE)
+      summary_stats[nrow(summary_stats) + 1,] = list(column,maxValue,meanValue,medianValue,minValue,sdValue)
+    }
+  
+  return(summary_stats)
+}
+```
+
+```{r FacTable, eval=F}
+#summary function for factor columns of tables
+summarizeFactorColumns <- function(df){
+  df <- select_if(df, is.factor)
+    
+  summary_stats <- data.frame(matrix(ncol = 8, nrow = 0))
+  x <- c("Variable","Top 1st","Top 2nd", "Top 3rd", "Top 4th", "Top 5th", "Others","Not Available")
+  colnames(summary_stats) <- x
+    
+  for (column in names(df)){
+    top <- giveTop(df,column,5,TRUE)
+    Others <- paste("Others: ",round(top[top[,1]=="Others",][1,2], digits = 2),"%",sep="") # Use round to fix a bug where digits are added
+    NotAvailable <- "Not Available: 0%"
+    if ("Not Available" %in% top[,1]){
+      NotAvailable <- paste("Not Available: ",top[top[,1]=="Not Available",][1,2],"%",sep="")
+    }
+    #Subset witohut entry for Others or NA
+    pureTop <- top[top[,1]!="Others" & top[,1]!="Not Available",]
+    summary <- c(column,"","","","","",Others,NotAvailable)
+    loopStop <- min(10,nrow(pureTop))
+    for (i in 1:loopStop){
+      summary[i+1] <- paste(pureTop[i,1],": ",pureTop[i,2],"%",sep="")
+    }
+    summary_stats[nrow(summary_stats) + 1,] <- summary
+  }
+    return(summary_stats)
+}
+```
 
 ###Order Data
+
+In the following section the statistical tables generated for the purpose of describing the order data are shown. Additionally, the most important or interesting analysis results are emphasized and shortly explained.
+
+*Note: To support a better visualization, more relevant columns columns are highligthed in red color.*
+
+####Customer Data
+
+Only the age can be regarded as a numerical customer data column here. As most intersting in this summary might appear the mean and the median, which both imply an average customer segment consisting of people in their late 30s.
+
+```{r OrderCustomerNum, echo=FALSE}
+knitTable("4 Data Overview/Tables/ CustomerData_Numerical.csv") %>%
+  row_spec(1, bold = T, color = "white", background = "#D7261E")
+```
+
+The following data summary shows some social data for the shop's customer segment. Since all of the available data for the country column contains the value 'United States', it is highly probable that the online shop exclusively delivers customer located in the US. This was the reason for us to choose a map of the United States in order to visualize the customers' locations later on in the plotting. Furthermore, the data clearly shows that the main customer audience targeted are women.   
+
+```{r OrderCustomerFac, echo=FALSE}
+knitTable("4 Data Overview/Tables/ CustomerData_Factors.csv") %>%
+  row_spec(2, bold = T, color = "white", background = "#D7261E") %>%
+  row_spec(5, bold = T, color = "white", background = "#D7261E") %>%
+  row_spec(6, bold = T, color = "white", background = "#D7261E")
+```
+
+####Product Data
+
+The selected columns belonging to the product information section show only factorial values. The statistical overview for the product data reveals that most of the sold articles are replenishable. The strongest brand in the current orders is American Essential, which seems to manufacture its articles by itself. Important is to recognize that the presented data is biased in a way: Because the given dataset shows only ordered products, it can be assumed that the popularity of articles distorts all percentual information referring to the products. Thus, we can not make any assumptions referring to the original product palette the store offers.
+
+```{r OrderProductFac, echo=FALSE}
+knitTable("4 Data Overview/Tables/ ProductData_Factors.csv") %>%
+  column_spec(2, bold = T, color = "white", background = "#D7261E")
+```
+
+####Payment Data
+
+When it comes to the data concerning the used payment methods, there are only factorial columns as well. The most used credit card is by far the VISA card. Furthermore almost a fifth of the customers uses a premium card. From this information it could be deduced how wealthy the customer segment is by comparing the ratio of premium cards to the one in the whole population.
+
+```{r OrderPayFac, echo=FALSE}
+knitTable("4 Data Overview/Tables/ PaymentMethodData_Factors.csv") %>%
+  row_spec(1, bold = T, color = "white", background = "#D7261E") %>%
+  row_spec(8, bold = T, color = "white", background = "#D7261E")
+```
+
+####Order Process Data
+
+The numerical data for the order process shows that a customer usally buys one product per order. Also the order line amount implies that the store offers rather inexpensive articles. Furthermore, the minimum value for both the order line quantity and the order line amount is negative, which hints to the assumption of eather the order data containing returns as well or having errors in it. Through the discount amount it is possible to state that the store offers a maximum of a 50% price reduction for the given time period. Also the buyed articles got by average a discount of about 9%. Again it can be assumed that this data is not representative for the shop's offer in general, because it is probable that articles with a higher discount are bought more often.
+
+```{r OrderOrderNum, echo=FALSE}
+knitTable("4 Data Overview/Tables/ OrderData_Numerical.csv") %>%
+  row_spec(1, bold = T, color = "white", background = "#D7261E") %>%
+  row_spec(3, bold = T, color = "white", background = "#D7261E") %>%
+  row_spec(5, bold = T, color = "white", background = "#D7261E")
+```
+
+The factors for the order process demonstrate that the 'FRIEND' discount is used most often and in the majority of the orders. (At this point it would be relevant for the interpretation to know for whom and under which circumstances this discount is given.) Also the weekday summary could be relevant for sales purposes, by example for finding out the most successfull time for showing ads to possible customers.
+```{r OrderOrderFac, echo=FALSE}
+knitTable("4 Data Overview/Tables/ OrderData_Factors.csv")  %>%
+  row_spec(3, bold = T, color = "white", background = "#D7261E")
+```
+
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 ###Clickstream Data
 
