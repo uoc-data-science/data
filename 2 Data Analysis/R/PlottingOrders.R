@@ -30,7 +30,6 @@ orders <- read.csv(file=pathOrders)
 
 #color pallett
 mycols <- c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF", "#246d18")
-
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # overview tables for interesting columns
@@ -330,3 +329,29 @@ p2 <-beautify(ggplot(plotData) +
   labs(title = "Age Distribution per Gender") +
   scale_linetype_discrete(guide=guide_legend(override.aes=aes(colour="black"))))
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age.png",sep=""), multiplot(p1,p2, cols=2), width=16, height=5)
+#-----------------------------------------------------------------------------------
+#any vehicle
+yes <- nrow(subset(orders, Truck.Owner == "True" | Motorcycle.Owner == "True" | RV.Owner == "True"))/nrow(orders)
+nan <- nrow(subset(orders, is.na(Truck.Owner) & is.na(Motorcycle.Owner) & is.na(RV.Owner)))/nrow(orders)
+no <- (1 - yes - nan)
+if (yes > no){
+  vehicle <- c('Any Vehicle', paste('True: ', yes, '%'), paste('False:', no, '%'), '', '', '', 'Others: 0%', paste('Not Available:', nan, '%'))
+}else{
+  vehicle <-  c('Any Vehicle', paste('False:', no, '%'), paste('True: ', yes, '%'), '', '', '', 'Others: 0%', paste('Not Available:', nan, '%'))
+}
+#-----------------------------------------------------------------------------------
+#dataframe for calculated values
+calcCol <- data.frame(Variable=character(),
+                      Top.1st=character(), 
+                      Top.2nd=character(),
+                      Top.3rd=character(),
+                      Top.4th=character(),
+                      Top.5th=character(),
+                      Others=character(),
+                      Not.Available=character())
+calcCol <- rbind(vehicle)
+colnames(calcCol) <- c('Variable','Top 1st','Top 2nd','Top 3rd','Top 4th','Top 5th','Others','Not Available')
+
+#print calc columns
+print(calcCol)
+write.table(calcCol, file = paste(pathTableFolder,"OrderData_Calc.csv"), sep=",", row.names=FALSE)
