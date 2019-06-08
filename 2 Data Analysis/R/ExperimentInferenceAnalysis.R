@@ -32,11 +32,13 @@ experiment <- experimentDf
 # Part 1: Test if the profit oriented reccomendation system causes a significant difference in sales
 
 obs_stat <- experiment %>% 
-  specify(Sales_in_EUR ~ Used_Top_Reccomendations) %>%
+  filter(Used_Top_Reccomendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Profit_Oriented_Reccomendations) %>%
   calculate(stat = "diff in means", order=c("1","0"))
 
 permuted_stat <- experiment %>% 
-  specify(Sales_in_EUR ~ Used_Top_Reccomendations) %>%
+  filter(Used_Top_Reccomendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Profit_Oriented_Reccomendations) %>%
   hypothesize(null = "independence") %>%
   generate(reps = 100, type="permute") %>%
   calculate(stat = "diff in means", order=c("1","0"))
@@ -49,7 +51,8 @@ viz_plot <- viz_plot + shade_p_value(obs_stat, direction = "two_sided", color = 
 print(viz_plot)
 
 bootstrap_stat <- experiment %>%
-  specify(Sales_in_EUR ~ Used_Top_Reccomendations) %>%
+  filter(Used_Top_Reccomendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Profit_Oriented_Reccomendations) %>%
   generate(reps = 100, type = "bootstrap") %>%
   calculate(stat = "diff in means", order = c("1", "0"))
 
@@ -63,11 +66,13 @@ print(viz_plot)
 # Part 2: Test if the popular products reccomendation system causes a significant difference in sales
 
 obs_stat <- experiment %>% 
-  specify(Sales_in_EUR ~ Used_Profit_Oriented_Reccomendations) %>%
+  filter(Used_Profit_Oriented_Reccomendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Top_Reccomendations) %>%
   calculate(stat = "diff in means", order=c("1","0"))
 
 permuted_stat <- experiment %>% 
-  specify(Sales_in_EUR ~ Used_Profit_Oriented_Reccomendations) %>%
+  filter(Used_Profit_Oriented_Reccomendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Top_Reccomendations) %>%
   hypothesize(null = "independence") %>%
   generate(reps = 100, type="permute") %>%
   calculate(stat = "diff in means", order=c("1","0"))
@@ -80,7 +85,8 @@ viz_plot <- viz_plot + shade_p_value(obs_stat, direction = "two_sided", color = 
 print(viz_plot)
 
 bootstrap_stat <- experiment %>%
-  specify(Sales_in_EUR ~ Used_Profit_Oriented_Reccomendations) %>%
+  filter(Used_Profit_Oriented_Reccomendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Top_Reccomendations) %>%
   generate(reps = 100, type = "bootstrap") %>%
   calculate(stat = "diff in means", order = c("1", "0"))
 
