@@ -40,11 +40,12 @@ permuted_stat <- experiment %>%
   filter(Used_Top_Reccomendations == 0) %>%
   specify(Sales_in_EUR ~ Used_Profit_Oriented_Reccomendations) %>%
   hypothesize(null = "independence") %>%
-  generate(reps = 100, type="permute") %>%
+  generate(reps = 1000, type="permute") %>%
   calculate(stat = "diff in means", order=c("1","0"))
 
 p_val <- permuted_stat %>%
   get_p_value(obs_stat = obs_stat, direction = "two_sided")
+print(p_val)
 
 viz_plot <- permuted_stat %>% visualize()
 viz_plot <- viz_plot + shade_p_value(obs_stat, direction = "two_sided", color = "black", fill = "grey")
@@ -53,11 +54,13 @@ print(viz_plot)
 bootstrap_stat <- experiment %>%
   filter(Used_Top_Reccomendations == 0) %>%
   specify(Sales_in_EUR ~ Used_Profit_Oriented_Reccomendations) %>%
-  generate(reps = 100, type = "bootstrap") %>%
+  generate(reps = 1000, type = "bootstrap") %>%
   calculate(stat = "diff in means", order = c("1", "0"))
 
+# Bonferroni correction: Default alpha = 5%, number of tests = 2 -> Set alpha to 2.5% -> level = 0.95
 ci <- bootstrap_stat %>%
-  get_confidence_interval(level = 0.9)
+  get_confidence_interval(level = 0.95)
+print(ci)
 
 viz_plot <- bootstrap_stat[complete.cases(bootstrap_stat), ] %>% visualize()
 viz_plot <- viz_plot + shade_confidence_interval(ci, color = "black", fill = "grey")
@@ -74,11 +77,12 @@ permuted_stat <- experiment %>%
   filter(Used_Profit_Oriented_Reccomendations == 0) %>%
   specify(Sales_in_EUR ~ Used_Top_Reccomendations) %>%
   hypothesize(null = "independence") %>%
-  generate(reps = 100, type="permute") %>%
+  generate(reps = 1000, type="permute") %>%
   calculate(stat = "diff in means", order=c("1","0"))
 
 p_val <- permuted_stat %>%
   get_p_value(obs_stat = obs_stat, direction = "two_sided")
+print(p_val)
 
 viz_plot <- permuted_stat %>% visualize()
 viz_plot <- viz_plot + shade_p_value(obs_stat, direction = "two_sided", color = "black", fill = "grey")
@@ -87,11 +91,13 @@ print(viz_plot)
 bootstrap_stat <- experiment %>%
   filter(Used_Profit_Oriented_Reccomendations == 0) %>%
   specify(Sales_in_EUR ~ Used_Top_Reccomendations) %>%
-  generate(reps = 100, type = "bootstrap") %>%
+  generate(reps = 1000, type = "bootstrap") %>%
   calculate(stat = "diff in means", order = c("1", "0"))
 
+# Bonferroni correction: Default alpha = 5%, number of tests = 2 -> Set alpha to 2.5% -> level = 0.95
 ci <- bootstrap_stat %>%
-  get_confidence_interval(level = 0.9)
+  get_confidence_interval(level = 0.95)
+print(ci)
 
 viz_plot <- bootstrap_stat[complete.cases(bootstrap_stat), ] %>% visualize()
 viz_plot <- viz_plot + shade_confidence_interval(ci, color = "black", fill = "grey")
