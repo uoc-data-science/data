@@ -29,6 +29,7 @@ library(stringr)
 library(reticulate)
 library(pander)
 library(kableExtra)
+library(infer)
 
 #function for reading csv and plotting it as table
 knitTable <- function(path){
@@ -578,6 +579,177 @@ Some information is too complex to be compressed into a single table without mak
 ###Order Data
 
 ###Clickstream Data
+
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+
+#Evaluating Reccomendation Systems
+
+In addition to analyzing the order and clickstream data, we have to analyze the performance of different recommendation models. The performance of three different recommendation systems was measured:
+
+* A profit based recommendation system: This one recommends products that shall fit the taste of the subject, but also generates high revenue shares.
+* A ranking based recommendation system: This one recommends best performing products according to their sales rank.
+* A random recommendation system: This one was used as a baseline treatment.
+
+The evaluation of the profit and ranking based recommendation systems is done using inference analysis, specifically using the computational paradigm instead of the mathematical one. One test for each of the two recommendation systems is carried out with the null hypothesis always being that the system does not cause different sales than a purely random recommendation system. During each test we randomize our sample data 1000 times, using either permutation or bootstrapping, and measure the p-value and confidence interval. The test statistic we always use is the difference in mean between the group using the profit or ranking based reccomendation system and the group using the random recommendation system. 
+If the null hypothesis was true, then the test statistic value for our sample would not significantly differ from the distribution of the test statistic for our randomized data. Our default alpha for the confidence interval is 5%, but since we conduct a total of two tests, we have to apply the Bonferroni correction and adjust the alpha we specify for our confidence interval to 2.5%.
+
+Before diving into the inference analysis itself, we have to reformat our data for the recommendation systems into a form that is suitable for inference analysis. We want to have a data frame in which one row equals one customer who was exposed to a recommendation system. We use three columns:
+
+* Sales: The sales in Euro per customer.
+* Used_Profit_Oriented_recommendations: 1 if the customer was exposed to the profit oriented recommendation system, otherwise 0.
+* Used_Top_recommendations: 1 if the customer was exposed to the ranking based recommendation system, otherwise 0.
+
+If the value in column Used_Top_recommendations and Used_Profit_Oriented_recommendations is 0, it means that the random recommendation system was used.
+
+In the following code block we reformat the data and print the first 10 rows of the reformatted table.
+
+```{r InferenceReformat, echo=FALSE}
+pathExperiment <- "experiment/experimental_results.csv"
+experiment <- read.csv(file=pathExperiment)
+
+# Reformat the results to allow inference analysis
+experimentDf <- data.frame(matrix(ncol = 3, nrow = 0))
+x <- c("Sales_in_EUR","Used_Profit_Oriented_recommendations","Used_Top_recommendations")
+colnames(experimentDf) <- x
+
+for (row in 1:nrow(experiment)){
+  random <- experiment[row, "random_recommendations"]
+  profit <- experiment[row, "profit_oriented"]
+  top <- experiment[row, "ranking_based"]
+  if (!is.na(random)){
+    experimentDf[nrow(experimentDf) + 1,] = list(random,0,0)
+  }
+  if (!is.na(profit)){
+    experimentDf[nrow(experimentDf) + 1,] = list(profit,1,0)
+  }
+  if (!is.na(top)){
+    experimentDf[nrow(experimentDf) + 1,] = list(top,0,1)
+  }
+}
+
+experimentDf[,"Used_Profit_Oriented_recommendations"] <- factor(experimentDf[,"Used_Profit_Oriented_recommendations"])
+experimentDf[,"Used_Top_recommendations"] <- factor(experimentDf[,"Used_Top_recommendations"])
+experiment <- experimentDf
+
+kable(head(experiment,10), row.names = FALSE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
+```
+
+##The Profit Oriented Recommendation System
+
+Now, we do an inference analysis for the profit oriented recommendation system. Firstly, we look at the p-value and the corresponding plot:
+
+```{r InferenceProfitP, echo=FALSE}
+# Do inference analysis
+# Part 1: Test if the profit oriented recommendation system causes a significant difference in sales
+
+obs_stat <- experiment %>% 
+  filter(Used_Top_recommendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Profit_Oriented_recommendations) %>%
+  calculate(stat = "diff in means", order=c("1","0"))
+
+permuted_stat <- experiment %>% 
+  filter(Used_Top_recommendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Profit_Oriented_recommendations) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type="permute") %>%
+  calculate(stat = "diff in means", order=c("1","0"))
+
+p_val <- permuted_stat %>%
+  get_p_value(obs_stat = obs_stat, direction = "two_sided")
+print(paste("p-value = ",as.data.frame(p_val)[1,1],sep=""))
+
+viz_plot <- permuted_stat %>% visualize()
+viz_plot <- viz_plot + shade_p_value(obs_stat, direction = "two_sided", color = "black", fill = "grey")
+print(viz_plot)
+```
+
+The plot shows us the distribution of the test statistic for the 1000 randomized samples. The test statistic value for our sample is represented by a black line. The two-sided p-value regions are marked by a grey background. If our null hypothesis were true, then the test statistic value of our sample would be somewhere in the distribution of the test statistic for the randomized samples. Every test statistic value for a randomized sample, which lies in the p-value region, increases the p-value.
+
+As we can see the test statistic value of our sample is pretty far away from the test statistic values of the randomized samples. This already shows, without looking at the p-value itself, that the profit oriented recommendation system causes a significant difference in the sales in Euro. The value of the p-value is 0, which reaffirms our interpretation of the plot.
+
+Now, we look at the confidence interval:
+
+```{r InferenceProfitCI, echo=FALSE}
+bootstrap_stat <- experiment %>%
+  filter(Used_Top_recommendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Profit_Oriented_recommendations) %>%
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "diff in means", order = c("1", "0"))
+
+# Bonferroni correction: Default alpha = 5%, number of tests = 2 -> Set alpha to 2.5% -> level = 0.95
+ci <- bootstrap_stat %>%
+  get_confidence_interval(level = 0.95)
+kable(ci, row.names = FALSE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
+lowerBound <- round(as.data.frame(ci)[1,1],digits=2)
+upperBound <- round(as.data.frame(ci)[1,2],digits=2)
+
+viz_plot <- bootstrap_stat[complete.cases(bootstrap_stat), ] %>% visualize()
+viz_plot <- viz_plot + shade_confidence_interval(ci, color = "black", fill = "grey")
+print(viz_plot)
+```
+
+As we can see, there is a 95% chance that for the global population customers, who get profit oriented recommendations, spend on average `r lowerBound`€-`r upperBound`€ more than people who get random recommendations.
+
+##The Ranking Based Recommendation System
+
+Now we do an inference analysis for the ranking based recommendation system. Firstly, we look at the p-value and the corresponding plot:
+
+```{r InferenceRankingP, echo=FALSE}
+# Part 2: Test if the popular products recommendation system causes a significant difference in sales
+
+obs_stat <- experiment %>% 
+  filter(Used_Profit_Oriented_recommendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Top_recommendations) %>%
+  calculate(stat = "diff in means", order=c("1","0"))
+
+permuted_stat <- experiment %>% 
+  filter(Used_Profit_Oriented_recommendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Top_recommendations) %>%
+  hypothesize(null = "independence") %>%
+  generate(reps = 1000, type="permute") %>%
+  calculate(stat = "diff in means", order=c("1","0"))
+
+p_val <- permuted_stat %>%
+  get_p_value(obs_stat = obs_stat, direction = "two_sided")
+print(paste("p-value = ",as.data.frame(p_val)[1,1],sep=""))
+
+viz_plot <- permuted_stat %>% visualize()
+viz_plot <- viz_plot + shade_p_value(obs_stat, direction = "two_sided", color = "black", fill = "grey")
+print(viz_plot)
+```
+
+In this plot quite some portions of the distribution of the test statistic for our random samples lie in the p-value zone. This is also shown by the p-value `r as.data.frame(p_val)[1,1]`, which greater than 0.025. This means that for our alpha = 0.05 the effect of the ranking based recommendation system is statistically insignificant.
+
+Now we look at the confidence interval:
+
+```{r InferenceRankingCI, echo=FALSE}
+bootstrap_stat <- experiment %>%
+  filter(Used_Profit_Oriented_recommendations == 0) %>%
+  specify(Sales_in_EUR ~ Used_Top_recommendations) %>%
+  generate(reps = 1000, type = "bootstrap") %>%
+  calculate(stat = "diff in means", order = c("1", "0"))
+
+# Bonferroni correction: Default alpha = 5%, number of tests = 2 -> Set alpha to 2.5% -> level = 0.95
+ci <- bootstrap_stat %>%
+  get_confidence_interval(level = 0.95)
+kable(ci, row.names = FALSE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
+lowerBound <- round(as.data.frame(ci)[1,1],digits=2)
+upperBound <- round(as.data.frame(ci)[1,2],digits=2)
+
+viz_plot <- bootstrap_stat[complete.cases(bootstrap_stat), ] %>% visualize()
+viz_plot <- viz_plot + shade_confidence_interval(ci, color = "black", fill = "grey")
+print(viz_plot)
+```
+
+Since the confidence interval includes the value 0, it shows us that the effect is statistically insignificant.
+
+##Summary
+
+To sum it up, the company should use the profit oriented recommendation system, since out of the two tested systems it causes the largest increase in sales. The ranking based recommendation system does not cause any statistically relevant difference in sales. However if the effect was something else than sales in Euro per person, then the results could be different. The company should ask itself if the goal of their recommendation system should really be to increase sales. Maybe at some point in time it could introduce a subscription business model, similar to that of Amazon. In that case it might also want to increase the percentage of customers that have a subscription.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
