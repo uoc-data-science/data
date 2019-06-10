@@ -18,8 +18,21 @@ giveTop <- function(df, column, first, percentage){
   top <- (tabyl(df[[column]])) #create frequency table
   top[,c(1)] <- as.character(top[,c(1)])
   top[is.na(top)] <- "Not Available"
+  naRow <- top %>%
+    filter(top[[1]] == "Not Available")
+  naRow <- naRow[,1:3]
+  
   totalCount <- sum(top$n) # used when only the top x columns are requested
   if (percentage == TRUE){
+    df <- subset(df, select=c(column))
+    df <- na.omit(df)
+    
+    top <- (tabyl(df[[column]])) #create frequency table
+    top[,c(1)] <- as.character(top[,c(1)])
+    if (nrow(naRow)>0){
+      top[nrow(top) + 1,] = naRow
+    }
+    
     top <- top %>% select(1, 3)
     names(top) <- c(column, "percentage") #rename
     top$percentage <- round(top$percentage*100, digits = 2)
@@ -191,7 +204,6 @@ summarizeNumericalColumns <- function(df){
     sdValue <- sd(df[[column]], na.rm = TRUE)
     summary_stats[nrow(summary_stats) + 1,] = list(column,maxValue,meanValue,medianValue,minValue,sdValue)
   }
-  
   return(summary_stats)
 }
 #-----------------------------------------------------------------------------------
@@ -219,15 +231,17 @@ summarizeFactorColumns <- function(df){
     }
     summary_stats[nrow(summary_stats) + 1,] <- summary
   }
+  summary_stats[['Others']] <- gsub('Others: ', '', summary_stats[['Others']])
+  summary_stats[['Not Available']] <- gsub('Not Available: ', '', summary_stats[['Not Available']])
   return(summary_stats)
 }
 #-----------------------------------------------------------------------------------
 # beautify plots
 beautify <- function(plot){
   plot <- plot +
-          theme_classic() +
-          theme(axis.text=element_text(size=12),
-                axis.title=element_text(size=12,face="bold"))
+    theme_classic() +
+    theme(axis.text=element_text(size=12),
+          axis.title=element_text(size=12,face="bold"))
   return(plot)
 }
 #-----------------------------------------------------------------------------------

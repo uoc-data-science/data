@@ -452,7 +452,7 @@ for (title in interestingOrders) {
 
 ##Statistical Tables
 
-Given a subset of interesting columns, we create two types of statistical tables for each: One table for numerical columns in the subset and another for factors. The statistical table for the numerical data contains the maximum value, minimum value, mean, median and standard deviation for each column. Whereas the factorial tables contain the five most frequent factors as well as their percentage, the ratio of NAs and other factors for each column.
+Given a subset of interesting columns, we create two types of statistical tables for each: One table for numerical columns in the subset and another for factors. The statistical table for the numerical data contains the maximum value, minimum value, mean, median and standard deviation for each column. Whereas the factorial tables contain the five most frequent factors as well as their percentage, the ratio of NAs and other factors for each column. For this, the NA percentage gets calculated at first, then the NA values are deleted from the regarded column and the percentage for each value is calcuated.
 
 <!-- Describe stat table coding here -->
 
