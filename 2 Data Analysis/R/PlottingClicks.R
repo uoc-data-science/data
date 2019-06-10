@@ -24,8 +24,7 @@ clicks <- read.csv(file=pathClicks)
 #-----------------------------------------------------------------------------------
 # Overview table of interestng columns
 #-----------------------------------------------------------------------------------
-clicksCustomerInfo <- c("BrandName",
-                        "WhichDoYouWearMostFrequent",
+clicksCustomerInfo <- c("WhichDoYouWearMostFrequent",
                         "YourFavoriteLegcareBrand",
                         "Registration.Gender",
                         "NumberOfChildren",
@@ -36,19 +35,13 @@ clicksCustomerInfo <- c("BrandName",
                         "WhoMakesPurchasesForYou",
                         "NumberOfAdults",
                         "HowDidYouHearAboutUs",
-                        "Company",
                         "SendEmail",
                         "HowOftenDoYouPurchase",
                         "HowDidYouFindUs",
                         "City",
-                        "Country",
                         "US.State",
-                        "Account.Creation.Date",
-                        "Account.Creation.Date_Time",
                         "Year.of.Birth",
                         "Email",
-                        "Login.Failure.Count",
-                        "Customer.ID",
                         "Truck.Owner",
                         "RV.Owner",
                         "Motorcycle.Owner",
@@ -93,8 +86,6 @@ clicksCustomerInfo <- c("BrandName",
                         "Upscale.Retail",
                         "Upscale.Speciality.Retail",
                         "Retail.Activity",
-                        "Last.Retail.Date",
-                        "Last.Retail.Date_Time",
                         "Dwelling.Size",
                         "Dataquick.Market.Code",
                         "Lendable.Home.Equity",
@@ -103,11 +94,8 @@ clicksCustomerInfo <- c("BrandName",
                         "Insurance.Expiry.Month",
                         "Dwelling.Unit.Size",
                         "Month.Home.Was.Bought",
-                        "Household.Status",
                         "Available.Home.Equity",
                         "Minority.Census.Tract",
-                        "Verification.Date",
-                        "Verification.Date_Time",
                         "Year.Of.Structure",
                         "Gender",
                         "Occupation",
@@ -200,11 +188,18 @@ clicksTimeInfo <- c("Request.Date",
                     "Session.First.Request.Hour.of.Day"
 )
 
+subset <- subset(clicks, select=clicksCustomerInfo)
+facCol <- summarizeFactorColumns(subset)
+numCol <- summarizeNumericalColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataCustomer_Factors.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataCustomer_Numerical.csv"), sep=",", row.names=FALSE)
+
 subset <- subset(clicks, select=clicksProducts)
 facCol <- summarizeFactorColumns(subset)
 numCol <- summarizeNumericalColumns(subset)
-write.table(facCol, file = paste(pathTableFolder,"ClickstreamData_Factors.csv"), sep=",", row.names=FALSE)
-write.table(numCol, file = paste(pathTableFolder,"ClickstreamData_Numerical.csv"), sep=",", row.names=FALSE)
+write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Factors.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Numerical.csv"), sep=",", row.names=FALSE)
+
 
 #------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
