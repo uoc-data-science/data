@@ -185,7 +185,7 @@ write.table(clicks_small, file = pathClicksSmall, sep=",", row.names=FALSE)
 ```
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-## Cleaning with Python
+##Cleaning with Python
 
 A similar cleaning process to the one explained above has been implemented in Python. In the following block you can see the version in Python coding.
 
@@ -448,6 +448,166 @@ for (title in interestingOrders) {
 
 ###Clickstream Data
 
+The clickstream data has three main categories:
+
+1) **Customer Data**: The data contains a vast collection of information about customers, reaching from usual informations like age, gender, etc. 
+over payment information and finacnial activities to opinions about the shop.
+```{r clicksCustomers, echo=FALSE, results = 'asis'}
+clicksCustomerInfo <- c("WhichDoYouWearMostFrequent",
+                        "YourFavoriteLegcareBrand",
+                        "Registration.Gender",
+                        "NumberOfChildren",
+                        "DoYouPurchaseForOthers",
+                        "HowDoYouDressForWork",
+                        "HowManyPairsDoYouPurchase",
+                        "YourFavoriteLegwearBrand",
+                        "WhoMakesPurchasesForYou",
+                        "NumberOfAdults",
+                        "HowDidYouHearAboutUs",
+                        "SendEmail",
+                        "HowOftenDoYouPurchase",
+                        "HowDidYouFindUs",
+                        "City",
+                        "US.State",
+                        "Year.of.Birth",
+                        "Email",
+                        "Truck.Owner",
+                        "RV.Owner",
+                        "Motorcycle.Owner",
+                        "Value.Of.All.Vehicles",
+                        "Age",
+                        "Other.Indiv...Age",
+                        "Marital.Status",
+                        "Working.Woman",
+                        "Mail.Responder",
+                        "Bank.Card.Holder",
+                        "Gas.Card.Holder",
+                        "Upscale.Card.Holder",
+                        "Unknown.Card.Type",
+                        "TE.Card.Holder",
+                        "Premium.Card.Holder",
+                        "Presence.Of.Children",
+                        "Number.Of.Adults",
+                        "Estimated.Income.Code",
+                        "Home.Market.Value",
+                        "New.Car.Buyer",
+                        "Vehicle.Lifestyle",
+                        "Property.Type",
+                        "Loan.To.Value.Percent",
+                        "Presence.Of.Pool",
+                        "Year.House.Was.Built",
+                        "Own.Or.Rent.Home",
+                        "Length.Of.Residence",
+                        "Mail.Order.Buyer",
+                        "Year.Home.Was.Bought",
+                        "Home.Purchase.Date",
+                        "Number.Of.Vehicles",
+                        "DMA.No.Mail.Solicitation.Flag",
+                        "DMA.No.Phone.Solicitation.Flag",
+                        "CRA.Income.Classification",
+                        "New.Bank.Card",
+                        "Number.Of.Credit.Lines",
+                        "Speciality.Store.Retail",
+                        "Oil.Retail.Activity",
+                        "Bank.Retail.Activity",
+                        "Finance.Retail.Activity",
+                        "Miscellaneous.Retail.Activity",
+                        "Upscale.Retail",
+                        "Upscale.Speciality.Retail",
+                        "Retail.Activity",
+                        "Dwelling.Size",
+                        "Dataquick.Market.Code",
+                        "Lendable.Home.Equity",
+                        "Home.Size.Range",
+                        "Lot.Size.Range",
+                        "Insurance.Expiry.Month",
+                        "Dwelling.Unit.Size",
+                        "Month.Home.Was.Bought",
+                        "Available.Home.Equity",
+                        "Minority.Census.Tract",
+                        "Year.Of.Structure",
+                        "Gender",
+                        "Occupation",
+                        "Other.Indiv...Gender",
+                        "Other.Indiv...Occupation"
+)
+cat("\n")
+for (title in clicksCustomerInfo) {
+  cat(paste("\t *", title, "\n")) 
+}
+```
+
+2) **Product Data**: The following data columns describe features of products clicked on by the customers.
+```{r clicksProducts, echo=FALSE, results = 'asis'}
+clicksProducts <- c("BrandName",
+                    "UnitsPerInnerBox",
+                    "PrimaryPackage",
+                    "Depth",
+                    "VendorMinREOrderDollars",
+                    "Height",
+                    "UnitsPerOuterBox",
+                    "StockType",
+                    "Pack",
+                    "ProductForm",
+                    "Look",
+                    "BasicOrFashion",
+                    "MfgStyleCode",
+                    "SaleOrNonSale",
+                    "Length",
+                    "MinQty",
+                    "LeadTime",
+                    "Weight",
+                    "HasDressingRoom",
+                    "ColorOrScent",
+                    "Width",
+                    "Texture",
+                    "Manufacturer",
+                    "ToeFeature",
+                    "Category2",
+                    "Material",
+                    "CategoryCode",
+                    "UnitIncrement",
+                    "WaistControl",
+                    "Collection",
+                    "BodyFeature",
+                    "Audience",
+                    "Category1",
+                    "Product",
+                    "Pattern"
+)
+cat("\n")
+for (title in clicksProducts) {
+  cat(paste("\t *", title, "\n")) 
+}
+```
+
+3) **Time Data**: The following data columns describe different dates and times for clicks.
+```{r clicksTimeinfo, echo=FALSE, results = 'asis'}
+clicksTimeInfo <- c("Request.Date",
+                    "Request.Date_Time",
+                    "Request.Sequence",
+                    "REQUEST_DAY_OF_WEEK",
+                    "REQUEST_HOUR_OF_DAY",
+                    "Cookie.First.Visit.Date",
+                    "Cookie.First.Visit.Date_Time",
+                    "Session.First.Request.Date",
+                    "Session.First.Request.Date_Time",
+                    "Session.Start.Login.Count",
+                    "Session.Cookie.ID",
+                    "Session.ID",
+                    "Session.Customer.ID",
+                    "Session.Visit.Count",
+                    "Session.First.Content.ID",
+                    "Session.First.Request.Day.of.Week",
+                    "Session.First.Request.Hour.of.Day"
+)
+cat("\n")
+for (title in clicksTimeInfo) {
+  cat(paste("\t *", title, "\n")) 
+}
+```
+
+
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 ##Statistical Tables
@@ -570,6 +730,31 @@ knitTable("4 Data Overview/Tables/ OrderData_Factors.csv")  %>%
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 ###Clickstream Data
+
+####Customer Data
+
+tbd
+
+```{r ClicksCustomerFac, echo=FALSE}
+knitTable("4 Data Overview/Tables/ ClickstreamDataCustomer_Factors.csv")
+```
+
+```{r ClicksCustomerNum, echo=FALSE}
+knitTable("4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical.csv")
+```
+
+###Product Data
+
+tbd
+
+```{r ClicksProductsFac, echo=FALSE}
+knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Factors.csv")
+```
+
+```{r ClicksProductsNum, echo=FALSE}
+knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Numerical.csv")
+```
+
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
