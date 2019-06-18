@@ -317,7 +317,7 @@ The aim of the data analysis is to extract information, which is suspected to be
 
 ##Missing Data{#missingData}
 
-Before creating overview tables or plots for columns, it makes sense to look which columns actually contain a large quantity of information and which do not. To do a check up on the ratio of filled cells, we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. The resulting rankings can be seen in the following two code blocks.
+Before creating overview tables or plots for columns, it makes sense to look which columns actually contain a large quantity of information and which do not. To do a check up on the ratio of filled cells, we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. The first 50 entries in the resulting rankings can be seen in the following two code blocks.
 
 ```{r NARankingOrders}
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
@@ -343,7 +343,7 @@ for (column in names(orders)){
 }
 # Sort by NA percentage ascending
 NAorders <- NAorders[with(NAorders, order(NAorders$NA_percentage)),]
-kable(NAorders, row.names = FALSE)
+kable(head(NAorders,50), row.names = FALSE)
 ```
 
 ```{r NARankingClicks}
@@ -360,7 +360,7 @@ for (column in names(clicks)){
 # Sort by NA percentage ascending
 NAclicks <- NAclicks[with(NAclicks, order(NAclicks$NA_percentage)),]
 write.table(NAclicks, file = pathNULLAnalysisClicks, sep=",", row.names=FALSE)
-kable(NAclicks, row.names = FALSE)
+kable(head(NAclicks,50), row.names = FALSE)
 ```
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -616,7 +616,59 @@ Given a subset of interesting columns, we create two types of statistical tables
 
 <!-- Describe stat table coding here -->
 
-```{r NumTable, eval=F}
+```{r createSummaryCSVFiles, echo=F, results = "hide", message=F, warning=F}
+#count different values in column of dataframe (calculate ratio)
+giveTop <- function(df, column, first, percentage){
+  top <- (tabyl(df[[column]])) #create frequency table
+  top[,c(1)] <- as.character(top[,c(1)])
+  top[is.na(top)] <- "Not Available"
+  naRow <- top %>%
+    filter(top[[1]] == "Not Available")
+  naRow <- naRow[,1:3]
+  
+  totalCount <- sum(top$n) # used when only the top x columns are requested
+  if (percentage == TRUE){
+    df <- subset(df, select=c(column))
+    df <- na.omit(df)
+    
+    top <- (tabyl(df[[column]])) #create frequency table
+    top[,c(1)] <- as.character(top[,c(1)])
+    if (nrow(naRow)>0){
+      top[nrow(top) + 1,] = naRow
+    }
+    
+    top <- top %>% select(1, 3)
+    names(top) <- c(column, "percentage") #rename
+    top$percentage <- round(top$percentage*100, digits = 2)
+    top <- arrange(top, desc(percentage))
+  }
+  else{
+    top <- top %>% select(1:2)
+    names(top) <- c(column, "amount") #rename
+    top <- arrange(top, desc(amount))
+  }
+  #get the highest rating x columns only
+  if (first != 0){
+    if("Not Available" %in% top[,1]){
+      first <- first+1
+    }
+    top <- head(top, first)
+    if(percentage == TRUE){
+      others <- max((100 - sum(top$percentage)),0) #Possible bug without max: others < 0 due to rounding
+      top[nrow(top) + 1,] = list("Others",others)
+      top <- arrange(top, desc(percentage))
+    }
+    else{
+      others <- (totalCount-sum(top$amount))
+      top[nrow(top) + 1,] = list("Others",others)
+      top <- arrange(top, desc(amount))
+    }
+    
+  }
+  top[[column]] <- factor(top[[column]], levels=top[[column]]) #lockOrder
+  return(top)
+}
+
 #summary function for numerical columns of tables
 summarizeNumericalColumns <- function(df){
   df <- select_if(df, is.numeric)
@@ -627,26 +679,24 @@ summarizeNumericalColumns <- function(df){
     
   for (column in names(df)){
       maxValue <- max(df[[column]], na.rm = TRUE)
-      meanValue <- mean(df[[column]], na.rm = TRUE)
+      meanValue <- round(mean(df[[column]], na.rm = TRUE),digits=2)
       medianValue <- median(df[[column]], na.rm = TRUE)
       minValue <- min(df[[column]], na.rm = TRUE)
-      sdValue <- sd(df[[column]], na.rm = TRUE)
+      sdValue <- round(sd(df[[column]], na.rm = TRUE),digits=2)
       summary_stats[nrow(summary_stats) + 1,] = list(column,maxValue,meanValue,medianValue,minValue,sdValue)
     }
   
   return(summary_stats)
 }
-```
 
-```{r FacTable, eval=F}
 #summary function for factor columns of tables
 summarizeFactorColumns <- function(df){
   df <- select_if(df, is.factor)
-    
+  
   summary_stats <- data.frame(matrix(ncol = 8, nrow = 0))
   x <- c("Variable","Top 1st","Top 2nd", "Top 3rd", "Top 4th", "Top 5th", "Others","Not Available")
   colnames(summary_stats) <- x
-    
+  
   for (column in names(df)){
     top <- giveTop(df,column,5,TRUE)
     Others <- paste("Others: ",round(top[top[,1]=="Others",][1,2], digits = 2),"%",sep="") # Use round to fix a bug where digits are added
@@ -663,8 +713,219 @@ summarizeFactorColumns <- function(df){
     }
     summary_stats[nrow(summary_stats) + 1,] <- summary
   }
-    return(summary_stats)
+  summary_stats[['Others']] <- gsub('Others: ', '', summary_stats[['Others']])
+  summary_stats[['Not Available']] <- gsub('Not Available: ', '', summary_stats[['Not Available']])
+  return(summary_stats)
 }
+
+# create tables as csv to keep the following code chunks small
+
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+# Order data tables
+#-----------------------------------------------------------------------------------
+# order data
+pathTableFolder <- "./4 Data Overview/Tables/"
+interestingOrders <- c("Order.Line.Quantity",
+                        "Order.Line.Unit.List.Price",
+                        "Order.Line.Amount",
+                        "Spend.Over..12.Per.Order.On.Average",
+                        "Order.Line.Day.of.Week",
+                        "Order.Line.Hour.of.Day",
+                        "Order.Promotion.Code",
+                        "Order.Discount.Amount"
+)
+subset <- subset(orders, select=interestingOrders)
+facCol <- summarizeFactorColumns(subset)
+numCol <- summarizeNumericalColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"OrderData_Factors.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"OrderData_Numerical.csv"), sep=",", row.names=FALSE)
+#-----------------------------------------------------------------------------------
+# payment method
+interestingPayments <- c("Order.Credit.Card.Brand",
+                        "Bank.Card.Holder",
+                        "Gas.Card.Holder",
+                        "Upscale.Card.Holder",
+                        "Unknown.Card.Type",
+                        "TE.Card.Holder",
+                        "Premium.Card.Holder",
+                        "New.Bank.Card"
+)
+subset <- subset(orders, select=interestingPayments)
+facCol <- summarizeFactorColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"PaymentMethodData_Factors.csv"), sep=",", row.names=FALSE)
+#-----------------------------------------------------------------------------------
+# product data
+interestingProducts <- c("StockType",
+                        "Manufacturer",
+                        "BrandName"
+)
+subset <- subset(orders, select=interestingProducts)
+facCol <- summarizeFactorColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"ProductData_Factors.csv"), sep=",", row.names=FALSE)
+#-----------------------------------------------------------------------------------
+# customer data
+interestingCustomers <- c("City",
+                        "Country",
+                        "US.State",
+                        "Age",
+                        "Marital.Status",
+                        "Gender",
+                        "Audience",
+                        "Truck.Owner",
+                        "RV.Owner",
+                        "Motorcycle.Owner",
+                        "Working.Woman",
+                        "Presence.Of.Children",
+                        "Speciality.Store.Retail",
+                        "Oil.Retail.Activity",
+                        "Bank.Retail.Activity",
+                        "Finance.Retail.Activity",
+                        "Miscellaneous.Retail.Activity",
+                        "Upscale.Retail",
+                        "Upscale.Speciality.Retail",
+                        "Retail.Activity"
+)
+subset <- subset(orders, select=interestingCustomers)
+facCol <- summarizeFactorColumns(subset)
+numCol <- summarizeNumericalColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"CustomerData_Factors.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"CustomerData_Numerical.csv"), sep=",", row.names=FALSE)
+
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+# Overview table of interestng columns
+#-----------------------------------------------------------------------------------
+pathTableFolder <- "./4 Data Overview/Tables/"
+clicksCustomerInfo <- c("WhichDoYouWearMostFrequent",
+                        "YourFavoriteLegcareBrand",
+                        "Registration.Gender",
+                        "NumberOfChildren",
+                        "DoYouPurchaseForOthers",
+                        "HowDoYouDressForWork",
+                        "HowManyPairsDoYouPurchase",
+                        "YourFavoriteLegwearBrand",
+                        "WhoMakesPurchasesForYou",
+                        "NumberOfAdults",
+                        "HowDidYouHearAboutUs",
+                        "SendEmail",
+                        "HowOftenDoYouPurchase",
+                        "HowDidYouFindUs",
+                        "City",
+                        "US.State",
+                        "Year.of.Birth",
+                        "Email",
+                        "Truck.Owner",
+                        "RV.Owner",
+                        "Motorcycle.Owner",
+                        "Value.Of.All.Vehicles",
+                        "Age",
+                        "Other.Indiv...Age",
+                        "Marital.Status",
+                        "Working.Woman",
+                        "Mail.Responder",
+                        "Bank.Card.Holder",
+                        "Gas.Card.Holder",
+                        "Upscale.Card.Holder",
+                        "Unknown.Card.Type",
+                        "TE.Card.Holder",
+                        "Premium.Card.Holder",
+                        "Presence.Of.Children",
+                        "Number.Of.Adults",
+                        "Estimated.Income.Code",
+                        "Home.Market.Value",
+                        "New.Car.Buyer",
+                        "Vehicle.Lifestyle",
+                        "Property.Type",
+                        "Loan.To.Value.Percent",
+                        "Presence.Of.Pool",
+                        "Year.House.Was.Built",
+                        "Own.Or.Rent.Home",
+                        "Length.Of.Residence",
+                        "Mail.Order.Buyer",
+                        "Year.Home.Was.Bought",
+                        "Home.Purchase.Date",
+                        "Number.Of.Vehicles",
+                        "DMA.No.Mail.Solicitation.Flag",
+                        "DMA.No.Phone.Solicitation.Flag",
+                        "CRA.Income.Classification",
+                        "New.Bank.Card",
+                        "Number.Of.Credit.Lines",
+                        "Speciality.Store.Retail",
+                        "Oil.Retail.Activity",
+                        "Bank.Retail.Activity",
+                        "Finance.Retail.Activity",
+                        "Miscellaneous.Retail.Activity",
+                        "Upscale.Retail",
+                        "Upscale.Speciality.Retail",
+                        "Retail.Activity",
+                        "Dwelling.Size",
+                        "Dataquick.Market.Code",
+                        "Lendable.Home.Equity",
+                        "Home.Size.Range",
+                        "Lot.Size.Range",
+                        "Insurance.Expiry.Month",
+                        "Dwelling.Unit.Size",
+                        "Month.Home.Was.Bought",
+                        "Available.Home.Equity",
+                        "Minority.Census.Tract",
+                        "Year.Of.Structure",
+                        "Gender",
+                        "Occupation",
+                        "Other.Indiv...Gender",
+                        "Other.Indiv...Occupation"
+)
+
+clicksProducts <- c("BrandName",
+                    "UnitsPerInnerBox",
+                    "PrimaryPackage",
+                    "Depth",
+                    "VendorMinREOrderDollars",
+                    "Height",
+                    "UnitsPerOuterBox",
+                    "StockType",
+                    "Pack",
+                    "ProductForm",
+                    "Look",
+                    "BasicOrFashion",
+                    "MfgStyleCode",
+                    "SaleOrNonSale",
+                    "Length",
+                    "MinQty",
+                    "LeadTime",
+                    "Weight",
+                    "HasDressingRoom",
+                    "ColorOrScent",
+                    "Width",
+                    "Texture",
+                    "Manufacturer",
+                    "ToeFeature",
+                    "Category2",
+                    "Material",
+                    "CategoryCode",
+                    "UnitIncrement",
+                    "WaistControl",
+                    "Collection",
+                    "BodyFeature",
+                    "Audience",
+                    "Category1",
+                    "Product",
+                    "Pattern"
+)
+
+selectUniqueCustomer <- clicks[ which(clicks$Request.Sequence==1), ]
+subset <- subset(clicks, select=clicksCustomerInfo)
+facCol <- summarizeFactorColumns(subset)
+numCol <- summarizeNumericalColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataCustomer_Factors.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataCustomer_Numerical.csv"), sep=",", row.names=FALSE)
+
+subset <- subset(clicks, select=clicksProducts)
+facCol <- summarizeFactorColumns(subset)
+numCol <- summarizeNumericalColumns(subset)
+write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Factors.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Numerical.csv"), sep=",", row.names=FALSE)
+
 ```
 
 ###Order Data

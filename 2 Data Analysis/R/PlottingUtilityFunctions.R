@@ -198,10 +198,10 @@ summarizeNumericalColumns <- function(df){
   
   for (column in names(df)){
     maxValue <- max(df[[column]], na.rm = TRUE)
-    meanValue <- mean(df[[column]], na.rm = TRUE)
+    meanValue <- round(mean(df[[column]], na.rm = TRUE),digits=2)
     medianValue <- median(df[[column]], na.rm = TRUE)
     minValue <- min(df[[column]], na.rm = TRUE)
-    sdValue <- sd(df[[column]], na.rm = TRUE)
+    sdValue <- round(sd(df[[column]], na.rm = TRUE),digits=2)
     summary_stats[nrow(summary_stats) + 1,] = list(column,maxValue,meanValue,medianValue,minValue,sdValue)
   }
   return(summary_stats)
