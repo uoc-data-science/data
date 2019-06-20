@@ -282,28 +282,54 @@ diffPrint(target=ordersP,current=orders)
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 ##Merging
-Furthermore, we tried to merge the click and order data in Python by trying different ID combinations that occure in both datasets. For testing the different combinations we used an inner join in order to be able of recognizing easier whether a merging try had success. Therefore, we used the following Coding. The example shows the try to merge on 'Session ID' for the clickstream data and on 'Order Session ID' for the order data.
+Furthermore, we tried to merge the click and order data in Python by trying different ID combinations that occure in both datasets. For testing the different combinations we used an inner join in order to be able to recognize easier whether a merging try had success. We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
 
-```{python pythonMerge, eval=F}
+```{python pythonMergingTries, echo=F}
 import pandas as pd
 
+pathIds = '1 Data Preprocessing/mergeIDs.csv'
 pathOrders = '0 Data/order_data_cleaned_P.csv'
 pathClicks = '0 Data/clickstream_data_cleaned_P.csv'
 
-orders =  pd.read_csv(pathOrders, sep=",", dtype=str)
 clicks = pd.read_csv(pathClicks, sep=",", dtype=str)
+orders = pd.read_csv(pathOrders, sep=",", dtype=str)
+ids = pd.read_csv(pathIds, sep=",", dtype=str)
 
-#Merging
-mergedData = pd.merge(clicks, orders,  how='inner', left_on=['Session ID'], right_on=['Order Session ID'])
+shapes = []
+for index, row in ids.iterrows():
+    # Merging
+    mergedData = pd.merge(clicks, orders, how='inner', left_on=[row['Clicks']], right_on=[row['Orders']])
+    shapes.append(str(list(mergedData.shape)))
+ids['Shape'] = shapes
 ```
 
-We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
+```{r MergingTries, echo=F}
+path <- '1 Data Preprocessing/mergeIDs.csv'
+mergingTries <- read.csv(file=path)
+kable(mergingTries, row.names = FALSE)
+```
 
-```{r mergingTries, echo=FALSE}
-pathIds  <- "1 Data Preprocessing/mergeIDs.csv"
-ids <- read.csv(file=pathIds)
 
-kable(ids, row.names = FALSE)
+In this way, we were able to discover that it is possible to join on the 'Customer ID' for some instances. Thereby, we saved a dataset for the merging results on the Customer ID:
+
+```{python pythonMerging, eval=F}
+import pandas as pd
+
+pathOrders = '../../0 Data/order_data_cleaned_P.csv'
+pathClicks = '../../0 Data/clickstream_data_cleaned_P.csv'
+
+pathMerge = "../../0 Data/merged_P.csv"
+pathMergeSmall = "../../0 Data/merged_small_P.csv"
+
+clicks = pd.read_csv(pathClicks, sep=",", dtype=str)
+orders = pd.read_csv(pathOrders, sep=",", dtype=str)
+
+# Merging
+mergedData = pd.merge(clicks, orders, how='inner', left_on=['Customer ID'], right_on=['Customer ID'])
+
+#Save CSV
+mergedData.to_csv(path_or_buf=pathMerge, index=False)
+(mergedData.head(10000)).to_csv(path_or_buf=pathMergeSmall, index=False)
 ```
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -1004,7 +1030,7 @@ knitTable("4 Data Overview/Tables/ ClickstreamDataCustomer_Factors.csv")
 knitTable("4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical.csv")
 ```
 
-###Product Data
+####Product Data
 
 tbd
 
