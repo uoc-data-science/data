@@ -56,15 +56,17 @@ Both datasets share a considerable amount of columns. However, since not every c
 
 The project's task is to analyze the dataset, especially by creating plots and statistical tables for the data, that is suspected to be relevant for the online shop in some way. 
 
+In addition to that the performance of different reccomendation systems has to be analyzed.
+
 <!-- TODO: Task description of the modelling task -->
-Additionally, a model has to be constructed to predict...
+Finally, a model has to be constructed to predict...
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 #Cleaning the Data {#cleaning}
 
-Before we started cleaning the data, we copied it to the folder "0 Data". The reason for this was to avoid accidentally altering the original dataset due to the clear logistical separation of the edited datasets from the original ones. The cleaned data and further forms of the datasets were also saved to this folder. Before explaining the cleaning process, it makes sense to get an overview of the content of the aforementioned folder. It can be described as follows:
+Before we started cleaning the data, we copied it to the folder "0 Data". The reason for this was to avoid accidentally altering the original dataset by separating the edited datasets from the original ones. The cleaned data and further forms of the datasets were also saved to this folder. Before explaining the cleaning process, it makes sense to get an overview of the content of the aforementioned folder. It can be described as follows:
 
 * Each file has a suffix depending on what language was used for creating it. Files created with a Python script have the suffix "_P", while files created with R have the suffix "_R". 
 * For both datasets three types of files are created: 
@@ -83,7 +85,7 @@ The cleaning process consists of the following steps:
 
 1. Copy the original datasets to the folder "0 Data"
 
-```{r copyFiles, eval=F}
+```{r copyFiles, eval=F, echo=F, results = "hide"}
 # Path of original file
 pathOrders <- "orders/order_data.csv"
 # Path of original file to be pasted into the Data folder
@@ -114,7 +116,7 @@ pathClicks2 <- newPathClicks2
 
 2. Read the data, add headers (i.e. column labels), replace "?" and "NULL" with NA, drop columns which have a 100% ratio of missing data, reformat datetime cells and save the result (e.g. as "order_data_cleaned_R.csv")
 
-```{r cleanFiles, eval=F}
+```{r cleanFiles, eval=F, echo=F, results = "hide"}
 # 2) read files, set headers and replace ? with NA
 
 # Function to get headers from header.txt
@@ -173,7 +175,7 @@ write.table(clicks, file = pathClicksClean, sep=",", row.names=FALSE)
 
 3. Create a subset of the cleaned data, containing only 1000 rows, and save it (e.g. as "order_data_small_R.csv")
 
-```{r smallFiles, eval=F}
+```{r smallFiles, eval=F, echo=F, results = "hide"}
 # 3) Save smaller versions for readability and dev purposes
 small_size = min(1000,nrow(orders))
 orders_small = orders[1:small_size,]
@@ -309,8 +311,7 @@ mergingTries <- read.csv(file=path)
 kable(mergingTries, row.names = FALSE)
 ```
 
-
-In this way, we were able to discover that it is possible to join on the 'Customer ID' for some instances. Thereby, we saved a dataset for the merging results on the Customer ID:
+This way we were able to discover that it is possible to join on the 'Customer ID' for some instances. Thus, we saved a dataset for the merging results on the Customer ID:
 
 ```{python pythonMerging, eval=F}
 import pandas as pd
@@ -343,9 +344,9 @@ The aim of the data analysis is to extract information, which is suspected to be
 
 ##Missing Data{#missingData}
 
-Before creating overview tables or plots for columns, it makes sense to look which columns actually contain a large quantity of information and which do not. To do a check up on the ratio of filled cells, we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. The first 50 entries in the resulting rankings can be seen in the following two code blocks.
+Before creating overview tables or plots for columns, it makes sense to look which columns actually contain a large quantity of information and which do not. To do a check up on the ratio of filled cells, we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. The first 50 entries in the resulting rankings can be seen in the following two tables.
 
-```{r NARankingOrders}
+```{r NARankingOrders, echo=F}
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
 pathClicks  <- "0 Data/clickstream_data_cleaned_R.csv"
 pathOrdersPython <- "0 Data/order_data_cleaned_P.csv"
@@ -372,7 +373,7 @@ NAorders <- NAorders[with(NAorders, order(NAorders$NA_percentage)),]
 kable(head(NAorders,50), row.names = FALSE)
 ```
 
-```{r NARankingClicks}
+```{r NARankingClicks, echo=F}
 # Create a DF to save the column names and appropriate NA percentage values
 NAclicks <- data.frame(matrix(ncol = 2, nrow = 0))
 x <- c("Column_Name", "NA_percentage")
