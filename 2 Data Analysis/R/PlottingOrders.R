@@ -135,6 +135,7 @@ for (day in orders$Order.Line.Date){
   }
 }
 plotData <- plotData %>% arrange(Date)
+plotData$Over_12_dollar_percentage <- plotData$Over_12_dollar_percentage * 100
 p3 <- ggplot(data=plotData, aes(x=Date, y=Over_12_dollar_percentage, group=1)) +
   geom_line() +
   geom_point() +
