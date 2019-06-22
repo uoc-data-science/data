@@ -268,11 +268,39 @@ ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardBrand.png",sep="")
 #-----------------------------------------------------------------------------------
 #Plotting Customer Data
 #-----------------------------------------------------------------------------------
-# US States heatmap
+# US States heatmap (weighted)
 states <- usStates
 states$State <- tolower(states$State)
 gusa <- map_data("state")
 plotData <- merge(orders, states, by.x="US.State", group = group, by.y="Abbreviation")
+plotData <-tabyl(plotData$State, sort = TRUE)
+names(plotData) <- c("region", "count", "percentage")
+print(plotData)
+top <- head(arrange(plotData, desc(count)), 10)
+top <- top$region
+centroids <- summarize(group_by(gusa, region), x = mean(range(long)), y = mean(range(lat))) #Calculate centroids
+names(centroids)[1] <- "state"
+centroids <- centroids[centroids$state %in% top,]
+plotData <- left_join(gusa, plotData)
+plotData[is.na(plotData)] <- 0
+ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
+  geom_polygon(aes(group=group, fill=count), color = "black", size = 0.3) +
+  labs(x = NULL, y = NULL, fill = "Count", title = "Customer Hotspots (weighted by order amount)") +
+  scale_fill_gradient(low = "white", high = "black") +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(), axis.title.y=element_blank(),
+        panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank()) +
+  #geom_label_repel(data = centroids, aes(x, y, label=state), force=2, segment.color="#fd9409", nudge_x=0.5) +
+  coord_map()
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/States_weighted.png",sep=""), bg = "transparent", width=13)
+
+# US States heatmap
+states <- usStates
+states$State <- tolower(states$State)
+gusa <- map_data("state")
+ordersDistinctCustomer <- distinct(orders, Customer.ID, .keep_all = TRUE)
+plotData <- merge(ordersDistinctCustomer, states, by.x="US.State", group = group, by.y="Abbreviation")
 plotData <-tabyl(plotData$State, sort = TRUE)
 names(plotData) <- c("region", "count", "percentage")
 print(plotData)
@@ -295,9 +323,31 @@ ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
   coord_map()
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/States.png",sep=""), bg = "transparent", width=13)
 #-----------------------------------------------------------------------------------
-#most important cities (map)
+#most important cities (map) (weighted)
 states <- usStates
 plotData <- merge(orders, states, by.x="US.State", by.y="Abbreviation")
+plotData$name<- with(plotData, paste0(City, " ", US.State)) #new column with city and state
+plotData <-tabyl(plotData$name, sort = TRUE)
+names(plotData) <- c("name", "count", "percentage")
+plotData <- left_join(us.cities, plotData)
+plotData <- na.omit(plotData) #drop cities without orders
+plotData <- arrange(plotData, desc(count))
+cities <- head(plotData, 100)
+print(cities)
+ggplot() + 
+  geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
+  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="black", alpha = .15) +
+  geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
+  labs(title = "Top 100 Customer Cities (weighted by order amount)") +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(), axis.title.y=element_blank(),
+        panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank())
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities_weighted.png",sep=""), width=13)
+
+#most important cities (map)
+states <- usStates %>% filter(State != "Alaska") #TODO: Possible bug? Why isn't this bugging the weighted version??
+plotData <- merge(ordersDistinctCustomer, states, by.x="US.State", by.y="Abbreviation")
 plotData$name<- with(plotData, paste0(City, " ", US.State)) #new column with city and state
 plotData <-tabyl(plotData$name, sort = TRUE)
 names(plotData) <- c("name", "count", "percentage")
@@ -317,17 +367,30 @@ ggplot() +
         panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank())
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=13)
 #-----------------------------------------------------------------------------------
-#age data
+#age data (weighted)
 p1 <- beautify(ggplot(orders, aes(x=Age)) + 
   geom_density() +
   scale_x_continuous(name="Age")) +
-  labs(title = "Age Distribution")
+  labs(title = "Age Distribution (weighted by order amount)")
 
 plotData <- na.omit(orders %>% select(Age, Gender))
 p2 <-beautify(ggplot(plotData) + 
   stat_density(aes(x=Age, linetype=Gender), geom="line", position="identity") +
-  labs(title = "Age Distribution per Gender") +
+  labs(title = "Age Distribution per Gender (weighted by order amount)") +
   scale_linetype_discrete(guide=guide_legend(override.aes=aes(colour="black"))))
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age_weighted.png",sep=""), multiplot(p1,p2, cols=2), width=16, height=5)
+
+#age data
+p1 <- beautify(ggplot(ordersDistinctCustomer, aes(x=Age)) + 
+                 geom_density() +
+                 scale_x_continuous(name="Age")) +
+  labs(title = "Age Distribution")
+
+plotData <- na.omit(ordersDistinctCustomer %>% select(Age, Gender))
+p2 <-beautify(ggplot(plotData) + 
+                stat_density(aes(x=Age, linetype=Gender), geom="line", position="identity") +
+                labs(title = "Age Distribution per Gender") +
+                scale_linetype_discrete(guide=guide_legend(override.aes=aes(colour="black"))))
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age.png",sep=""), multiplot(p1,p2, cols=2), width=16, height=5)
 #-----------------------------------------------------------------------------------
 #any vehicle
