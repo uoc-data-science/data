@@ -82,7 +82,9 @@ for (i in 1:ncol(dataframe)) {
   }
 }
 print(drop)
+
 # Lösche doppelte Spalten (immer die 2.)
+
 dataframe <- subset(dataframe, select = -drop)
 head(dataframe)
 ```
@@ -116,6 +118,14 @@ head(diff_p)
 ## Including Plots
 
 You can also embed plots, for example:
+
+```{r}
+
+
+
+```
+
+
 
 ```{r}
 
@@ -158,7 +168,23 @@ ggplot(data = dataframe)+
   geom_smooth(mapping = aes(x=Order_Line_Quantity,
                            y=Order_Amount))
 
+#headmap
+Customer_Product_heatmap <- dataframe %>%
+  select(US_State,Customer_ID,Order_Line_ID,Order_Line_Amount) %>%
+  group_by(Customer_ID,US_State) %>%
+  summarise(numberoforders= n(),totalspend=sum(Order_Line_Amount))
+
+ggplot(data= Customer_Product_heatmap)+
+  geom_tile(mapping = aes(x=US_State,y=Customer_ID, fill=totalspend))
+
+
+
+
+
 ```
+
+
+
 
 ```{r}
 ```
