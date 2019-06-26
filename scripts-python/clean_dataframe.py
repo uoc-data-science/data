@@ -38,11 +38,9 @@ def delete_empty_indexorcolumns_in_df(df, index_or_columns, threshold):
 
 
 def clean_df_generic(df, threshold):
-    print(df)
     df = drop_identical(df)
     df = delete_empty_indexorcolumns_in_df(df, "columns", threshold)
     df = delete_empty_indexorcolumns_in_df(df, "index", threshold)
-    print(df)
     return df
 
 

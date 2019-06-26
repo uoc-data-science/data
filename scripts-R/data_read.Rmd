@@ -13,6 +13,8 @@ knitr::opts_knit$set(root.dir = "F:/Github/ourdata/data")
 #Philipp_root
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
 
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
+
 #laurenz_root
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
 
@@ -46,6 +48,16 @@ result <- gsub(" ", "_", result)
 dataframe <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
 dataframe$order_time <- parse_time(dataframe$"Order_Line_Date_Time","%H\\:%M\\:%S")
 head(dataframe)
+```
+
+## Replacing "?" and "NULL" with nan
+```{r}
+library(naniar)
+na_strings <- c("?", "NULL")
+df2 <- dataframe %>% replace_with_na_all(condition = ~.x %in% na_strings)
+## dataframe <- str_replace_all(dataframe, ";", ",")
+head(df2)
+
 ```
 
 ## Clean_dataset
@@ -120,14 +132,13 @@ ggplot(dataframe) +
     colour = "Product Level"
   )
 ggplot(dataframe) + 
-  geom_point(mapping = aes(x = x, y = dataframe$Order_Line_Amount, colour = dataframe$Order_Line_Quantity)) +
+  geom_point(mapping = aes(x = x, y = dataframe$Order_Amount, colour = dataframe$Gender)) +
   labs(
     x = "Time",
     y = "Shipping Amount",
     colour = "Order Quantity"
   )
-#lapply(dataframe, mean)
-#lapply(dataframe, max)
+
 
 ggplot(data = dataframe)+
   geom_bar(mapping = aes(x = Order_Credit_Card_Brand, fill = Order_Credit_Card_Brand))
