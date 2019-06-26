@@ -172,7 +172,7 @@ ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Time.png",sep=""), 
 beautify(ggplot(orders, aes(x=Order.Discount.Amount)) +
   geom_density() +
   scale_x_continuous(name="Discount Amount") +
-  ggtitle("Density of Order Amount"))
+  ggtitle("Density of Discount"))
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
