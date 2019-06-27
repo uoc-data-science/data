@@ -7,6 +7,7 @@ output:
     toc: yes
     toc_float: true
     theme: flatly
+tables: yes
 ---
 
 <!--centers the text, but does not work very fine -->
@@ -43,7 +44,7 @@ knitTable <- function(path){
 }
 
 #declare python version to use (Comment Kim: I need this to knit the document.)
-#use_python('/anaconda3/bin/python', required = TRUE)
+use_python('/anaconda3/bin/python', required = FALSE)
 ```
 
 #About the Data {#data}
@@ -319,26 +320,69 @@ kable(mergingTries, row.names = FALSE)
 ```
 
 <br> 
-This way we were able to discover that it is possible to join on the 'Customer ID' for some instances. Thus, we saved a dataset for the merging results on the Customer ID.
+In this way we were able to discover that it is possible to join on the 'Customer ID' for some instances. Thus, we saved a dataset for the merging results on the Customer ID. But the merged data makes rather less sense since a Customer ID can have multiple order and click rows. Because of this issue, we decided on building a second, smaller data subset containing only the customer information columns of both original datasets. The final merged customer dataset contains 80 attributes for 97 customers. 
 
 ```{python pythonMerging, eval=F, echo=F, results = "hide"}
 import pandas as pd
 
+# sources
 pathOrders = '../../0 Data/order_data_cleaned_P.csv'
 pathClicks = '../../0 Data/clickstream_data_cleaned_P.csv'
 
-pathMerge = "../../0 Data/merged_P.csv"
-pathMergeSmall = "../../0 Data/merged_small_P.csv"
+pathClickCustomer1 = '../../4 Data Overview/Tables/ ClickstreamDataCustomer_Factors.csv'
+pathClickCustomer2 = '../../4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical.csv'
+pathOrderCustomer1 = '../../4 Data Overview/Tables/ CustomerData_Factors.csv'
+pathOrderCustomer2 = '../../4 Data Overview/Tables/ CustomerData_Numerical.csv'
 
+# results
+pathMerge = "../../0 Data/merged_P.csv"
+pathCustomers = "../../0 Data/merged_Customers_P.csv"
+
+#############################################################################
+# normal merge
+
+# read data
 clicks = pd.read_csv(pathClicks, sep=",", dtype=str)
 orders = pd.read_csv(pathOrders, sep=",", dtype=str)
 
-# Merging
+# merging
 mergedData = pd.merge(clicks, orders, how='inner', left_on=['Customer ID'], right_on=['Customer ID'])
 
-#Save CSV
+# save data
+print(list(mergedData.shape))
 mergedData.to_csv(path_or_buf=pathMerge, index=False)
-(mergedData.head(10000)).to_csv(path_or_buf=pathMergeSmall, index=False)
+
+#############################################################################
+# customer data merge
+
+# read data
+clickCustomer1 = pd.read_csv(pathClickCustomer1, sep=",", dtype=str)
+clickCustomer2 = pd.read_csv(pathClickCustomer2, sep=",", dtype=str)
+orderCustomer1 = pd.read_csv(pathOrderCustomer1, sep=",", dtype=str)
+orderCustomer2 = pd.read_csv(pathOrderCustomer2, sep=",", dtype=str)
+
+# build subset on Customer Columns
+clickCustomer1 = [w.replace('.', ' ') for w in clickCustomer1['Variable']]
+clickCustomer1 = [w.replace('   ', '\. ') for w in clickCustomer1]
+clickCustomer2 = [w.replace('.', ' ') for w in clickCustomer2['Variable']]
+clickCustomer2 = [w.replace('   ', '\. ') for w in clickCustomer2]
+clickCustomer1.extend(clickCustomer2)
+clickCustomer1.append('Customer ID')
+clicks = clicks[clickCustomer1]
+clicks = clicks.drop_duplicates(subset=['Customer ID'])
+
+orderCustomer1 = [w.replace('.', ' ') for w in orderCustomer1['Variable']]
+orderCustomer2 = [w.replace('.', ' ') for w in orderCustomer2['Variable']]
+orderCustomer1.extend(orderCustomer2)
+orderCustomer1.append('Customer ID')
+orders = (orders[orderCustomer1])
+orders = orders.drop_duplicates(subset=['Customer ID'])
+
+# merging
+mergedCustomer = pd.merge(clicks, orders, how='inner', left_on=['Customer ID'], right_on=['Customer ID'], suffixes=('', '_y'))
+mergedCustomer.drop(list(mergedCustomer.filter(regex='_y$')), axis=1, inplace=True) #delete duplicates
+print(list(mergedCustomer.shape))
+mergedCustomer.to_csv(path_or_buf=pathCustomers, index=False)
 ```
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -354,7 +398,7 @@ The aim of the data analysis is to extract information, which is suspected to be
 
 Before creating overview tables or plots for columns, it makes sense to look which columns actually contain a large quantity of information and which do not. To do a check up on the ratio of filled cells, we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. The first 50 entries in the resulting rankings can be seen in the following two tables.
 
-```{r NARankingOrders, echo=F}
+```{r NARanking, echo=F}
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
 pathClicks  <- "0 Data/clickstream_data_cleaned_R.csv"
 pathOrdersPython <- "0 Data/order_data_cleaned_P.csv"
@@ -378,10 +422,10 @@ for (column in names(orders)){
 }
 # Sort by NA percentage ascending
 NAorders <- NAorders[with(NAorders, order(NAorders$NA_percentage)),]
-kable(head(NAorders,50), row.names = FALSE)
-```
+# kable(head(NAorders,50), row.names = FALSE, format = 'latex')
 
-```{r NARankingClicks, echo=F}
+##########################################################################
+
 # Create a DF to save the column names and appropriate NA percentage values
 NAclicks <- data.frame(matrix(ncol = 2, nrow = 0))
 x <- c("Column_Name", "NA_percentage")
@@ -395,7 +439,15 @@ for (column in names(clicks)){
 # Sort by NA percentage ascending
 NAclicks <- NAclicks[with(NAclicks, order(NAclicks$NA_percentage)),]
 write.table(NAclicks, file = pathNULLAnalysisClicks, sep=",", row.names=FALSE)
-kable(head(NAclicks,50), row.names = FALSE)
+# kable(head(NAclicks,50), row.names = FALSE, format = 'latex')
+
+df <- data.frame(matrix(ncol = 1, nrow = 0))
+colnames(df) <- c("|    |")
+for (i in 0:50){
+  df[nrow(df) + 1,] = list("|    |")
+}
+
+knitr::kable(list(head(NAorders,50), df, head(NAclicks,50)), row.names = FALSE, booktabs = TRUE, linesep = " ")
 ```
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
