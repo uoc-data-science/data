@@ -8,12 +8,12 @@ output: html_document
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
 #nico_root
-knitr::opts_knit$set(root.dir = "F:/Github/ourdata/data")
+#knitr::opts_knit$set(root.dir = "F:/Github/ourdata/data")
 
 #Philipp_root
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
 
-#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
+knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
 
 #laurenz_root
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
@@ -187,5 +187,10 @@ ggplot(data= Customer_Product_heatmap)+
 
 
 ```{r}
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "experiment/experimental_results.csv", sep="/")
+experiment <- read_csv(headersPath)
+experiment <- experiment[1:147,]
+t.test(experiment$random_recommendations, experiment$ranking_based)
 ```
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
