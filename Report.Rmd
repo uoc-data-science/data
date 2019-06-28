@@ -961,6 +961,13 @@ knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Factors.csv")
 knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Numerical.csv")
 ```
 
+####Calculated Data
+
+Since not all interesting data can be recorded through simply summaring the existing columns, we decided to add calculated columns. The session duration gives the time in minutes a customer spend on the website, which gets calculated through the timestamps on the first and last click of a session. The click number represents how much clicks a customer made during one session. For both these values, the max values indicate that there could be bot activity on the website.
+
+```{r ClicksCalc, echo=FALSE}
+knitTable("4 Data Overview/Tables/ ClickstreamData_Calc.csv")
+```
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 

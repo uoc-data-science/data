@@ -203,19 +203,23 @@ SeqPos <- 0 # the position in the click sequence
 Index <- 1 # current index
 FirstVisit <- 1 # position of first click
 vector <- character(0) # empty helper vector
-
+clickNum <- vector()
 # search for start and and of click sequences and get the matching times
   for (val in SeqAndTime$Request.Sequence) {
     if(val>SeqPos) {
       SeqPos <- val
     }
     if(val<SeqPos) {
+      clickNum <- c(clickNum, SeqPos)
       vector <- c(vector, SeqAndTime[FirstVisit, "Request.Date_Time"] %>%
                     as.character())
       vector <- c(vector, SeqAndTime[Index-1, "Request.Date_Time"] %>%
                     as.character())
       FirstVisit <- Index
       SeqPos <- 1
+    }
+    if(val == SeqPos) {
+      clickNum <- c(clickNum, SeqPos)
     }
     Index <- Index+1
   }
@@ -232,6 +236,7 @@ diffV$totalMinutes <- diffV$hours*60 + #calculate the total minutes
   diffV$minutes +
   diffV$seconds/60
 calc <- data.frame("Session Duration" = diffV$totalMinutes)
+clickNum <- data.frame("Click Number" = clickNum)
 diffV <- subset(diffV, totalMinutes<40) # only select rows with less than 40 mins
                                         # for visual reasons
 print(diffV)
@@ -257,11 +262,6 @@ beautify(ggplot(hourGroup, aes(x = datetime, y=count)) +
   geom_line() +
   ggtitle("History of Clicks per Hour"))
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Click History.png",sep=""), width=10)
-#-----------------------------------------------------------------------------------
-#print calc columns
-calcCol <- summarizeNumericalColumns(calc)
-print(calcCol)
-write.table(calcCol, file = paste(pathTableFolder,"ClickstreamData_Calc.csv"), sep=",", row.names=FALSE)
 #-----------------------------------------------------------------------------------
 # US States heatmap
 states <- usStates
@@ -311,3 +311,10 @@ ggplot() +
         axis.title.x=element_blank(), axis.title.y=element_blank(),
         panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank())
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Cities_weighted.png",sep=""), width=13)
+#-----------------------------------------------------------------------------------
+#print calc columns
+calcCol <- summarizeNumericalColumns(calc)
+calcCol2 <- summarizeNumericalColumns(clickNum)
+calcCol <- rbind(calcCol, calcCol2)
+
+write.table(calcCol, file = paste(pathTableFolder,"ClickstreamData_Calc.csv"), sep=",", row.names=FALSE)
