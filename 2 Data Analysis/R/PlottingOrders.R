@@ -28,8 +28,6 @@ usStates <- read.csv(file="2 Data Analysis/states.csv")
 # read data
 orders <- read.csv(file=pathOrders)
 
-#color pallett
-mycols <- c("#0073C2FF", "#EFC000FF", "#868686FF", "#CD534CFF", "#246d18")
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # overview tables for interesting columns
@@ -103,7 +101,7 @@ write.table(numCol, file = paste(pathTableFolder,"CustomerData_Numerical.csv"), 
 
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
-#Plotting Order Data
+#Plotting Order Process Data
 #-----------------------------------------------------------------------------------
 # Distribution of order amount, unit price, order quantity
 p1 <- ggplot(orders, aes(x=Order.Line.Amount)) + 
