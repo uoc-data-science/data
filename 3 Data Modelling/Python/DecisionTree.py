@@ -19,6 +19,10 @@ import pydotplus
 
 import math
 
+pathInput = '../prediction_input_data.csv'
+pathConfusionMatrix = "../cm_tree.png"
+pathTreeVisualization = "../graphviz_tree.png"
+
 # --------------------------Utility functions--------------------------------
 #Methode zum Plotten einer Confusion Matrix
 #Quelle: https://gist.github.com/shaypal5/94c53d765083101efc0240d776a23823
@@ -94,7 +98,7 @@ def prune_duplicate_leaves(mdl):
 # --------------------------Utility functions--------------------------------
 
 
-df = pd.read_csv('../prediction_input_data.csv',sep=',',encoding='utf-8')
+df = pd.read_csv(pathInput,sep=',',encoding='utf-8')
 df.Ordered = df.Ordered.astype('str', copy=False)
 
 subset0 = df.loc[df['Ordered'] == 'Yes']
@@ -133,7 +137,7 @@ y_predictions = clf.predict(X_test)
 
 cm = confusion_matrix(y_test, y_predictions,classes)
 print_confusion_matrix(cm,classes)
-plt.savefig("cm_tree.png")
+plt.savefig(pathConfusionMatrix)
 plt.show()
 
 
@@ -147,4 +151,4 @@ dot_data = tree.export_graphviz(clf, out_file=None, feature_names=X_train_val.co
                                 proportion=True, rotate=False, rounded=True, precision=3)
 
 graph = pydotplus.graph_from_dot_data(dot_data)
-graph.write_png("graphviz_tree.png")
+graph.write_png(pathTreeVisualization)

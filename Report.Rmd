@@ -71,7 +71,7 @@ The project's task is to analyze the dataset, especially by creating plots and s
 In addition to that the performance of different Recomendation systems has to be analyzed.
 
 <!-- TODO: Task description of the modelling task -->
-Finally, a model has to be constructed to predict...
+Finally, a model has to be constructed to predict whether or not a user of the web-shop will order something, based on his browsing behaviour on the site.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -204,8 +204,11 @@ write.table(clicks_small, file = pathClicksSmall, sep=",", row.names=FALSE)
 A similar cleaning process to the one explained above has been implemented in Python.
 
 *Note: Python coding chunks are excutable in RMarkdown in general, but the Python environment is not persistent across different python chunks for the preview function ro run coding. Despite this, the chunks are compiled together, when the document is knitted.*
+*To execute the provided Python code copy it into the Python IDE of your choice, ideally under the recommended location, which is mentioned at the top of code block. The path is always relative to the repository.*
 
 ```{python pythonCleaning, eval=F, echo=F, results = "hide"}
+#Recommended Location: "./"
+
 import shutil
 import pandas as pd
  
@@ -296,9 +299,13 @@ diffPrint(target=ordersP,current=orders)
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 ##Merging 
+*Note: Since we do not use the merged datasets for any in-depth analysis we consider it to be a part of "Data exploration", instead of "Data cleaning". Thus we implemented it in Python only.*
+
 Furthermore, we tried to merge the click and order data in Python by trying different ID combinations that occure in both datasets. For testing the different combinations we used an inner join in order to be able to recognize easier whether a merging try had success. We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
 
 ```{python pythonMergingTries, eval=F, echo=F}
+#Recommended Location: "./"
+
 import pandas as pd
 
 pathIds = '1 Data Preprocessing/mergeIDs.csv'
@@ -327,6 +334,8 @@ kable(mergingTries, row.names = FALSE)
 In this way we were able to discover that it is possible to join on the 'Customer ID' for some instances. Thus, we saved a dataset for the merging results on the Customer ID. But the merged data makes rather less sense since a Customer ID can have multiple order and click rows. Because of this issue, we decided on building a second, smaller data subset containing only the customer information columns of both original datasets. The final merged customer dataset contains 80 attributes for 97 customers. 
 
 ```{python pythonMerging, eval=F, echo=F, results = "hide"}
+#Recommended Location: "./1 Data Preprocessing/Python/"
+
 import pandas as pd
 
 # sources
@@ -1528,7 +1537,246 @@ To sum it up, the company should use the profit oriented recommendation system, 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-#Creating a Model {#model}
+#Predicting customer behaviour {#model}
+
+Following the inference analysis our next task is to predict whether or not a person browsing the online-shop will end up purchasing something, based on the browsing behaviour on the site.
+
+First of all the relevant data had to be extracted, or engineered, from the clickstream data and put into a seperate dataset, to be used as the input data for a prediction model. The resulting data set contains one row per session. For each session the following attributes are used:
+
+* The number of clicks during that session
+* The session duration (in seconds)
+* The hour of day at which the session was started
+* The day of week at which the session was started
+* Whether the session contains an order (this was extracted by looking if the customer visited the URL "checkout/thankyou")
+
+```{python prepareModelInputData, eval=F, echo=F, results = "hide"}
+#Recommended Location: "./3 Data Modelling/Python/"
+
+import pandas as pd
+import datetime
+import numpy as np
+
+pathClicks = '../../0 Data/clickstream_data_cleaned_P.csv'
+pathResult = "../prediction_input_data.csv"
+
+#############################################################################
+
+# read data
+clicksOrig = pd.read_csv(pathClicks, sep=",", dtype=str)
+
+df = pd.DataFrame(columns=['Clicks','Duration_in_Seconds','REQUEST_DAY_OF_WEEK','REQUEST_HOUR_OF_DAY','Ordered'])
+clickCount = '1'
+minTime = 0
+maxTime = 0
+ordered = "No"
+init = 1
+for index, row in clicksOrig.iterrows():
+    if row["Request Sequence"] == '1':
+        if init == 0 and clickCount != '1':
+            duration = (maxTime - minTime).total_seconds()
+            df.loc[len(df)] = [str(clickCount), str(duration), str(day), str(hour), str(ordered)]
+        if init == 1:
+            init = 0
+        ordered = "No"
+        #new minTime
+        dt = row['Request Date'] + ' ' + row['Request Date_Time']
+        minTime = datetime.datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
+        day = row["REQUEST_DAY_OF_WEEK"]
+        hour = row["REQUEST_HOUR_OF_DAY"]
+    if row["Request Template"] == "checkout/thankyou\.jhtml":
+        ordered = "Yes"
+    clickCount = row["Request Sequence"]
+    dt = row['Request Date'] + ' ' + row['Request Date_Time']
+    maxTime = datetime.datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
+
+
+# one hot encode where needed
+df['REQUEST_HOUR_OF_DAY'] = df['REQUEST_HOUR_OF_DAY'].apply(lambda x: "{}{}".format('Hour_', x))
+one_hot = pd.get_dummies(df['REQUEST_HOUR_OF_DAY'])
+df = df.drop('REQUEST_HOUR_OF_DAY',axis = 1)
+df = df.join(one_hot)
+df['REQUEST_DAY_OF_WEEK'] = df['REQUEST_DAY_OF_WEEK'].apply(lambda x: "{}{}".format('Weekday_', x))
+one_hot = pd.get_dummies(df['REQUEST_DAY_OF_WEEK'])
+df = df.drop('REQUEST_DAY_OF_WEEK',axis = 1)
+df = df.join(one_hot)
+df.to_csv(pathResult, index=False)
+```
+
+Since the last two attributes have to be one-hot-encoded, it is not possible to show the head of the dataset in this report. However an important thing to note is that about 99% of sessions do not contain an order. In addition to that, sessions consisting of only one click are ignored, since they offer no valuable information.
+
+After preparing the data the next step is training and testing a model. The model of choice is a decision tree, since it allows to easily understand the decision making process of the model, and since it removes the need for dimensionality reduction and feature scaling, thus reducing the required work. The evaluation metric used during the Grid Search is roc-score. However, depending on the evolving needs of the company, one might want to chose a different evaluation metric.
+
+```{python createTree, eval=F, echo=F, results = "hide"}
+#Recommended Location: "./3 Data Modelling/Python/"
+#Note: In addition to having the packages installed, the software "graphviz" also needs to be installed. If any bugs related to graphviz prevent you from running the code, you can use the figure provided in this chapter as a reference.
+
+import numpy as np
+import pandas as pd
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import cross_val_score, cross_val_predict
+from sklearn.model_selection import GridSearchCV
+
+from sklearn import tree
+import graphviz
+import pydotplus
+
+import math
+
+pathInput = '../prediction_input_data.csv'
+pathConfusionMatrix = "../cm_tree.png"
+pathTreeVisualization = "../graphviz_tree.png"
+
+# --------------------------Utility functions--------------------------------
+#Methode zum Plotten einer Confusion Matrix
+#Quelle: https://gist.github.com/shaypal5/94c53d765083101efc0240d776a23823
+
+def print_confusion_matrix(confusion_matrix, class_names, figsize=(10, 7), fontsize=14):
+    """Prints a confusion matrix, as returned by sklearn.metrics.confusion_matrix, as a heatmap.
+
+    Arguments
+    ---------
+    confusion_matrix: numpy.ndarray
+        The numpy.ndarray object returned from a call to sklearn.metrics.confusion_matrix.
+        Similarly constructed ndarrays can also be used.
+    class_names: list
+        An ordered list of class names, in the order they index the given confusion matrix.
+    figsize: tuple
+        A 2-long tuple, the first value determining the horizontal size of the ouputted figure,
+        the second determining the vertical size. Defaults to (10,7).
+    fontsize: int
+        Font size for axes labels. Defaults to 14.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The resulting confusion matrix figure
+    """
+    df_cm = pd.DataFrame(
+        confusion_matrix, index=class_names, columns=class_names,
+    )
+    fig = plt.figure(figsize=figsize)
+    try:
+        heatmap = sns.heatmap(df_cm, annot=True, fmt="d")
+    except ValueError:
+        raise ValueError("Confusion matrix values must be integers.")
+    heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=0, ha='right', fontsize=fontsize)
+    heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), rotation=45, ha='right', fontsize=fontsize)
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    return fig
+
+# Methode zum Entfernen doppelter Blätter
+# Quelle: https://stackoverflow.com/questions/51397109/prune-unnecessary-leaves-in-sklearn-decisiontreeclassifier
+
+from sklearn.tree._tree import TREE_LEAF
+
+def is_leaf(inner_tree, index):
+    # Check whether node is leaf node
+    return (inner_tree.children_left[index] == TREE_LEAF and
+            inner_tree.children_right[index] == TREE_LEAF)
+
+def prune_index(inner_tree, decisions, index=0):
+    # Start pruning from the bottom - if we start from the top, we might miss
+    # nodes that become leaves during pruning.
+    # Do not use this directly - use prune_duplicate_leaves instead.
+    if not is_leaf(inner_tree, inner_tree.children_left[index]):
+        prune_index(inner_tree, decisions, inner_tree.children_left[index])
+    if not is_leaf(inner_tree, inner_tree.children_right[index]):
+        prune_index(inner_tree, decisions, inner_tree.children_right[index])
+
+    # Prune children if both children are leaves now and make the same decision:
+    if (is_leaf(inner_tree, inner_tree.children_left[index]) and
+        is_leaf(inner_tree, inner_tree.children_right[index]) and
+        (decisions[index] == decisions[inner_tree.children_left[index]]) and
+        (decisions[index] == decisions[inner_tree.children_right[index]])):
+        # turn node into a leaf by "unlinking" its children
+        inner_tree.children_left[index] = TREE_LEAF
+        inner_tree.children_right[index] = TREE_LEAF
+        ##print("Pruned {}".format(index))
+
+def prune_duplicate_leaves(mdl):
+    # Remove leaves if both
+    decisions = mdl.tree_.value.argmax(axis=2).flatten().tolist() # Decision for each node
+    prune_index(mdl.tree_, decisions)
+# --------------------------Utility functions--------------------------------
+
+
+df = pd.read_csv(pathInput,sep=',',encoding='utf-8')
+df.Ordered = df.Ordered.astype('str', copy=False)
+
+subset0 = df.loc[df['Ordered'] == 'Yes']
+subset0 = subset0.sample(n=math.ceil(len(subset0.index)/2))
+subset1 = df.loc[df['Ordered'] == 'No']
+subset1 = subset1.sample(n=math.ceil(len(subset0.index)*2))
+
+train = subset1.append(subset0)
+test = df[~df.isin(train)].dropna()
+
+X_train_val = train.drop('Ordered', axis=1)
+y_train_val = train.loc[:,'Ordered']
+X_test = test.drop('Ordered', axis=1)
+y_test = test.loc[:,'Ordered']
+
+classes = ['No','Yes']
+
+parameters = {'max_depth':[1,2,3,4,5],
+              'min_samples_leaf':[1,0.0025,0.005,0.01],
+              'min_impurity_decrease':[0, 0.05,0.1,0.15,0.2,0.25]}
+
+clf = GridSearchCV(estimator=tree.DecisionTreeClassifier(), param_grid=parameters, scoring ='roc_auc', n_jobs=-1, cv=10)
+clf.fit(X_train_val, y_train_val)
+
+print('Best score for data1:', clf.best_score_)
+print('Best Depth:',clf.best_estimator_.max_depth)
+print('Best Min Samples Leaf:',clf.best_estimator_.min_samples_leaf)
+print('Best Min Impurity Decrease:',clf.best_estimator_.min_impurity_decrease)
+
+clf = tree.DecisionTreeClassifier(
+    max_depth = clf.best_estimator_.max_depth,
+    min_samples_leaf = clf.best_estimator_.min_samples_leaf,
+    min_impurity_decrease=clf.best_estimator_.min_impurity_decrease).fit(X_train_val,y_train_val)
+prune_duplicate_leaves(clf)
+y_predictions = clf.predict(X_test)
+
+cm = confusion_matrix(y_test, y_predictions,classes)
+print_confusion_matrix(cm,classes)
+plt.savefig(pathConfusionMatrix)
+plt.show()
+
+
+accuracy = round(accuracy_score(y_test, y_predictions),2)
+f1 = round(recall_score(y_test, y_predictions, average="binary", pos_label="Yes"),2)
+print("Accuracy: "+str(accuracy))
+print("F1: "+str(f1))
+
+dot_data = tree.export_graphviz(clf, out_file=None, feature_names=X_train_val.columns, class_names = clf.classes_,
+                                label = 'all', filled = True, leaves_parallel= False, impurity = True, node_ids = False,
+                                proportion=True, rotate=False, rounded=True, precision=3)
+
+graph = pydotplus.graph_from_dot_data(dot_data)
+graph.write_png(pathTreeVisualization)
+```
+
+Since the training set is created by using random samples, model performance can vary during each run. However, on average the accuracy should be around 89% and the F1 score at around 94%. Also, on average the most important features are the number of clicks and the session duration. 
+
+The confusion matrix can be seen below. As you can see, the model classifies around 95% of sessions, which contain an order, correctly. However, only around 89% of instances, which do not contain an order, are classified correctly. This brings up the following question: How should each classification type be weighted? To answer this the company should first ask itself "How, if at all, do we want to target session users differently?". For example, one idea could be to offer discounts to visitors, which have a high click rate during short sessions, as this could imply unsatisfaction with the price or quality of the visited products.
+
+![Decision Tree - Confusion Matrix](./3 Data Modelling/cm_tree.png)
+
+As mentioned above the main reason for choosing a decision tree is the ease of understanding its logic and the automatic feature filtering. Below you can see a visualization of the decision tree. It has three layers. The only variables of interest are the session duration and the number of clicks during the session. As you can see, whenever a session has over 10.5 clicks and lasts for longer than 141 seconds the tree predicts that it contains an order. 
+
+![Decision Tree Vizualized](./3 Data Modelling/graphviz_tree.png)
+
+It should be noted that if the company prefers a model with a higher performance and less traceability, other models should be considered as well. Among them are Logistic Regression, Random Forest and Neural Networks. Methods for automatic dimensionality reduction, such as PCA, or for iterative model improvements, such as Bagging or Boosting, should also be considered in that case.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
