@@ -1766,7 +1766,7 @@ graph = pydotplus.graph_from_dot_data(dot_data)
 graph.write_png(pathTreeVisualization)
 ```
 
-Since the training set is created by using random samples, model performance can vary during each run. However, on average the accuracy should be around 89% and the F1 score at around 94%. Also, on average the most important features are the number of clicks and the session duration. 
+Since the training set is created by using random samples, model performance can vary during each run. However, on average the accuracy should be around 90%, the F1 score at around 93% and the ROC score at around 95%. Also, on average the most important features are the number of clicks and the session duration. 
 
 The confusion matrix can be seen below. As you can see, the model classifies around 95% of sessions, which contain an order, correctly. However, only around 89% of instances, which do not contain an order, are classified correctly. This brings up the following question: How should each classification type be weighted? To answer this the company should first ask itself "How, if at all, do we want to target session users differently?". For example, one idea could be to offer discounts to visitors, which have a high click rate during short sessions, as this could imply unsatisfaction with the price or quality of the visited products.
 
