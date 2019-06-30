@@ -1,0 +1,8 @@
+"Variable","Top 1st","Top 2nd","Top 3rd","Top 4th","Top 5th","Others","Not Available"
+"Bank.Card.Holder","True: 81.44%","False: 18.56%","","","","0%","89.44%"
+"Gas.Card.Holder","True: 68.95%","False: 31.05%","","","","0%","89.44%"
+"Upscale.Card.Holder","False: 50.88%","True: 49.12%","","","","0%","89.44%"
+"Unknown.Card.Type","False: 59.71%","True: 40.29%","","","","0%","89.44%"
+"TE.Card.Holder","False: 90.67%","True: 9.33%","","","","0%","89.44%"
+"Premium.Card.Holder","False: 79.92%","True: 20.08%","","","","0%","89.44%"
+"New.Bank.Card","False: 100%","","","","","0%","89.44%"

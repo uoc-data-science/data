@@ -182,18 +182,18 @@ write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Numeri
 #-----------------------------------------------------------------------------------
 #Lorenz Curve Brands
 plotBarAndLorenz(clicks, "BrandName")
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Lorenz Brands.png",sep=""), width=12, height=13)
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzBrands.png",sep=""), width=12, height=13)
 #-----------------------------------------------------------------------------------
 #Lorenz Curve Products
 plotBarAndLorenz(clicks, "Product")
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Lorenz Products.png",sep=""), width=15, height=12)
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzProducts.png",sep=""), width=15, height=12)
 #-----------------------------------------------------------------------------------
 #Density Hour of Day
 beautify(ggplot(clicks, aes(x=REQUEST_HOUR_OF_DAY)) +
            geom_density() +
            scale_x_continuous(name="Hour of Day")) +
   ggtitle("Density of Clicks over Hour of Day")
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Click Time.png",sep=""), width=10)
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickTime.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #Density of time between first and recent click
 SeqAndTime <- clicks %>% # select sequence and time
@@ -246,7 +246,7 @@ print(diffV)
 beautify(ggplot(diffV, aes(totalMinutes)) +
   geom_density() +
   ggtitle("Density of Session Duration (under 40 minutes)"))
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Session Duration.png",sep=""), width=10)
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/SessionDuration.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #History of Clicks
 hourGroup <- clicks %>%
@@ -261,7 +261,7 @@ hourGroup$datetime <- as.POSIXct(hourGroup$datetime, format = "%Y-%m-%d %H:%M:%S
 beautify(ggplot(hourGroup, aes(x = datetime, y=count)) +
   geom_line() +
   ggtitle("History of Clicks per Hour"))
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Click History.png",sep=""), width=10)
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickHistory.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 # US States heatmap
 states <- usStates
