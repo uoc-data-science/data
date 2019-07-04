@@ -1809,6 +1809,13 @@ accuracy = round(accuracy_score(y_test, y_predictions),2)
 f1 = round(recall_score(y_test, y_predictions, average="binary", pos_label="Yes"),2)
 print("Accuracy: "+str(accuracy))
 print("F1: "+str(f1))
+# Convert y to int for roc scoring
+y_test = y_test.replace("No",0)
+y_test = y_test.replace("Yes",1)
+y_predictions[y_predictions == "No"] = 0
+y_predictions[y_predictions == "Yes"] = 1
+roc = roc_auc_score(y_test, y_predictions)
+print("ROC AUC score: "+str(roc))
 
 dot_data = tree.export_graphviz(clf, out_file=None, feature_names=X_train_val.columns, class_names = clf.classes_,
                                 label = 'all', filled = True, leaves_parallel= False, impurity = True, node_ids = False,
