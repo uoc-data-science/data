@@ -4,16 +4,56 @@ author: "Philipp Peter & Laurenz Harnischmacher & Nico Lindert"
 date: "11 Mai 2019"
 output: html_document
 ---
-
+## definie enviromentpath
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
-#knitr::opts_knit$set(root.dir = "C:/Github/Programming_Data_Science/ourdata")
-#lh_root
-knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+#nico_root
+#knitr::opts_knit$set(root.dir = "F:/Github/ourdata/data")
+
+#Philipp_root
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+
+knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
+
+#laurenz_root
+knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
+
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+## move dataset to raw_data
+```{r warning=FALSE}
+
+rootDir <- knitr::opts_knit$get("root.dir")
+origin_clickstream <- paste(rootDir, "clickstream", sep="/")
+origin_experiment <- paste(rootDir,"experiment", sep="/")
+origin_orders <- paste(rootDir,"orders", sep="/")
+
+des_root <- paste(rootDir, "00_raw_data", sep="/")
+des_under <- paste(rootDir, "01_data_understanding", sep="/")
+
+# move datasets
+# clickstream1
+unzip(paste(origin_clickstream,"clickstream_data.zip",sep="/"),files= "clickstream_data.csv",list = FALSE, exdir = des_root)
+# clickstream2
+file.copy(paste(origin_clickstream,"clickstream_data_part_2.csv",sep="/"),des_root)
+# experiment 
+file.copy(paste(origin_experiment,"experimental_results.csv", sep = "/"),des_root)
+#order
+file.copy(paste(origin_orders,"order_data.csv",sep = "/"),des_root)
+
+#move .txts
+#clickstream_columns.txt
+file.copy(paste(origin_clickstream,"clickstream_columns.txt", sep = "/"),des_under)
+
+#order_columns.txt
+file.copy(paste(origin_orders,"order_columns.txt",sep = "/"),des_under)
+
+
+```
+
 
 ## Get the data 
 
@@ -42,6 +82,16 @@ dataframe$order_time <- parse_time(dataframe$"Order_Line_Date_Time","%H\\:%M\\:%
 head(dataframe)
 ```
 
+## Replacing "?" and "NULL" with nan
+```{r}
+library(naniar)
+na_strings <- c("?", "NULL")
+df2 <- dataframe %>% replace_with_na_all(condition = ~.x %in% na_strings)
+## dataframe <- str_replace_all(dataframe, ";", ",")
+head(df2)
+
+```
+
 ## Clean_dataset
 ```{r}
 #dataframe[colSums(!is.na(dataframe)) > 0]
@@ -64,7 +114,9 @@ for (i in 1:ncol(dataframe)) {
   }
 }
 print(drop)
-# Lvsche doppelte Spalten (immer die 2.)
+
+# Lösche doppelte Spalten (immer die 2.)
+
 dataframe <- subset(dataframe, select = -drop)
 head(dataframe)
 ```
@@ -75,10 +127,37 @@ colnames(dataframe) <- str_replace(colnames(dataframe),"\\\\","")
 head(dataframe)
 ```
 
+## create csv from dataframe
+## compare py csv and r csv
+``` {r}
+write.csv(dataframe, file = "../00_raw_data/order_r.csv", row.names =FALSE, na = "")
 
+# py csv
+py_df = read.csv(file = "../00_raw_data/order_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
+
+# r csv
+r_df = read.csv(file = "../00_raw_data/order_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
+
+#head(r_df)
+#head(py_df)
+# show difference between python and r dataset
+diff_r <-r_df[!(r_df%in%py_df)]
+head(diff_r)
+diff_p <-py_df[!(py_df%in%r_df)]
+head(diff_p)
+
+```
 ## Including Plots
 
 You can also embed plots, for example:
+
+```{r}
+
+
+
+```
+
+
 
 ```{r}
 
@@ -95,16 +174,77 @@ ggplot(dataframe) +
     colour = "Product Level"
   )
 ggplot(dataframe) + 
-  geom_point(mapping = aes(x = x, y = dataframe$Order_Line_Amount, colour = dataframe$Order_Line_Quantity)) +
+  geom_point(mapping = aes(x = x, y = dataframe$Order_Amount, colour = dataframe$Gender)) +
   labs(
     x = "Time",
     y = "Shipping Amount",
     colour = "Order Quantity"
   )
-#lapply(dataframe, mean)
-#lapply(dataframe, max)
+
+
+ggplot(data = dataframe)+
+  geom_bar(mapping = aes(x = Order_Credit_Card_Brand, fill = Order_Credit_Card_Brand))
+
+
+ggplot(data = dataframe)+
+  geom_point(mapping = aes(x=Order_Line_Quantity,
+                           y=Order_Amount, 
+                           color=Gender))+
+  facet_wrap(~Order_Credit_Card_Brand,nrow = 2)
+
+
+ggplot(data = dataframe)+
+  geom_point(mapping = aes(x=Order_Line_Quantity,
+                           y=Order_Amount, 
+                           color=Gender))+
+  geom_smooth(mapping = aes(x=Order_Line_Quantity,
+                           y=Order_Amount))
+
+#headmap
+Customer_Product_heatmap <- dataframe %>%
+  select(US_State,Customer_ID,Order_Line_ID,Order_Line_Amount) %>%
+  group_by(Customer_ID,US_State) %>%
+  summarise(numberoforders= n(),totalspend=sum(Order_Line_Amount))
+
+ggplot(data= Customer_Product_heatmap)+
+  geom_tile(mapping = aes(x=US_State,y=Customer_ID, fill=totalspend))
+
+
+
+
+
+```
+
+
+
+
+```{r include=false}
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "experiment/experimental_results.csv", sep="/")
+experiment <- read_csv(headersPath)
+#experiment <- experiment[1:146,]
+```
+```{r}
+profExp <- t.test(experiment$profit_oriented, experiment$expectation, alternative="greater", paired=TRUE)
+rdmExp <- t.test(experiment$random_recommendations, experiment$expectation, alternative="greater", paired=TRUE)
+rkgExp <- t.test(experiment$ranking_based, experiment$expectation, alternative="greater", paired=TRUE)
+profRdm <- t.test(experiment$profit_oriented, experiment$random_recommendations, alternative = "greater", paired=TRUE)
+profRkg <- t.test(experiment$profit_oriented, experiment$ranking_based, alternative = "greater", paired=TRUE)
 ```
 
 ```{r}
+# plot data
+ggplot() %>%
+  + geom_density(aes(x=experiment$profit_oriented),adjust=.8, color="red") %>% # profit
+  + geom_density(aes(x=experiment$random_recommendations),adjust=.8, color="blue") %>% # random
+  + geom_density(aes(x=experiment$ranking_based),adjust=.8, color="green") %>% # ranking
+  + geom_vline(xintercept=19.25) #%>% # Expectation
+#  + geom_vline(xintercept=19.25+profExp$conf.int[1], color="red") %>%
+#  + geom_vline(xintercept=19.25+rdmExp$conf.int[1], color="blue") %>%
+#  + geom_vline(xintercept=19.25+rkgExp$conf.int[1], color="green")
 ```
+
+
+
+
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -11,8 +11,11 @@ def read_raw_data(filename, column_file, samplename, dataset_name):
     filename = "../00_raw_data/" + filename
     path_to_file = relative_to_absolute(filename)
     columns = read_raw_columns(column_file)
-    df = pd.read_csv(path_to_file, header=None, names=columns, low_memory=False, encoding="ansi", keep_default_na=True,
-                     na_values=["", "?", "NULL", "NA", "Nan"], decimal=".")
+    df = pd.read_csv(
+        path_to_file, header=None, names=columns,
+        low_memory=False, encoding="ansi", keep_default_na=True,
+        na_values=["", "?", "NULL", "NA", "Nan"], decimal="."
+                    )
     save_dataframe(df, dataset_name)
     return df
 
@@ -57,7 +60,8 @@ def recreate_dtypes(dataframe, dtypes):
     i = 0
     for column in dataframe:
         if dtypes[i] == np.float64:
-            dataframe[column] = pd.to_numeric(dataframe[column], errors='coerce')
+            dataframe[column] = pd.to_numeric(
+                dataframe[column], errors='coerce')
         else:
             dataframe[column] = dataframe[column].astype(dtype=dtypes[i])
         i = i + 1
@@ -99,7 +103,8 @@ def split_ordered_categories(categories):
 
 def create_sample_excel(dataframe, samplename):
     from pandas import ExcelWriter
-    # create a Excel sheet with the heads and the first 100 lines for data understanding
+    # create a Excel sheet with the heads and the first 1000
+    # lines for data understanding
     df = dataframe.iloc[:1000]
     samplename = "../01_data_understanding/" + samplename
     path_to_file = relative_to_absolute(samplename)
@@ -109,10 +114,24 @@ def create_sample_excel(dataframe, samplename):
 
 
 def create_csv_from_dataframe(dataframe, filename):
-    filename = "../data_intermediate/" + filename
+    filename = "../00_raw_data/" + filename
     path_to_file = relative_to_absolute(filename)
     df = dataframe
+    # booleandf = df.select_dtypes(include=[bool])
+    # booleanDictionary = {True: 'TRUE', False: 'FALSE'}
+    # print(booleandf)
+    # for column in booleandf:
+    #     df[column] = df[column].map(booleanDictionary)
     df.to_csv(path_or_buf=path_to_file, index=False)
+
+
+def create_dataframe_from_processed_csv(filename):
+    filename = "../00_raw_data/" + filename
+    path_to_file = relative_to_absolute(filename)
+    df = pd.read_csv(
+        path_to_file, low_memory=False
+                    )
+    return df
 
 
 def save_dataframe(dataframe, filename):
@@ -128,5 +147,7 @@ def load_dataframe(filename):
     return df
 
 # test if dataset is altered by type change
-# df = read_raw_data("order_data.csv","order_columns.txt","order.xlsx","order.pkl")
-# print(df[["DoYouPurchaseForOthers","SendEmail","ProductCode","New Bank Card"]])
+# df = read_raw_data("order_data.csv","order_columns.txt",
+# "order.xlsx","order.pkl")
+# print(df[["DoYouPurchaseForOthers","SendEmail",
+# "ProductCode","New Bank Card"]])

@@ -1,0 +1,51 @@
+---
+title: "merge_sets"
+author: "Nico Lindert"
+date: "22 5 2019"
+output: html_document
+---
+
+## definie enviromentpath
+```{r "knitr config", cache = FALSE, include=FALSE}
+require("knitr")
+#nico_root
+knitr::opts_knit$set(root.dir = "F:/Github/ourdata/data")
+
+#Philipp_root
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+
+#laurenz_root
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
+
+```
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Get the data 
+
+```{r}
+library(tidyverse)
+library(stringi)
+library(hms)
+
+rootDir <- knitr::opts_knit$get("root.dir")
+
+order_df = read.csv(file = "../00_raw_data/order_r.csv", na = c("", "?", "NULL", "NA", "Nan"), sep = "," )
+click_df = read.csv(file = "../00_raw_data/click_r.csv", na = c("", "?", "NULL", "NA", "Nan"), sep = "," )
+
+```
+
+## Find well matching column for join
+``` {r}
+#order_df$match <- rownames()
+#merge(dat1, dat2, by.x = 2, by.y = 0, all.x = TRUE)
+merged_set <- merge(order_df, click_df, by = intersect(names(order_df), names(click_df)), 
+                    by.x = 2, by.y = 0, all.x = TRUE)
+merged_set
+```
+
+## Testing
+``` {r}
+click_df[1]
+```
