@@ -297,10 +297,18 @@ div.tocify {
 
 <div id="introduction" class="section level1">
 <h1><span class="header-section-number">1</span> Introduction</h1>
-<p>The course is about…</p>
+<p>This course simulated a data science project. Within this course, a webshop’s dataset from 2000 will be imported, cleaned, analyzed and evaluated. <br> The process is separated into the following steps:<br></p>
+<ul>
+<li><a href="#dataMan">Data manipulation</a></li>
+<li>[Visualization] using a grammar of graphics</li>
+<li><a href="#summary-tables">Summary tables</a></li>
+<li><a href="#comparison-of-groups">Comparison of groups</a> (treatment effect)</li>
+<li><a href="#predictions">Predictions</a> (bias, variance, complexity factor)</li>
+</ul>
 <div id="motivation" class="section level2">
 <h2><span class="header-section-number">1.1</span> Motivation</h2>
-<p>In times of big data and the importance of evaluating company’s data to stay competible on a highly digitized market, data science provides powerful tools to handle these challenges. <br /> Within this course, a webshop’s dataset from 2000 will be imported, cleaned, analyzed and evaluated.</p>
+<p>In times of big data and the importance of evaluating company’s data to stay competible on a highly digitized market, data science provides powerful tools to handle these challenges.<br></p>
+<p>&lt; more blabla &gt;</p>
 </div>
 <div id="data-import" class="section level2">
 <h2><span class="header-section-number">1.2</span> Data Import</h2>
@@ -309,12 +317,31 @@ div.tocify {
 </div>
 <div id="analysis" class="section level1">
 <h1><span class="header-section-number">2</span> Analysis</h1>
-<div id="data-manipulation" class="section level2">
+<div id="dataMan" class="section level2">
 <h2><span class="header-section-number">2.1</span> Data Manipulation</h2>
-<p>Due to the huge size of the datasets, the columns will be reduced to the relevant ones.</p>
+<p>Due to the huge size of the datasets, we will</p>
+<ol style="list-style-type: decimal">
+<li>create a new set with the 16 most relevant columns</li>
+<li>reduce the original set by deleting all twin columns</li>
+</ol>
+<pre><code>## [1] &quot;Order_Line_Session_ID = Order_Session_ID&quot;
+## [1] &quot;Order_Line_Date = Order_Date&quot;
+## [1] &quot;Order_Line_Day_of_Week = Order_Day_of_Week&quot;
+## [1] &quot;Customer_ID = Order_Customer_ID&quot;
+## [1] &quot;DMA_No_Mail_Solicitation_Flag = DMA_No_Phone_Solicitation_Flag&quot;
+## [1] &quot;Order_System_Number = Order_ID&quot;
+## [1] &quot;Order_Shipment_Method_ID = ProductCode&quot;
+## [1] &quot;Order_Shipment_Method_ID = Assortment_End_Date&quot;
+## [1] &quot;Order_Shipment_Method_ID = Assortment_End_Date_Time&quot;
+## [1] &quot;ProductCode = Assortment_End_Date&quot;
+## [1] &quot;ProductCode = Assortment_End_Date_Time&quot;
+## [1] &quot;Assortment_End_Date = Assortment_End_Date_Time&quot;
+## [1] &quot;Promotion_Object_ID = Promotion_ID&quot;
+## [1] &quot;Promotion_Folder_Status = Promotion_Status&quot;</code></pre>
+<pre><code>##  [1]   1   2  13  39  72 114 124 124 124 170 170 206 217 224</code></pre>
 </div>
-<div id="first-look" class="section level2">
-<h2><span class="header-section-number">2.2</span> First Look</h2>
+<div id="visualisation" class="section level2">
+<h2><span class="header-section-number">2.2</span> Visualisation</h2>
 <p>On a first look, the data provides the following information.</p>
 <table>
 <thead>
@@ -352,9 +379,29 @@ div.tocify {
 <td align="right">20.0</td>
 <td align="right">19070.36528</td>
 </tr>
+<tr class="even">
+<td align="left">Thereby, d</td>
+<td align="right">ate and tim</td>
+<td align="right">e are less use</td>
+<td align="right">ful, as th</td>
+<td align="right">e time-for</td>
+<td align="right">mat is transformed into double values that provide no information on a first look.</td>
+</tr>
 </tbody>
 </table>
 </div>
+<div id="summary-tables" class="section level2">
+<h2><span class="header-section-number">2.3</span> Summary tables</h2>
+</div>
+<div id="comparison-of-groups" class="section level2">
+<h2><span class="header-section-number">2.4</span> Comparison of groups</h2>
+</div>
+<div id="predictions" class="section level2">
+<h2><span class="header-section-number">2.5</span> Predictions</h2>
+</div>
+</div>
+<div id="conclusion" class="section level1">
+<h1><span class="header-section-number">3</span> Conclusion</h1>
 </div>
 
 

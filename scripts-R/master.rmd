@@ -33,13 +33,26 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 # Introduction
-The course is about...
+
+This course simulated a data science project. Within this course, a webshop's dataset from 2000 will be imported, cleaned, analyzed and evaluated. <br>
+The process is separated into the following steps:<br>
+
+* [Data manipulation]
+* [Visualization] using a grammar of graphics
+* [Summary tables]
+* [Comparison of groups] (treatment effect)
+* [Predictions] (bias, variance, complexity factor)
+
 
 ## Motivation
-In times of big data and the importance of evaluating company's data to stay competible on a highly digitized market, data science provides powerful tools to handle these challenges. <br />
-Within this course, a webshop's dataset from 2000 will be imported, cleaned, analyzed and evaluated.
+
+In times of big data and the importance of evaluating company's data to stay competible on a highly digitized market, data science provides powerful tools to handle these challenges.<br>
+
+< more blabla >
+
 
 ## Data Import
+
 At first, the csv-files containting data will be imported.
 
 ```{r dataImport, echo=FALSE, warning=FALSE, message=FALSE}
@@ -66,18 +79,54 @@ order_df <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "
 order_df$Order_Time <- parse_time(order_df$"Order_Line_Date_Time","%H\\:%M\\:%S")
 ```
 
+
 # Analysis
-## Data Manipulation
-Due to the huge size of the datasets, the columns will be reduced to the relevant ones.
+
+## Data Manipulation {#dataMan}
+
+Due to the huge size of the datasets, we will
+
+1. create a new set `relevant_df` with the 16 most relevant columns
+1. reduce the original set `order_df` by deleting all twin columns
+
+Besides, all semicolons within the cells were simply erased.
+
 ```{r dataClean, echo=FALSE}
 # Selected Column Indices
 sel <- c(115,116,120,189,233,121,39,101,107,130,135,58,25,30,32,35)
 
-order_df <- select(order_df,sel)
+relevant_df <- select(order_df,sel)
+
+# Vergleiche Spalten, ob Dopplungen vorkommen
+dataframe <- order_df
+
+drop <- vector()
+k <- 1
+for (i in 1:ncol(dataframe)) {
+  col_i = colnames(dataframe)[i]
+  for (j in i+1:ncol(dataframe)){
+    col_j = colnames(dataframe)[j]
+    if(identical(dataframe[[col_i]],dataframe[[col_j]])) {
+      # print(paste(col_i,col_j,sep=" = "))
+      drop[k] <- i
+      k <- k+1
+    }
+  }
+}
+# print(drop)
+# Loesche doppelte Spalten (immer die 1.)
+order_df <- subset(dataframe, select = -drop)
+
+# Get rid of semicolons
+order_df$Estimated_Income_Code <- gsub(";", "", order_df$Estimated_Income_Code)
+relevant_df$Estimated_Income_Code <- gsub(";", "", relevant_df$Estimated_Income_Code)
 ```
 
-## First Look
+
+## Visualisation
+
 On a first look, the data provides the following information.
+
 ```{r firstLook, echo = FALSE, warning = FALSE}
 summary_stats <- order_df %>% # start with data frame, and then ...
   summarize_at(
@@ -92,3 +141,27 @@ kable(summary_stats)
 ```
 Thereby, date and time are less useful, as the time-format is transformed into double values that provide no information on a first look.
 
+
+
+
+## Summary tables
+
+```{r summary, echo=FALSE}
+
+```
+
+
+## Comparison of groups
+
+```{r compare, echo=FALSE}
+
+```
+
+
+## Predictions
+
+```{r prediction, echo=FALSE}
+
+```
+
+# Conclusion
