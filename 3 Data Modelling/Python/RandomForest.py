@@ -10,18 +10,14 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import recall_score
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import cross_val_score, cross_val_predict
 from sklearn.model_selection import GridSearchCV
 
-from sklearn import tree
-import graphviz
-import pydotplus
+from sklearn.ensemble import RandomForestClassifier
 
 import math
 
 pathInput = '../prediction_input_data.csv'
-pathConfusionMatrix = "../cm_tree.png"
-pathTreeVisualization = "../graphviz_tree.png"
+pathConfusionMatrix = "../cm_forest.png"
 
 # --------------------------Utility functions--------------------------------
 #Methode zum Plotten einer Confusion Matrix
@@ -62,39 +58,6 @@ def print_confusion_matrix(confusion_matrix, class_names, figsize=(10, 7), fonts
     plt.xlabel('Predicted label')
     return fig
 
-# Methode zum Entfernen doppelter Blätter
-# Quelle: https://stackoverflow.com/questions/51397109/prune-unnecessary-leaves-in-sklearn-decisiontreeclassifier
-
-from sklearn.tree._tree import TREE_LEAF
-
-def is_leaf(inner_tree, index):
-    # Check whether node is leaf node
-    return (inner_tree.children_left[index] == TREE_LEAF and
-            inner_tree.children_right[index] == TREE_LEAF)
-
-def prune_index(inner_tree, decisions, index=0):
-    # Start pruning from the bottom - if we start from the top, we might miss
-    # nodes that become leaves during pruning.
-    # Do not use this directly - use prune_duplicate_leaves instead.
-    if not is_leaf(inner_tree, inner_tree.children_left[index]):
-        prune_index(inner_tree, decisions, inner_tree.children_left[index])
-    if not is_leaf(inner_tree, inner_tree.children_right[index]):
-        prune_index(inner_tree, decisions, inner_tree.children_right[index])
-
-    # Prune children if both children are leaves now and make the same decision:
-    if (is_leaf(inner_tree, inner_tree.children_left[index]) and
-        is_leaf(inner_tree, inner_tree.children_right[index]) and
-        (decisions[index] == decisions[inner_tree.children_left[index]]) and
-        (decisions[index] == decisions[inner_tree.children_right[index]])):
-        # turn node into a leaf by "unlinking" its children
-        inner_tree.children_left[index] = TREE_LEAF
-        inner_tree.children_right[index] = TREE_LEAF
-        ##print("Pruned {}".format(index))
-
-def prune_duplicate_leaves(mdl):
-    # Remove leaves if both
-    decisions = mdl.tree_.value.argmax(axis=2).flatten().tolist() # Decision for each node
-    prune_index(mdl.tree_, decisions)
 # --------------------------Utility functions--------------------------------
 
 
@@ -116,23 +79,25 @@ y_test = test.loc[:,'Ordered']
 
 classes = ['No','Yes']
 
-parameters = {'max_depth':[1,2,3,4,5],
-              'min_samples_leaf':[1,0.0025,0.005,0.01],
-              'min_impurity_decrease':[0, 0.05,0.1,0.15,0.2,0.25]}
+parameters = {'n_estimators':[10,25,50],
+              'max_depth':[2,3,4],
+              'min_samples_leaf':[1,0.0025,0.01],
+              'min_impurity_decrease':[0, 0.05,0.1]}
 
-clf = GridSearchCV(estimator=tree.DecisionTreeClassifier(), param_grid=parameters, scoring ='roc_auc', n_jobs=-1, cv=10)
+clf = GridSearchCV(estimator=RandomForestClassifier(), param_grid=parameters, scoring ='roc_auc', n_jobs=-1, cv=10)
 clf.fit(X_train_val, y_train_val)
 
 print('Best score for data1:', clf.best_score_)
+print('Best number of estimators:', clf.best_estimator_.n_estimators)
 print('Best Depth:',clf.best_estimator_.max_depth)
 print('Best Min Samples Leaf:',clf.best_estimator_.min_samples_leaf)
 print('Best Min Impurity Decrease:',clf.best_estimator_.min_impurity_decrease)
 
-clf = tree.DecisionTreeClassifier(
+clf = RandomForestClassifier(
+    n_estimators = clf.best_estimator_.n_estimators,
     max_depth = clf.best_estimator_.max_depth,
     min_samples_leaf = clf.best_estimator_.min_samples_leaf,
     min_impurity_decrease=clf.best_estimator_.min_impurity_decrease).fit(X_train_val,y_train_val)
-prune_duplicate_leaves(clf)
 y_predictions = clf.predict(X_test)
 
 cm = confusion_matrix(y_test, y_predictions,classes)
@@ -152,10 +117,3 @@ y_predictions[y_predictions == "No"] = 0
 y_predictions[y_predictions == "Yes"] = 1
 roc = round(roc_auc_score(y_test, y_predictions),2)
 print("ROC AUC score: "+str(roc))
-
-dot_data = tree.export_graphviz(clf, out_file=None, feature_names=X_train_val.columns, class_names = clf.classes_,
-                                label = 'all', filled = True, leaves_parallel= False, impurity = True, node_ids = False,
-                                proportion=True, rotate=False, rounded=True, precision=3)
-
-graph = pydotplus.graph_from_dot_data(dot_data)
-graph.write_png(pathTreeVisualization)
