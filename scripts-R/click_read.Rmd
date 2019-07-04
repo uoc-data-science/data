@@ -8,16 +8,47 @@ output: html_document
 ```{r "knitr config", cache = FALSE, include=FALSE}
 require("knitr")
 #nico_root
-knitr::opts_knit$set(root.dir = "F:/Github/ourdata/data")
+#knitr::opts_knit$set(root.dir = "F:/Github/ourdata/data")
 
 #Philipp_root
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
 
 #lh_root
-#knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
+knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
+
+## move dataset to raw_data
+```{r warning=FALSE}
+
+rootDir <- knitr::opts_knit$get("root.dir")
+origin_clickstream <- paste(rootDir, "clickstream", sep="/")
+origin_experiment <- paste(rootDir,"experiment", sep="/")
+origin_orders <- paste(rootDir,"orders", sep="/")
+
+des_root <- paste(rootDir, "00_raw_data", sep="/")
+des_under <- paste(rootDir, "01_data_understanding", sep="/")
+
+# move datasets
+# clickstream1
+unzip(paste(origin_clickstream,"clickstream_data.zip",sep="/"),files= "clickstream_data.csv",list = FALSE, exdir = des_root)
+# clickstream2
+file.copy(paste(origin_clickstream,"clickstream_data_part_2.csv",sep="/"),des_root)
+# experiment 
+file.copy(paste(origin_experiment,"experimental_results.csv", sep = "/"),des_root)
+#order
+file.copy(paste(origin_orders,"order_data.csv",sep = "/"),des_root)
+
+#move .txts
+#clickstream_columns.txt
+file.copy(paste(origin_clickstream,"clickstream_columns.txt", sep = "/"),des_under)
+
+#order_columns.txt
+file.copy(paste(origin_orders,"order_columns.txt",sep = "/"),des_under)
+
+
 ```
 
 ## Get the data 
@@ -30,6 +61,7 @@ library(hms)
 rootDir <- knitr::opts_knit$get("root.dir")
 headersPath <- paste(rootDir, "01_data_understanding/clickstream_columns.txt", sep="/")
 dataPath <- paste(rootDir, "00_raw_data/clickstream_data.csv", sep="/")
+dataPath2 <- paste(rootDir, "00_raw_data/clickstream_data_part_2.csv", sep="/")
 
 # prepare column name list
 headersFile = file(headersPath, "r")
@@ -43,6 +75,10 @@ dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
 result <- gsub(" ", "_", result)
 
 dataframe <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+dataframe2 <- read_csv(dataPath2, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+
+
+dataframe <- rbind(dataframe,dataframe2)
 
 head(dataframe)
 ```
