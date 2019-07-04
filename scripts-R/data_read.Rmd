@@ -186,35 +186,30 @@ ggplot(data= Customer_Product_heatmap)+
 
 
 
-```{r}
+```{r include=false}
 rootDir <- knitr::opts_knit$get("root.dir")
 headersPath <- paste(rootDir, "experiment/experimental_results.csv", sep="/")
 experiment <- read_csv(headersPath)
-experiment <- experiment[1:146,]
-t.test(experiment$ranking_based, experiment$random_recommendations, alternative="greater")
-t.test(experiment$profit_oriented, experiment$random_recommendations, alternative="greater")
+#experiment <- experiment[1:146,]
+```
+```{r}
+profExp <- t.test(experiment$profit_oriented, experiment$expectation, alternative="greater", paired=TRUE)
+rdmExp <- t.test(experiment$random_recommendations, experiment$expectation, alternative="greater", paired=TRUE)
+rkgExp <- t.test(experiment$ranking_based, experiment$expectation, alternative="greater", paired=TRUE)
+profRdm <- t.test(experiment$profit_oriented, experiment$random_recommendations, alternative = "greater", paired=TRUE)
+profRkg <- t.test(experiment$profit_oriented, experiment$ranking_based, alternative = "greater", paired=TRUE)
 ```
 
 ```{r}
-# generate data
-a <- rnorm(100000,mean(experiment$profit_oriented), sd(experiment$profit_oriented)) %>% 
-  sort()
-b <- rnorm(1000,mean(experiment$ranking_based), sd(experiment$ranking_based)) %>%
-  sort()
-c <- rnorm(1000,mean(experiment$random_recommendations), sd(experiment$random_recommendations)) %>%
-  sort()
-
-
 # plot data
-ggplot()+
-  geom_density(aes(x=experiment$profit_oriented),adjust=1, color="red")+
-  geom_density(aes(x=experiment$random_recommendations),adjust=1, color="blue")+
-  geom_density(aes(x=experiment$ranking_based),adjust=1, color="green")
-
-ggplot()+
-  geom_density(aes(x=a),adjust=0.5, color="red")+
-  geom_density(aes(x=b),adjust=0.5, color="blue")+
-  geom_density(aes(x=c),adjust=0.5, color="green")
+ggplot() %>%
+  + geom_density(aes(x=experiment$profit_oriented),adjust=.8, color="red") %>% # profit
+  + geom_density(aes(x=experiment$random_recommendations),adjust=.8, color="blue") %>% # random
+  + geom_density(aes(x=experiment$ranking_based),adjust=.8, color="green") %>% # ranking
+  + geom_vline(xintercept=19.25) #%>% # Expectation
+#  + geom_vline(xintercept=19.25+profExp$conf.int[1], color="red") %>%
+#  + geom_vline(xintercept=19.25+rdmExp$conf.int[1], color="blue") %>%
+#  + geom_vline(xintercept=19.25+rkgExp$conf.int[1], color="green")
 ```
 
 
