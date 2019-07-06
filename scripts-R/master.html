@@ -1548,6 +1548,41 @@ div.tocify {
 </div>
 
 
+<pre class="r"><code>#set knitr root
+require(&quot;knitr&quot;)
+
+# Set root directory
+#knitr::opts_knit$set(root.dir = &quot;C:/Github/data&quot;)
+#lh_root
+knitr::opts_knit$set(root.dir = &quot;C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data&quot;)</code></pre>
+<pre class="r"><code># move dataset to raw_data
+rootDir &lt;- knitr::opts_knit$get(&quot;root.dir&quot;)
+origin_clickstream &lt;- paste(rootDir, &quot;clickstream&quot;, sep=&quot;/&quot;)
+origin_experiment &lt;- paste(rootDir,&quot;experiment&quot;, sep=&quot;/&quot;)
+origin_orders &lt;- paste(rootDir,&quot;orders&quot;, sep=&quot;/&quot;)
+
+des_root &lt;- paste(rootDir, &quot;00_raw_data&quot;, sep=&quot;/&quot;)
+des_under &lt;- paste(rootDir, &quot;01_data_understanding&quot;, sep=&quot;/&quot;)
+
+# move datasets
+# clickstream1
+unzip(paste(origin_clickstream,&quot;clickstream_data.zip&quot;,sep=&quot;/&quot;),files= &quot;clickstream_data.csv&quot;,list = FALSE, exdir = des_root)
+# clickstream2
+file.copy(paste(origin_clickstream,&quot;clickstream_data_part_2.csv&quot;,sep=&quot;/&quot;),des_root)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code># experiment 
+file.copy(paste(origin_experiment,&quot;experimental_results.csv&quot;, sep = &quot;/&quot;),des_root)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>#order
+file.copy(paste(origin_orders,&quot;order_data.csv&quot;,sep = &quot;/&quot;),des_root)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>#move .txts
+#clickstream_columns.txt
+file.copy(paste(origin_clickstream,&quot;clickstream_columns.txt&quot;, sep = &quot;/&quot;),des_under)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>#order_columns.txt
+file.copy(paste(origin_orders,&quot;order_columns.txt&quot;,sep = &quot;/&quot;),des_under)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
 <div id="introduction" class="section level1">
 <h1><span class="header-section-number">1</span> Introduction</h1>
 <p>This course simulated a data science project. Within this course, a webshop’s dataset from 2000 will be imported, cleaned, analyzed and evaluated. <br>
@@ -1583,10 +1618,51 @@ The process is separated into the following steps:<br></p>
 <div id="visualisation" class="section level2">
 <h2><span class="header-section-number">2.2</span> Visualisation</h2>
 <p>On a first look, the data provides the following information.</p>
+<p>Thereby, date and time are less useful, as the time-format is transformed into double values that provide no information on a first look.</p>
+</div>
+<div id="summary-tables" class="section level2">
+<h2><span class="header-section-number">2.3</span> Summary tables</h2>
+<div id="tables" class="section level3">
+<h3><span class="header-section-number">2.3.1</span> Tables</h3>
+<pre class="r"><code>Session_data &lt;- click_df %&gt;%
+  select(Session_ID,Request_Sequence,Request_Processing_Time,Request_Query_String,Request_Referrer,Request_Date,Request_Date_Time,
+         Request_Assortment_ID,Request_Subassortment_ID,Request_Template,REQUEST_DAY_OF_WEEK,
+         Product_ID)%&gt;%
+  group_by(Session_ID)%&gt;%
+  summarise(Request_count = max(Request_Sequence),
+            Session_duration_mins = difftime(max(Request_Date_Time),min(Request_Date_Time),units = c(&quot;mins&quot;)),
+            Visited_assortments = length(unique(Request_Assortment_ID)),
+            Referrer=last(Request_Referrer),
+            Session_day=first(REQUEST_DAY_OF_WEEK),
+            Visited_products =length(unique(Product_ID))
+            )
+Session_data$Session_duration_mins &lt;- as.numeric(Session_data$Session_duration_mins)
+
+df &lt;- data.frame(W=Session_data$Request_count,X=Session_data$Session_duration_mins, Y=Session_data$Visited_assortments, Z=Session_data$Visited_products) # fake data
+summary_stats &lt;- df %&gt;% # start with data frame, and then ...
+  summarize_at(
+    .vars = c(&quot;W&quot;,&quot;X&quot;, &quot;Y&quot;, &quot;Z&quot;), # select variables that should be in the table
+    .funs = funs(min, max, mean, median, sd) # which summary statistics do you want?
+  ) %&gt;% 
+  gather(key, value) %&gt;% # transpose everything, and then ...
+  separate(col=key, sep=&quot;_&quot;, c(&quot;summary_stats&quot;, &quot;stat&quot;)) %&gt;% # make two columns out of var name
+  spread(key=stat, value=value) # reapeated obs into multiple columns</code></pre>
+<pre><code>## Warning: funs() is soft deprecated as of dplyr 0.8.0
+## please use list() instead
+## 
+##   # Before:
+##   funs(name = f(.))
+## 
+##   # After: 
+##   list(name = ~ f(.))
+## This warning is displayed once per session.</code></pre>
+<pre class="r"><code>summary_stats$summary_stats &lt;- c(&quot;Request_count&quot;,&quot;Session_duration_mins&quot;,&quot;Visited_assortments&quot;,&quot;Visited_products&quot;)
+
+kable(summary_stats)  </code></pre>
 <table>
 <thead>
 <tr class="header">
-<th align="left">feature</th>
+<th align="left">summary_stats</th>
 <th align="right">max</th>
 <th align="right">mean</th>
 <th align="right">median</th>
@@ -1596,42 +1672,42 @@ The process is separated into the following steps:<br></p>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">Amount</td>
-<td align="right">562.35</td>
-<td align="right">24.76853</td>
-<td align="right">6.7</td>
-<td align="right">-0.7</td>
-<td align="right">50.55347</td>
+<td align="left">Request_count</td>
+<td align="right">1842.000</td>
+<td align="right">3.250999</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">17.8620117</td>
 </tr>
 <tr class="even">
-<td align="left">Date</td>
-<td align="right">11047.00</td>
-<td align="right">11022.37489</td>
-<td align="right">11019.0</td>
-<td align="right">10984.0</td>
-<td align="right">11.51307</td>
+<td align="left">Session_duration_mins</td>
+<td align="right">2861.083</td>
+<td align="right">10.835476</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">86.7627186</td>
 </tr>
 <tr class="odd">
-<td align="left">Time</td>
-<td align="right">86395.00</td>
-<td align="right">48731.39221</td>
-<td align="right">50241.0</td>
-<td align="right">20.0</td>
-<td align="right">19070.36528</td>
+<td align="left">Visited_assortments</td>
+<td align="right">4.000</td>
+<td align="right">1.270323</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">0.4837795</td>
 </tr>
 <tr class="even">
-<td align="left">Thereby, d</td>
-<td align="right">ate and tim</td>
-<td align="right">e are less use</td>
-<td align="right">ful, as th</td>
-<td align="right">e time-for</td>
-<td align="right">mat is transformed into double values that provide no information on a first look.</td>
+<td align="left">Visited_products</td>
+<td align="right">154.000</td>
+<td align="right">1.321453</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1.9212895</td>
 </tr>
 </tbody>
 </table>
+<p>From the <code>click_df</code> dataset we extractet the <code>Session_data</code>dataset.
+This dataset contains 50558 session observations.</p>
 </div>
-<div id="summary-tables" class="section level2">
-<h2><span class="header-section-number">2.3</span> Summary tables</h2>
 </div>
 <div id="comparison-of-groups" class="section level2">
 <h2><span class="header-section-number">2.4</span> Comparison of groups</h2>

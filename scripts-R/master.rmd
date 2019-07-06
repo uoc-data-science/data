@@ -207,11 +207,9 @@ Thereby, date and time are less useful, as the time-format is transformed into d
 
 ## Summary tables
 
-### Session Statistics
+### Tables
 
-
-```{r Session Statistics, echo=TRUE, warning=TRUE}
-#preconditions Session 
+```{r myTables }
 
 Session_data <- click_df %>%
   select(Session_ID,Request_Sequence,Request_Processing_Time,Request_Query_String,Request_Referrer,Request_Date,Request_Date_Time,
@@ -228,29 +226,22 @@ Session_data <- click_df %>%
 Session_data$Session_duration_mins <- as.numeric(Session_data$Session_duration_mins)
 
 df <- data.frame(W=Session_data$Request_count,X=Session_data$Session_duration_mins, Y=Session_data$Visited_assortments, Z=Session_data$Visited_products) # fake data
-summary_Session <- df %>% # start with data frame, and then ...
+summary_stats <- df %>% # start with data frame, and then ...
   summarize_at(
     .vars = c("W","X", "Y", "Z"), # select variables that should be in the table
     .funs = funs(min, max, mean, median, sd) # which summary statistics do you want?
   ) %>% 
   gather(key, value) %>% # transpose everything, and then ...
-  separate(col=key, sep="_", c("Session_statistics", "stat")) %>% # make two columns out of var name
+  separate(col=key, sep="_", c("summary_stats", "stat")) %>% # make two columns out of var name
   spread(key=stat, value=value) # reapeated obs into multiple columns
 
-summary_Session$Session_statistics <- c("Request_count","Session_duration_mins","Visited_assortments","Visited_products")
-kable(summary_Session)  
+summary_stats$summary_stats <- c("Request_count","Session_duration_mins","Visited_assortments","Visited_products")
 
-
-summary_Session
-
-
-
-
-
+kable(summary_stats)  
 ```
+
 From the `click_df` dataset we extractet the `Session_data`dataset.
 This dataset contains `r nrow(Session_data)`  session observations.
-
 
 
 
