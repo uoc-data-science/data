@@ -67,15 +67,15 @@ compare <- function(path1, path2, column){
 The field of data science deals with the extraction of knowledge from data. From this target a sophisticated set of interdisciplinary tasks arises, which demand different skills in the area of data exploration.  
 The activities described in this report are intended to illustrate the exemplary implementation of such data science tasks by programming based on a simulated business project. For this purpose, data from an online shop was provided. During the course of the project the import, cleaning and manipulation of data was implemented. Also, the topics exploratory analysis, visualization, experiment analysis and machine learning (building of a data model) were covered and their results are described in the following sections of this report. The realization of all these tasks was either done in the programming language R or Python. The first step, the data cleaning, was even implemented in both languages.
 
-The project's main task is to analyze the given datasets, especially by creating appropiate [visualizations](#plots) and [summary tables](#sumTabs) for the data, that is suspected to be relevant for the online shop in some way. In addition to this, an [experiment analysis](#recomm) has to be executed, which calculates and presents the performance strength of different recomendation systems. Furthermore, a data [model](#model) should be constructed in order to predict, whether a user of the online shop will order something. This prediction should be based the browsing behaviour of a person on the website.
+The project's main task is to analyze the given datasets, especially by creating appropiate [visualizations](#plots) and [summary tables](#sumTabs) for the data, that is suspected to be relevant for the online shop in some way. In addition to this, an [experiment analysis](#recomm) has to be executed, which calculates and presents the performance strength of different recomendation systems. Furthermore, a data [model](#model) should be constructed in order to predict, whether a user of the online shop will order something. This prediction should be based on the browsing behaviour of a person on the website.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 # Data Description {#data}
 
-The provided data comes from an online shop selling beauty products. There are two datasets given: One with data about customer orders and another with data about customer clicks on the website.  
-The orders dataset consists of one row for each customer order in the time periode from the 28. January 2000 to the 3. March 2000. The data contains values characterizing the ordered products, the used payment methods, the order process itself and social data, as by example the customer's location or age.  
+The provided data comes from an online shop selling beauty products. There are two datasets: One with data about customer orders and another with data about customer clicks on the website.  
+The orders dataset consists of one row for each customer order in the time period from the 28. January 2000 to the 3. March 2000. The data contains values characterizing the ordered products, the used payment methods, the order process itself and social data, as by example the customer's location or age.  
 Whereas, the clicks dataset contains data referring to customer clicks on the website of the given company from the 14. April 2000 to the 30. April 2000. Therefore, it is mainly composed of data giving information about the payment methods, customer attributes and preferences, product details and of values describing each click itself as by example the request time or the current page URL. Through this data it is possible to illustrate the whole session course of a customer.  
 Both datasets share a considerable amount of columns. However, since not every click results in an order and since a session consists normally of more than one click, the contents differ nonetheless significantly.
 
@@ -84,7 +84,7 @@ Both datasets share a considerable amount of columns. However, since not every c
 
 # Data Manipulation {#cleaning}
 
-Before we started cleaning the data, we copied it to a seperated folder. The reason for this was to avoid accidentally altering the original dataset by separating the edited datasets from the original ones. The cleaned data and further forms of the datasets were also saved to this folder. For a structure overview of the aforementioned folder see the [Appendix](#dataFolderStructure).
+Before we started cleaning the data, we copied it to a separated folder. The reason for this was to avoid accidentally altering the original dataset by separating the edited datasets from the original ones. The cleaned data and further forms of the datasets were also saved to this folder. For a structure overview of the aforementioned folder see the [Appendix](#dataFolderStructure).
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -205,7 +205,7 @@ write.table(clicks_small, file = pathClicksSmall, sep=",", row.names=FALSE)
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 A similar cleaning process to the one explained above has been implemented in Python.
 
-*Note: Python coding chunks are excutable in RMarkdown in general, but the Python environment is not persistent across different python chunks for the preview function ro run coding. Despite this, the chunks are compiled together, when the document is knitted.*  
+*Note: Python coding chunks are executable in RMarkdown in general, but the Python environment is not persistent across different python chunks for the preview function to run coding. Despite this, the chunks are compiled together, when the document is knitted.*  
 *To execute the provided you may need to enter your Python path in a R coding block by "use_python()". If this does not work, copy the Python coding into the Python IDE of your choice, ideally under the main repository directory "./".*  
 *In addition to having the packages installed, the software "graphviz" needs to be installed. If any bugs related to graphviz prevent you from running the code, you can use the decision tree figure provided in this report as a reference.* 
 
@@ -301,9 +301,9 @@ diffPrint(target=ordersP,current=orders)
 
 ## Merging 
 
-*Note: As we explain in this subchapter, the merged data is too small to be beneficial for any useful purpose. This is why we did not implement the merging in R after the coding in Python.*
+*Note: As we explain in this sub-chapter, the merged data is too small to be beneficial for any useful purpose. This is why we did not implement the merging in R after the coding in Python.*
 
-We tried to merge the click and order data in Python by trying different ID combinations that occure in both datasets. For testing the different combinations we used an inner join in order to be able to recognize easier, whether a merging try had success. We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
+We tried to merge the click and order data in Python by trying different ID combinations that occur in both datasets. For testing the different combinations we used an inner join in order to be able to recognize easier, whether a merging try had success. We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
 
 ```{python pythonMergingTries, eval=F, echo=F}
 import pandas as pd
@@ -328,7 +328,7 @@ ids['Shape'] = shapes
 knitTable('1 Data Preprocessing/mergeIDs.csv', "")
 ```
 
-In this way we were able to discover that it is possible to join the datasets on the 'Customer ID' for some instances. Thus, we saved a dataset for the merging results on the Customer ID. But the merged data makes rather less sense since a Customer ID can have multiple order and click rows. Another problem is that the time periods of the dataset do not overlap in any way. Because of this issues, we decided on building a second, smaller data subset containing only the customer information columns of both original datasets. The final merged customer dataset contains 80 attributes for 97 customers. Since only such a minor ratio of data could be merged, we consider the joined dataset as rather unimportant and did not perform any further analytical steps on it.
+In this way we were able to discover that it is possible to join the datasets on the 'Customer ID' for some instances. Thus, we saved a dataset for the merging results on the Customer ID. But the merged data makes rather less sense since a Customer ID can have multiple order and click rows. Another problem is that the time periods of the dataset do not overlap in any way. Because of this issues, we decided on building a second, smaller data subset containing only the customer information columns of both original datasets. The final merged customer dataset contains 80 attributes for 97 customers. Since only such a minor ratio of data could be merged, we consider the joined dataset as rather unimportant and did not perform any further analytic steps on it.
 
 ```{python pythonMerging, eval=F, echo=F, results = "hide"}
 #Recommended Location: "./1 Data Preprocessing/Python/"
@@ -476,7 +476,7 @@ kable(df, row.names = FALSE) %>%
 
 ### Order Data 
 
-The order data can be mainly devided into 4 sections:
+The order data can be mainly divided into 4 sections:
 
 1) **Customer Data**: For this section we regard all information referring to the customer as an individual. This data contains information such as the customer gender, location, family status and retail activities.
 ```{r ordersCustomers, echo=FALSE, results = 'asis'}
@@ -560,7 +560,7 @@ for (title in interestingOrders) {
 
 The clickstream data has three main categories: Customer data, product data and time data. The clickstream dataset contains payment methods as well, but the information coming from this attributes gets not regarded in this observation since the payment data is in anyway only available for customers that actually ordered. For analysis purposes only the most important or interesting attributes are discussed in detail. For the full range of columns see the [Appendix](#fullClickstreamTables).
 
-1) **Customer Data**: The data contains a vast collection of information about customers, reaching from usual informations like age, gender, etc. 
+1) **Customer Data**: The data contains a vast collection of information about customers, reaching from usual information like age, gender, etc. 
 over financial activities to opinions about the shop.
 ```{r clicksCustomers, echo=FALSE, results = 'asis'}
 clicksCustomerInfo <- c("City",
@@ -590,7 +590,7 @@ for (title in clicksCustomerInfo) {
 }
 ```
   
-2) **Product Data**: The following data columns describe features of products clicked on by the customers. Similar to the customer data, the product data listing is cutted to the most essential attributes.
+2) **Product Data**: The following data columns describe features of products clicked on by the customers. Similar to the customer data, the product data listing is boiled down to the most essential attributes.
 ```{r clicksProducts, echo=FALSE, results = 'asis'}
 
 clicksProducts <- c("StockType",
@@ -622,7 +622,7 @@ for (title in clicksTimeInfo) {
 
 ## Summary Tables {#sumTabs}
 
-Given a subset of interesting columns, we create two types of summary tables for each: One table for numerical columns in the subset and another for factors. The summary table for the numerical data contains the maximum value, minimum value, mean, median and standard deviation for each column. Whereas the factorial tables contain the five most frequent factors as well as their percentage, the ratio of NAs and other factors for each column. For this, the NA percentage gets calculated at first, then the NA values are deleted from the regarded column and the percentage for each value is calcuated.
+Given a subset of interesting columns, we create two types of summary tables for each: One table for numerical columns in the subset and another for factors. The summary table for the numerical data contains the maximum value, minimum value, mean, median and standard deviation for each column. Whereas the factorial tables contain the five most frequent factors as well as their percentage, the ratio of NAs and other factors for each column. For this, the NA percentage gets calculated at first, then the NA values are deleted from the regarded column and the percentage for each value is calculated.
 
 ```{r createSummaryCSVFiles, echo=F, results = "hide", message=F, warning=F}
 # create tables as csv to keep the following code chunks small
@@ -692,11 +692,11 @@ write.table(numCol, file = paste(pathTableFolder,"ClickstreamTime_Numerical_Shor
 
 In the following section the summary tables generated for the purpose of describing the order data are shown. Additionally, the most important or interesting analysis results are emphasized and shortly explained. Important to note is that the analysis is based on each order. That means the data of a customer can possibly be regarded multiple times in the customer analysis if he ordered more than once in the shop.
 
-*Note: To support a better visualization, the most relevant columns are highligthed in black color.*
+*Note: To support a better visualization, the most relevant columns are highlighted in black color.*
 
 #### Customer Data 
 
-Only the age can be regarded as a numerical customer data column here. As most intersting in this summary might appear the mean and the median, which both imply an average customer segment consisting of people in their late 30s.  
+Only the age can be regarded as a numerical customer data column here. As most interesting in this summary might appear the mean and the median, which both imply an average customer segment consisting of people in their late 30s.  
 ```{r OrderCustomerNum, echo=FALSE}
 knitTable("4 Data Overview/Tables/ CustomerData_Numerical.csv", "Variable") %>%
   column_spec(3, bold = T, color = "white", background = "#000000") %>%
@@ -715,7 +715,7 @@ knitTable("4 Data Overview/Tables/ CustomerData_Factors.csv", "Variable") %>%
 
 #### Product Data {#SumOrderProduct}
 
-The selected columns belonging to the product information section show only factorial values. The statistical overview for the product data reveals that most of the sold articles are replenishable. The strongest brand in the current orders is American Essential, which seems to manufacture its articles by itself. Important is to recognize that the presented data is skewed in a way: Because the given dataset shows only ordered products, it can be assumed that the popularity of articles distorts all percentual information referring to the products. Thus, we can not make any assumptions referring to the original product palette the store offers. By this reason the following table should be regarede as a popularity overview for product attributes.  
+The selected columns belonging to the product information section show only factorial values. The statistical overview for the product data reveals that most of the sold articles are replenishable. The strongest brand in the current orders is American Essential, which seems to manufacture its articles by itself. Important is to recognize that the presented data is skewed in a way: Because the given dataset shows only ordered products, it can be assumed that the popularity of articles distorts all percentual information referring to the products. Thus, we can not make any assumptions referring to the original product palette the store offers. By this reason the following table should be regarded as a popularity overview for product attributes.  
 ```{r OrderProductFac, echo=FALSE}
 knitTable("4 Data Overview/Tables/ ProductData_Factors.csv", "Variable") %>%
   column_spec(2, bold = T, color = "white", background = "#000000")
@@ -732,7 +732,7 @@ knitTable("4 Data Overview/Tables/ PaymentMethodData_Factors.csv", "Variable") %
 
 #### Order Process Data 
 
-The numerical data for the order process shows that a customer usally buys one product per order. Also the order line amount implies that the store offers rather inexpensive articles. Furthermore, the minimum value for both the order line quantity and the order line amount is negative, which hints to the assumption of eather the order data containing returns as well or having errors in it. Through the discount amount it is possible to state that the store offers a maximum of a 50% price reduction for the given time period. Also the buyed articles got by average a discount of about 9%. Again it can be assumed that this data is not representative for the shop's offer in general, because it is probable that articles with a higher discount are bought more often.  
+The numerical data for the order process shows that a customer usually buys one product per order. Also the order line amount implies that the store offers rather inexpensive articles. Furthermore, the minimum value for both the order line quantity and the order line amount is negative, which hints to the assumption of either the order data containing returns as well or having errors in it. Through the discount amount it is possible to state that the store offers a maximum of a 50% price reduction for the given time period. Also the bought articles got by average a discount of about 9%. Again it can be assumed that this data is not representative for the shop's offer in general, because it is probable that articles with a higher discount are bought more often.  
 ```{r OrderOrderNum, echo=FALSE}
 knitTable("4 Data Overview/Tables/ OrderData_Numerical.csv", "Variable") %>%
   row_spec(1, bold = T, color = "white", background = "#000000") %>%
@@ -740,7 +740,7 @@ knitTable("4 Data Overview/Tables/ OrderData_Numerical.csv", "Variable") %>%
   row_spec(5, bold = T, color = "white", background = "#000000")
 ```
 
-The factors for the order process demonstrate that the 'FRIEND' discount is used most often and in the majority of the orders. (At this point it would be relevant for the interpretation to know for whom and under which circumstances this discount is given.) Also the weekday summary could be relevant for sales purposes, by example for finding out the most successfull time for showing ads to possible customers: From this overview, it can be assumed that the weekday Wednesday could have a high chance for ad responds.
+The factors for the order process demonstrate that the 'FRIEND' discount is used most often and in the majority of the orders. (At this point it would be relevant for the interpretation to know for whom and under which circumstances this discount is given.) Also the weekday summary could be relevant for sales purposes, by example for finding out the most successful time for showing ads to possible customers: From this overview, it can be assumed that the weekday Wednesday could have a high chance for ad responds.
 ```{r OrderOrderFac, echo=FALSE}
 knitTable("4 Data Overview/Tables/ OrderData_Factors.csv", "Variable")  %>%
   row_spec(3, bold = T, color = "white", background = "#000000")
@@ -754,7 +754,7 @@ The following tables display only the most important columns from the clickstrea
 
 #### Customer Data 
 
-Since the clickstream dataset contains a row for every click of a customer the social information for a user gets easily multiplied by the browsing behaviour. Thus, the data has a high probability of being skewed when it comes to customer information. Therefore, we calcuated the customer summary based on only one row per session. 
+Since the clickstream dataset contains a row for every click of a customer the social information for a user gets easily multiplied by the browsing behavior. Thus, the data has a high probability of being skewed when it comes to customer information. Therefore, we calculated the customer summary based on only one row per session. 
 
 The age has its average at 37.58 and its median of 36, implying a main customership in their late 30s.
 ```{r ClicksCustomerFac, echo=FALSE}
@@ -783,7 +783,7 @@ knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Factors_Short.csv", "
 
 #### Time Data
 
-At Saturday the shop can register its highest visitor rates, which seems reasonable since at the weekend people usually have the most time for online shopping. At the 27. April, a Thursday in the year 2000, the shop had the most viewers for the given time period. As their way no big holiday coming up, this high activity may be due to weather circumstances, which have normally a high influence in online shopping behaviour.  
+At Saturday the shop can register its highest visitor rates, which seems reasonable since at the weekend people usually have the most time for online shopping. At the 27. April, a Thursday in the year 2000, the shop had the most viewers for the given time period. As their way no big holiday coming up, this high activity may be due to weather circumstances, which have normally a high influence in online shopping behavior.  
 ```{r ClicksTimeFac, echo=FALSE}
 knitTable("4 Data Overview/Tables/ ClickstreamTime_Factors_Short.csv", "Variable") %>%
   column_spec(2, bold = T, color = "white", background = "#000000")
@@ -798,7 +798,7 @@ knitTable("4 Data Overview/Tables/ ClickstreamTime_Numerical_Short.csv", "Variab
 
 #### Calculated Data {#calcData}
 
-Since not all interesting data can be recorded through simply summaring the existing columns, we decided to add calculated columns. The session duration gives the time in minutes a customer spend on the website, which gets calculated through the timestamps on the first and last click of a session. The click number represents how much clicks a customer made during one session. For both these values, the max values indicate that there could be bot activity on the website.  
+Since not all interesting data can be recorded through simply summarizing the existing columns, we decided to add calculated columns. The session duration gives the time in minutes a customer spend on the website, which gets calculated through the timestamps on the first and last click of a session. The click number represents how much clicks a customer made during one session. For both these values, the max values indicate that there could be bot activity on the website.  
 ```{r ClicksCalc, echo=FALSE}
 knitTable("4 Data Overview/Tables/ ClickstreamData_Calc.csv", "Variable")
 ```
@@ -806,21 +806,21 @@ knitTable("4 Data Overview/Tables/ ClickstreamData_Calc.csv", "Variable")
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 ### Comparison
 
-When comparing the product and customer information for the order and click dataset directly some intersting observations can be made.
+When comparing the product and customer information for the order and click dataset directly some interesting observations can be made.
 
 #### Customer Data
 
-**Age:** The summarised age values of the click and order dataset are similar, but nor entirely equal. The median is indeed equal for both datasets. However, the mean differs a little and is lower for the click data, indicating that young people might browse more than buy.  
+**Age:** The summarized age values of the click and order dataset are similar, but nor entirely equal. The median is indeed equal for both datasets. However, the mean differs a little and is lower for the click data, indicating that young people might browse more than buy.  
 ```{r CustomerNumCompare, echo=FALSE}
 compare("4 Data Overview/Tables/ CustomerData_Numerical.csv", "4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical_Short.csv", "Age")
 ```
 
-**City:** From the following overview can be observed that especially people from New York tend to order relativly often compared to their browsing amount. But since a lot of the click data for the cities is not available, the comparison is possibly not that meaningful.  
+**City:** From the following overview can be observed that especially people from New York tend to order relatively often compared to their browsing amount. But since a lot of the click data for the cities is not available, the comparison is possibly not that meaningful.  
 ```{r CustomerCityCompare, echo=FALSE}
 compare("4 Data Overview/Tables/ CustomerData_Factors.csv", "4 Data Overview/Tables/ ClickstreamDataCustomer_Factors_Short.csv", "City")
 ```
 
-**Audience:** The confrontation of the audience for both datasets displays that more women and children products get viewed than buyed, whereas the opposite can be said for men products. Since it can be assumed that usually women look for children products, this observation shows that male users are the more target buyers. This could be interesting by example for discount offerings, because an indecisive potential customer is more likely to be affected by such offers than a determined one. 
+**Audience:** The confrontation of the audience for both datasets displays that more women and children products get viewed than bought, whereas the opposite can be said for men products. Since it can be assumed that usually women look for children products, this observation shows that male users are the more target buyers. This could be interesting by example for discount offerings, because an indecisive potential customer is more likely to be affected by such offers than a determined one. 
 ```{r CustomerAudienceCompare, echo=FALSE}
 compare("4 Data Overview/Tables/ CustomerData_Factors.csv", "4 Data Overview/Tables/ ClickstreamDataCustomer_Factors_Short.csv", "Audience")
 ```
@@ -852,7 +852,7 @@ compare("4 Data Overview/Tables/ ProductData_Factors.csv", "4 Data Overview/Tabl
 
 ## Visualizations {#plots}
 
-Some information is too complex to be compressed into a single table without making it too confusing or it's simply easier to understand if presented as a plot. The plot types used are time series plots, stacked bar plots, distribution curves, lorenz curves and maps.
+Some information is too complex to be compressed into a single table without making it too confusing or it's simply easier to understand if presented as a plot. The plot types used are time series plots, stacked bar plots, distribution curves, Lorenz curves and maps.
 
 ```{r Plotting, echo=FALSE, eval=FALSE, results="hide", message=F, warning=F}
 # target path
@@ -1160,23 +1160,23 @@ ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age.png",sep=""), mult
 
 #### Customer Data 
 
-The customer data of the order data can be viewed from two perspectives: One way is to use every single order row for the creation of the visualizations and therby create a weighted view on the data, in which customers that have bought more products are more respected. Another possibility is to display the customer information just for every unique customer in the order data and disregard the number of orders a customer made. The following plottings will show both of this perspectives.
+The customer data of the order data can be viewed from two perspectives: One way is to use every single order row for the creation of the visualizations and thereby create a weighted view on the data, in which customers that have bought more products are more respected. Another possibility is to display the customer information just for every unique customer in the order data and disregard the number of orders a customer made. The following plots will show both of this perspectives.
 
-Firstly, we genereted some density curves for the attribute age to visualize the distribution of the customership. Also, we differentiated between the genders for this. The curves all show a fast rise in customership for the ages 20 to 40, which decreases slowly after a peak at about 35 to 40. When comparing the weighted and the normal graph, a slightly shift of the curve can be observed. This indicates that in general older people tend to order more. This is especially relevant for an older male customership, which is shown by the peak at about 55 in the male curve of the weighted density plot. Additionally, a less wide peak can be observed for the male customers, which has its maximum shortly before the age of 40. Furthermore, it should be regarded, that the gender plot shows a prozentual curve for each gender, but the ratio of customers differs by gender.  
+Firstly, we generated some density curves for the attribute age to visualize the distribution of the customership. Also, we differentiated between the genders for this. The curves all show a fast rise in customership for the ages 20 to 40, which decreases slowly after a peak at about 35 to 40. When comparing the weighted and the normal graph, a slightly shift of the curve can be observed. This indicates that in general older people tend to order more. This is especially relevant for an older male customership, which is shown by the peak at about 55 in the male curve of the weighted density plot. Additionally, a less wide peak can be observed for the male customers, which has its maximum shortly before the age of 40. Furthermore, it should be regarded, that the gender plot shows a percentual curve for each gender, but the ratio of customers differs by gender.  
 ```{r OrderPlotAge,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Age_weighted.png', 1))
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Age.png', 1))
 ```
 
 
-In order to show the customer location, we generated a map of the United States, which shows the cities with the highest customer numbers. From this it can be observed that the west coast of the US orders in general the most. The difference between the weighted and the other customer graph shows that the customership from the large cities like New York or San Franscisco tends to have high order numbers since the large circles at this cities disappear, when we look at the non-weighted graph.  
+In order to show the customer location, we generated a map of the United States, which shows the cities with the highest customer numbers. From this it can be observed that the west coast of the US orders in general the most. The difference between the weighted and the other customer graph shows that the customership from the large cities like New York or San Francisco tends to have high order numbers since the large circles at this cities disappear, when we look at the non-weighted graph.  
 ```{r OrderPlotCities,echo=FALSE, }
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Cities_weighted.png', 1))
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Cities.png', 1))
 ```
 
 
-To visualize the importance of different areas, we created a heatmap for the different US States. Here we can see that California and New York are the most important customer states. This is probably highly influenced by the big cities in this states. Here, the distorting factor of population density must be taken into account.  
+To visualize the importance of different areas, we created a heat map for the different US States. Here we can see that California and New York are the most important customer states. This is probably highly influenced by the big cities in this states. Here, the distorting factor of population density must be taken into account.  
 ```{r OrderPlotStates,echo=FALSE, out.width = "100%"}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/States_weighted.png', 1))
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/States.png', 1))
@@ -1192,32 +1192,32 @@ knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/StockPer
 ```
 <br><br>
 
-*Note: For the lorenz curves we dropped the x-tick labels for a better readability. For details see the top attributes for products in the [summary tables](#SumOrderProduct).*
+*Note: For the Lorenz curves we dropped the x-tick labels for a better readability. For details see the top attributes for products in the [summary tables](#SumOrderProduct).*
 
 ```{r OrderPlotProducts, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzProducts.png', 1))
 ```
 <br><br><br><br><br><br>
-The lorenz curve of the products shows that only a quarter of the whole product quantity is responsible for about 75% of the ordered products. This indicates that some products have a very high popularity.  The curve is pretty steady, which indicates that the product popularity slowly and steadily decreases over the ranking.  
+The Lorenz curve of the products shows that only a quarter of the whole product quantity is responsible for about 75% of the ordered products. This indicates that some products have a very high popularity.  The curve is pretty steady, which indicates that the product popularity slowly and steadily decreases over the ranking.  
 <br><br><br><br><br><br>
   
 ```{r OrderPlotManufacturers, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzManufacturer.png', 1))
 ```
 <br><br><br><br><br><br>
-The manufacturer lorenz curve shows a real high ratio on orders for the biggest manufacturer, which leads to the assumptions that the popularity of some manufacturers is even higher than the product popularity. Furthermore, the graph seems to be a little pointy showing that the manufacturer popularity makes a relative high jump after the top 9 manufacturers.  
+The manufacturer Lorenz curve shows a real high ratio on orders for the biggest manufacturer, which leads to the assumptions that the popularity of some manufacturers is even higher than the product popularity. Furthermore, the graph seems to be a little pointy showing that the manufacturer popularity makes a relative high jump after the top 9 manufacturers.  
 <br><br><br><br><br><br>
   
 ```{r OrderPlotBrands, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzBrandName.png', 1))
 ```
 <br><br><br><br><br><br>
-The brand lorenz curve looks a little more flat, indicating a higher relevance for the manufacturer than for the brand. The curve here is a little pointy at two parts. The first part can be explained due to the high ratio of American Essentials on the orders (as we know from the [summary tables](#SumOrderProduct)). Another interesting anomaly in the curve can be observed after the top 11. brands, because the ratio of the following brands decreases strongly after this point.
+The brand Lorenz curve looks a little more flat, indicating a higher relevance for the manufacturer than for the brand. The curve here is a little pointy at two parts. The first part can be explained due to the high ratio of American Essentials on the orders (as we know from the [summary tables](#SumOrderProduct)). Another interesting anomaly in the curve can be observed after the top 11. brands, because the ratio of the following brands decreases strongly after this point.
 <br><br><br><br><br><br>
 
 #### Payment Data 
 
-The stacked bar plot for credit card brands shows the ratio of each brand on premium and on upscale cards. The card brand AMEX is here noticable with a relative high ratio of premium and upscale cards.   
+The stacked bar plot for credit card brands shows the ratio of each brand on premium and on upscale cards. The card brand AMEX is here noticeable with a relative high ratio of premium and upscale cards.   
 ```{r OrderPlotCards,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Payment Method Data/CardBrand.png', 1))
 ```
@@ -1236,7 +1236,7 @@ A density curve reflecting the order time is shown by the next plot. As to be ex
 knitr::include_graphics(rep('./4 Data Overview/Plots/Order Data Plots/Order Time.png', 1))
 ```
 
-Next, there is displayed a graph, which summarizes some information on order behaviour. From this visulalization we can learn that the online shop sells products of a low price segments, but usually receives orders contaning a rather high amount (peak at 3-15) of articles. The different history plots on the right indicate a high activity in the first half of February, which drops in the beginning of the second month half and than slowly rises again. The first half could possibly be explained through customers buying presents for the valentines day (14th February).  
+Next, there is displayed a graph, which summarizes some information on order behavior. From this visualization we can learn that the online shop sells products of a low price segments, but usually receives orders containing a rather high amount (peak at 3-15) of articles. The different history plots on the right indicate a high activity in the first half of February, which drops in the beginning of the second month half and than slowly rises again. The first half could possibly be explained through customers buying presents for the valentines day (14th February).  
 ```{r OrderPlotPrice,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Order Data Plots/Order Price.png', 1))
 ```
@@ -1401,13 +1401,13 @@ knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/Stat
 
 #### Product Data
 
-*Note: For the lorenz curves we dropped the x-tick labels for a better readability. For details see the top attributes for products in the [summary tables](#SumClickProduct).*
+*Note: For the Lorenz curves we dropped the x-tick labels for a better readability. For details see the top attributes for products in the [summary tables](#SumClickProduct).*
 
 ```{r ClickPlotProducts, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzProducts.png', 1))
 ```
 <br><br><br><br><br><br><br>
-The lorenz curve for the products is rather flat, which indicates there are no big outliers for the product popularity counted by views. Furthermore, the curve seems to be a little pointy at about 60% of the products, which implies a product segment of about 40% with a really low interest rate.
+The Lorenz curve for the products is rather flat, which indicates there are no big outlines for the product popularity counted by views. Furthermore, the curve seems to be a little pointy at about 60% of the products, which implies a product segment of about 40% with a really low interest rate.
 <br><br><br><br><br><br><br>
   
 ```{r ClickPlotManufacturers, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
@@ -1421,14 +1421,14 @@ The following graph appears a bit erratic, indicating that manufacturers can be 
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzBrands.png', 1))
 ```
 <br><br><br><br><br><br><br>
-Whereas the brand lorenz curves shows a more equal distributed popularity, because it is overall rather flat. At about 50% of the brands, a pointy part can be seen in the graph, which devides the brands in a rather popular half and a rather unpopular one.
+Whereas the brand Lorenz curves shows a more equal distributed popularity, because it is overall rather flat. At about 50% of the brands, a pointy part can be seen in the graph, which divides the brands in a rather popular half and a rather unpopular one.
 <br><br><br><br><br><br><br><br><br>
 
 #### Time Data
 
-Especially interesting for analysing purposes is the time component that comes with the clickstream dataset. Each clickstream consists of timestamps and a number in a sequence.
+Especially interesting for analyzing purposes is the time component that comes with the clickstream dataset. Each clickstream consists of timestamps and a number in a sequence.
 
-The following plot shows that most of the clicks are accumulated in the morning and then descending over day. The extreme spike at around 2 a.m. can be neglected as it seems to be bot activity with extremly long session times and sequences.  
+The following plot shows that most of the clicks are accumulated in the morning and then descending over day. The extreme spike at around 2 a.m. can be neglected as it seems to be bot activity with extremely long session times and sequences.  
 ```{r ClicksTime, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/ClickTime.png', 1))
 ```
@@ -1449,7 +1449,7 @@ For some of the graphs a direct comparison makes sense in order to visualize the
 
 #### Customer Data
 
-The maps clearly show the numerical difference in the both dataset. Especially Chicago and Dellas have to be highlighted because both this cities have a really high viewer amount, but a rather small customership.
+The maps clearly show the numerical difference in the both dataset. Especially Chicago and Dallas have to be highlighted because both this cities have a really high viewer amount, but a rather small customership.
 
 **Orders Map**  
 ```{r ComCities,echo=FALSE}
@@ -1463,9 +1463,9 @@ knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/Citi
 
 #### Product Data
 
-*Note: For the lorenz curves we dropped the x-tick labels for a better readability. For details see the top attributes for products in the [summary tables](#sumTabs).*
+*Note: For the Lorenz curves we dropped the x-tick labels for a better readability. For details see the top attributes for products in the [summary tables](#sumTabs).*
 
-In the following the product data lorenz curves for both datasets will be compared. For this the order plot gets always displayed **on the left and the click plot on the right**. For all plots it can be observed that the curve for the order data is more extended. Thus, it can be stated that the orders contain a higher inequality for the popularity of product attributes. This means people seem to decide for rather the same products or brands, despite having a bigger variance in the viewed products. 
+In the following the product data Lorenz curves for both datasets will be compared. For this the order plot gets always displayed **on the left and the click plot on the right**. For all plots it can be observed that the curve for the order data is more extended. Thus, it can be stated that the orders contain a higher inequality for the popularity of product attributes. This means people seem to decide for rather the same products or brands, despite having a bigger variance in the viewed products. 
 
 ```{r ComProducts, echo=FALSE, out.width= "50%", out.extra='style="float:left; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzProducts.png', 1))
@@ -1493,7 +1493,7 @@ In addition to analyzing the order and clickstream data, we have to analyze the 
 * A ranking based recommendation system: This one recommends best performing products according to their sales rank.
 * A random recommendation system: This one was used as a baseline treatment.
 
-The evaluation of the profit and ranking based recommendation systems is done using inference analysis, specifically using the computational paradigm instead of the mathematical one. One test for each of the two recommendation systems is carried out with the null hypothesis always being that the system does not cause different sales than a purely random recommendation system. During each test we randomize our sample data 1000 times, using either permutation or bootstrapping, and measure the p-value and confidence interval. The test statistic, we always use, is the difference in mean between the group using the profit or ranking based Recomendation system and the group using the random recommendation system. 
+The evaluation of the profit and ranking based recommendation systems is done using inference analysis, specifically using the computational paradigm instead of the mathematical one. One test for each of the two recommendation systems is carried out with the null hypothesis always being that the system does not cause different sales than a purely random recommendation system. During each test we randomize our sample data 1000 times, using either permutation or bootstrapping, and measure the p-value and confidence interval. The test statistic, we always use, is the difference in mean between the group using the profit or ranking based Recommendation system and the group using the random recommendation system. 
 If the null hypothesis was true, then the test statistic value for our sample would not significantly differ from the distribution of the test statistic for our randomized data. Our default alpha for the confidence interval is 5%, but since we conduct a total of two tests, we have to apply the Bonferroni correction and adjust the alpha we specify for our confidence interval to 2.5%.
 
 Before diving into the inference analysis itself, we have to reformat our data for the recommendation systems into a form that is suitable for inference analysis. We want to have a data frame in which one row equals one customer, who was exposed to a recommendation system. We use three columns:
@@ -1658,11 +1658,11 @@ To sum it up, the company should use the profit oriented recommendation system, 
 
 # Order Prediction {#model}
 
-Following the inference analysis our next task is to predict whether or not a person browsing the online-shop will end up purchasing something, based on the browsing behaviour on the site. Since the vast majority of click sessions do not contain any customer information, due to unregistered users browsing the website, or registered users not being logged in, we decided to omit that type of data for our prototypes. However, it is technically possible to include these attributes, which should be considered when developing a more advanced version of our prediction models.
+Following the inference analysis our next task is to predict whether or not a person browsing the online-shop will end up purchasing something, based on the browsing behavior on the site. Since the vast majority of click sessions do not contain any customer information, due to unregistered users browsing the website, or registered users not being logged in, we decided to omit that type of data for our prototypes. However, it is technically possible to include these attributes, which should be considered when developing a more advanced version of our prediction models.
 
 
 ## Data Preparation {#modelData}
-First of all the relevant data had to be extracted or engineered from the clickstream data and was then used to build a seperate dataset, which represents the input data for a prediction model. The resulting data set contains one row per session. For each session the following attributes are used:
+First of all the relevant data had to be extracted or engineered from the clickstream data and was then used to build a separate dataset, which represents the input data for a prediction model. The resulting data set contains one row per session. For each session the following attributes are used:
 
 * The number of clicks during a session
 * The session duration in seconds
@@ -1738,13 +1738,13 @@ However, an important thing to note is that about 99% of sessions do not contain
 
 To handle model variance and bias we use the GridSearch approach. This allows us to get the optimal bias-variance trade off for each model, without having to inspect the source of variance or bias and fine tune model parameters manually. This way we do not need bias or variance related plots, such as learning curves. 
 
-While our approach optimises the bias variance trade off for each model, it does not account for bias and variance differences between several models. The two types of models we use for our problem are decision trees and random forrests. By design random forrests have less bias and more variance than decision trees. This means, that depending on the performance of both models we can see if our main problem is too much bias or variance in the data. For example, if random forrests were to perform better than decision trees it would mean that our main problem is too much bias in the data.
+While our approach optimizes the bias variance trade off for each model, it does not account for bias and variance differences between several models. The two types of models we use for our problem are decision trees and random forests. By design random forests have less bias and more variance than decision trees. This means, that depending on the performance of both models we can see if our main problem is too much bias or variance in the data. For example, if random forests were to perform better than decision trees it would mean that our main problem is too much bias in the data.
 
-It should also be mentioned that depending on the business goal, the ratio of positive and negative instances in the training set should be adjusted. We use a 1-2 ratio of positives and negatives. Increasing the amount of negatives would cause a model to have an increased rate of true negatives and less false positives, however, it would also increase the rate of false negatives. Increasing the amount of positive instanced in the training set would have the reverse effet.
+It should also be mentioned that depending on the business goal, the ratio of positive and negative instances in the training set should be adjusted. We use a 1-2 ratio of positives and negatives. Increasing the amount of negatives would cause a model to have an increased rate of true negatives and less false positives, however, it would also increase the rate of false negatives. Increasing the amount of positive instanced in the training set would have the reverse effect.
 
 ## Decision Trees {#modelTree}
 
-The first model of choice is a decision tree, because it allows to easily understand the decision making process of the model. Since it removes the need for dimensionality reduction and feature scaling it also reduces the required amount ofwork. The evaluation metric used during the grid search is ROC-score. However, depending on the evolving needs of the company, one might want to chose a different evaluation metric.
+The first model of choice is a decision tree, because it allows to easily understand the decision making process of the model. Since it removes the need for dimensionality reduction and feature scaling it also reduces the required amount of work. The evaluation metric used during the grid search is ROC-score. However, depending on the evolving needs of the company, one might want to chose a different evaluation metric.
 
 ```{python createTree, eval=F, echo=F, results = "hide"}
 #Note: In addition to having the packages installed, the software "graphviz" also needs to be installed. If any bugs related to graphviz prevent you from running the code, you can use the figure provided in this chapter as a reference.
@@ -1929,7 +1929,7 @@ As mentioned above the main reason for choosing a decision tree is the ease of u
 
 ## Random Forrest {#modelForrest}
 
-The second model of choice is a random forrest. A random forrest is an ensemble model made up of several decision trees. Due to the structure of a random forrest it has less bias than a single decision tree, but it suffers from higher variance. It also offers less insight into the logic of the model, since it is made up of several trees. However, depending on the forrest complexity, it is still possible to present an overview of that logic. For example if the forrest is made up of only 5 trees, each tree could be visualized. However, the more trees a forrest is made out of, the less transparency it offers.
+The second model of choice is a random forest. A random forest is an ensemble model made up of several decision trees. Due to the structure of a random forest it has less bias than a single decision tree, but it suffers from higher variance. It also offers less insight into the logic of the model, since it is made up of several trees. However, depending on the forest complexity, it is still possible to present an overview of that logic. For example if the forest is made up of only 5 trees, each tree could be visualized. However, the more trees a forest is made out of, the less transparency it offers.
 
 ```{python createForrest, eval=F, echo=F, results = "hide"}
 import numpy as np
@@ -2059,7 +2059,7 @@ The following values values could be observed on average:
 * F1 score around 93%   
 * ROC score around 90%  
 
-This shows a 1%-3% percentage drop in performance compared to the previous decision tree model. This indicates a high variance in the data, which favors a decision tree more than a random forrest.
+This shows a 1%-3% percentage drop in performance compared to the previous decision tree model. This indicates a high variance in the data, which favors a decision tree more than a random forest.
 
 The confusion matrix can be seen below. The model classifies around 98% of sessions, that contain an order, correctly. On the other hand it predicts that around 85% of sessions, which do not contain an order, do contain one.  
 
@@ -2072,7 +2072,7 @@ In this case it looks like the model simply trades a lower ratio of false negati
 First of all it should be evaluated which correct and false predictions are important. For example, the company might want to offer discounts to potential customers, who would normally not order something during their session. In that case the ratio of false positives should be kept down as the company does not want to offer discounts to too many people, who would order a product anyway.  
 After this evaluation a fitting performance measurement metric can be chosen. Depending on the metric the performance ranking of different models can change. In addition to that the ratio of positive and negative instances used to train the model should be adjusted, as it was described in this chapter.  
 Another important question is how important model transparency is. If it is not required at all to understand how the model predicts, and why, more models and modelling strategies should be considered. For example neural networks would become an option. Or methods for automatic dimensionality reduction, such as PCA, or for iterative model improvements, such as Bagging or Boosting, should also be evaluated.  
-In addition, it should be considered whether a continuous training of the model is a good idea. On one hand it offers the advantge of staying up to date by feeding the newest customer behaviour data to the model. On the other hand it would require a higher investment in monitoring software and personnel as well as IT security. The reason for that is that continous learning creates the risk of model corruption, which requires constant performance monitoring, regular model backups and a quick way to switch to an older version of the model.
+In addition, it should be considered whether a continuous training of the model is a good idea. On one hand it offers the advantage of staying up to date by feeding the newest customer behavior data to the model. On the other hand it would require a higher investment in monitoring software and personnel as well as IT security. The reason for that is that continuous learning creates the risk of model corruption, which requires constant performance monitoring, regular model backups and a quick way to switch to an older version of the model.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -2099,7 +2099,7 @@ To get an overview of the content of the "0 Data" folder:
 
 ## Full Clickstream Tables {#fullClickstreamTables}
 
-The clickstream dataset contains a high quantity of information. Thus, not all attributes are displayed in the summary tables above, but can be seen in the followiing overview tables.
+The clickstream dataset contains a high quantity of information. Thus, not all attributes are displayed in the summary tables above, but can be seen in the following overview tables.
 
 ### Customer Data {#clicksCustomerFullTable}
 
