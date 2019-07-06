@@ -176,20 +176,25 @@ ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=
 #-----------------------------------------------------------------------------------
 #Plotting product data
 #-----------------------------------------------------------------------------------
+#Plotting product data
+#-----------------------------------------------------------------------------------
 #Manufacturer lorenz curve
-plotBarAndLorenz(orders, "Manufacturer") +
-        ggtitle("Lorenz Curve Manufacturers")
-ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzManufacturer.png",sep=""), width=12, height=13)
+beautify(plotLorenzCurve(orders, "Manufacturer") +
+           ggtitle("Lorenz Curve Manufacturers")) +
+  theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzManufacturer.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #Product ID lorenz curve
-plotBarAndLorenz(orders, "Order.Line.Subassortment.ID") +
-  ggtitle("Lorenz Curve Products")
-ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzProducts.png",sep=""), width=20, height=7)
+beautify(plotLorenzCurve(orders, "Order.Line.Subassortment.ID") +
+           ggtitle("Lorenz Curve Products")) +
+  theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzProducts.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #BrandName lorenz curve
-plotBarAndLorenz(orders, "BrandName") +
-  ggtitle("Lorenz Curve Brands")
-ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzBrandName.png",sep=""), width=12, height=13)
+beautify(plotLorenzCurve(orders, "BrandName") +
+           ggtitle("Lorenz Curve Brands")) +
+  theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzBrandName.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #StockPerBrand
 top <- orders

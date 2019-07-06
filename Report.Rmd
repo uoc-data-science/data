@@ -10,12 +10,11 @@ output:
 tables: yes
 ---
 
-<!--centers the text, but does not work very fine -->
-<!-- <style>body {text-align: justify}</style> -->
+<!--centers the text -->
+<style>div {text-align: justify}</style>
+
 
 ```{r importingMyLibraries, echo=F, results = "hide", message=F, warning=F}
-#    ^ only output, not coding
-#cmd+alt+i --> for r coding
 #load libraries
 library(diffobj)
 library(gridExtra)
@@ -36,52 +35,60 @@ library(kableExtra)
 library(infer)
 library(maps)
 
-#function for reading csv and plotting it as table
-knitTable <- function(path){
-  df =  read.csv(file=path)
+#function for reading csv and plotting/formatting it as table
+knitTable <- function(path, column){
+  df = read.csv(file=path)
+  if (column != ""){
+     df[[column]] <- str_replace_all(df[[column]], '[.]', ' ')
+  }
   kable(df, row.names = FALSE) %>%
     kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
 }
 
-#declare python version to use (Comment Kim: I need this to knit the document.)
-use_python('/anaconda3/bin/python', required = FALSE)
+compare <- function(path1, path2, column){
+  df <- read.csv(file=path1)
+  df <- filter(df, Variable == column)
+  df$Variable <- c("Orders")
+  df2 <- read.csv(file=path2)
+  df2 <- filter(df2, Variable == column)
+  df2$Variable <- c("Clicks")
+  df <- rbind(as.matrix(df), as.matrix(df2))
+  df <- df[, colSums(df != "") != 0]
+  kable(df, row.names = FALSE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
+}
 ```
 
 ```{r ref.label="sourceCode",echo=FALSE}
  # execute sourceCode chunk from appendix for plotting functions
 ```
 
-# About the Data {#data}
+# Introduction
 
-The available data comes from an online shop, which sells beauty products. There are two datasets given: One with data about customer orders and another with data about customer clicks on the website.
+The field of data science deals with the extraction of knowledge from data. From this target a sophisticated set of interdisciplinary tasks arises, which demand different skills in the area of data exploration.  
+The activities described in this report are intended to illustrate the exemplary implementation of such data science tasks by programming based on a simulated business project. For this purpose, data from an online shop was provided. During the course of the project the import, cleaning and manipulation of data was implemented. Also, the topics exploratory analysis, visualization, experiment analysis and machine learning (building of a data model) were covered and their results are described in the following sections of this report. The realization of all these tasks was either done in the programming language R or Python. The first step, the data cleaning, was even implemented in both languages.
 
-The orders dataset consists of one row for each customer order in the time periode from the 28. January 2000 to the 3. March 2000. The data contains values such as the number of product units ordered, the total order amount, payment information, the manufacturer and brand names of the ordered products and social data about the customer, as by example his location or age.
-
-The clicks dataset contains data referring to customer clicks on the website of the given company. Therefore, it is composed of data such as the timestamp of a click, the session length and the name of the clicked product, as well as the product category it belongs to. In this way the whole session course of a customer can be illustrated through the data.
-
-Both datasets share a considerable amount of columns. However, since not every click results in an order and since a session consists normally of more than one click, the contents differ significantly.
+The project's main task is to analyze the given datasets, especially by creating appropiate [visualizations](#plots) and [summary tables](#sumTabs) for the data, that is suspected to be relevant for the online shop in some way. In addition to this, an [experiment analysis](#recomm) has to be executed, which calculates and presents the performance strength of different recomendation systems. Furthermore, a data [model](#model) should be constructed in order to predict, whether a user of the online shop will order something. This prediction should be based the browsing behaviour of a person on the website.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-# Task Description {#task}
+# Data Description {#data}
 
-The project's task is to analyze the dataset, especially by creating plots and statistical tables for the data, that is suspected to be relevant for the online shop in some way. 
-
-In addition to that the performance of different Recomendation systems has to be analyzed.
-
-<!-- TODO: Task description of the modelling task -->
-Finally, a model has to be constructed to predict whether or not a user of the web-shop will order something, based on his browsing behaviour on the site.
+The provided data comes from an online shop selling beauty products. There are two datasets given: One with data about customer orders and another with data about customer clicks on the website.  
+The orders dataset consists of one row for each customer order in the time periode from the 28. January 2000 to the 3. March 2000. The data contains values characterizing the ordered products, the used payment methods, the order process itself and social data, as by example the customer's location or age.  
+Whereas, the clicks dataset contains data referring to customer clicks on the website of the given company from the 14. April 2000 to the 30. April 2000. Therefore, it is mainly composed of data giving information about the payment methods, customer attributes and preferences, product details and of values describing each click itself as by example the request time or the current page URL. Through this data it is possible to illustrate the whole session course of a customer.  
+Both datasets share a considerable amount of columns. However, since not every click results in an order and since a session consists normally of more than one click, the contents differ nonetheless significantly.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-# Cleaning the Data {#cleaning}
+# Data Manipulation {#cleaning}
 
 Before we started cleaning the data, we copied it to the folder "0 Data". The reason for this was to avoid accidentally altering the original dataset by separating the edited datasets from the original ones. The cleaned data and further forms of the datasets were also saved to this folder. Before explaining the cleaning process, it makes sense to get an overview of the content of the aforementioned folder. It can be described as follows:
 
 * Each file has a suffix depending on what language was used for creating it. Files created with a Python script have the suffix "_P", while files created with R have the suffix "_R". 
-* For both datasets three types of files are created: 
+* For both datasets three types of files are created:  
     + A copy of the original dataset (e.g. "order_data_R.csv")
     + A cleaned version of that dataset (e.g. "order_data_cleaned_R.csv")
     + A smaller version of the cleaned data, which allows quick viewing and testing of the technical functionality of the coding (e.g. "order_data_small_R.csv")
@@ -91,12 +98,11 @@ Before we started cleaning the data, we copied it to the folder "0 Data". The re
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-## Cleaning with R
+## Cleaning
     
 The cleaning process consists of the following steps:
 
-1. Copy the original datasets to the folder "0 Data"
-
+1. Copy the original datasets
 ```{r copyFiles, eval=F, echo=F, results = "hide"}
 # Path of original file
 pathOrders <- "orders/order_data.csv"
@@ -126,7 +132,15 @@ pathClicks <- newPathClicks
 pathClicks2 <- newPathClicks2
 ```
 
-2. Read the data, add headers (i.e. column labels), replace "?" and "NULL" with NA, drop columns which have a 100% ratio of missing data, reformat datetime cells and save the result (e.g. as "order_data_cleaned_R.csv")
+2. Read the data from the files
+
+3. Add headers
+
+4. Replace "?" and "NULL" with NA
+
+5. Drop columns with a 100% ratio of missing data
+
+6. Reformat datetime cells and save the result
 
 ```{r cleanFiles, eval=F, echo=F, results = "hide"}
 # 2) read files, set headers and replace ? with NA
@@ -185,8 +199,7 @@ for (col in names(clicks)){
 write.table(clicks, file = pathClicksClean, sep=",", row.names=FALSE)
 ```
 
-3. Create a subset of the cleaned data, containing only 1000 rows, and save it (e.g. as "order_data_small_R.csv")
-
+7. Save a subset of the cleaned data, containing only 1000 rows, to support a quick view into the cleaned data
 ```{r smallFiles, eval=F, echo=F, results = "hide"}
 # 3) Save smaller versions for readability and dev purposes
 small_size = min(1000,nrow(orders))
@@ -197,14 +210,12 @@ small_size = min(1000,nrow(clicks))
 clicks_small = clicks[1:small_size,]
 write.table(clicks_small, file = pathClicksSmall, sep=",", row.names=FALSE)
 ```
+
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
-
-## Cleaning with Python 
-
 A similar cleaning process to the one explained above has been implemented in Python.
 
-*Note: Python coding chunks are excutable in RMarkdown in general, but the Python environment is not persistent across different python chunks for the preview function ro run coding. Despite this, the chunks are compiled together, when the document is knitted.*
-*To execute the provided Python code copy it into the Python IDE of your choice, ideally under the recommended location, which is mentioned at the top of code block. The path is always relative to the repository.*
+*Note: Python coding chunks are excutable in RMarkdown in general, but the Python environment is not persistent across different python chunks for the preview function ro run coding. Despite this, the chunks are compiled together, when the document is knitted.*  
+*To execute the provided you may need to enter your Python path in a R coding block by "use_python()". If this does not work, copy the Python coding into the Python IDE of your choice, ideally under the recommended location, which is mentioned at the top of each code block. The path is always relative to the repository.*
 
 ```{python pythonCleaning, eval=F, echo=F, results = "hide"}
 #Recommended Location: "./"
@@ -276,12 +287,12 @@ clicks.to_csv(path_or_buf=pathClicksClean, index=False, encoding='utf-8')
 orders.to_csv(path_or_buf=pathOrdersClean, index=False, encoding='utf-8')
 (orders.head(1000)).to_csv(path_or_buf=pathOrdersSmall, index=False, encoding='utf-8')
 ```
+
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+To test if the cleaning scripts in Python and R result in the same file, we implemented a short coding to create a diff view.
+The result showed that there are no differences in the cleaned versions of the datasets created through the both languages.
 
-## Cleaning differences of Python and R {#diff}
-To test if the cleaning scripts in Python and R result in the same file, execute the following code in RStudio. The package creates a diff view 
-
-```{r diffFiles, eval=F}
+```{r diffFiles, eval=F, echo=F}
 library(diffobj)
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
 pathClicks  <- "0 Data/clickstream_data_cleaned_R.csv"
@@ -299,9 +310,10 @@ diffPrint(target=ordersP,current=orders)
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 ## Merging 
-*Note: Since we do not use the merged datasets for any in-depth analysis we consider it to be a part of "Data exploration", instead of "Data cleaning". Thus we implemented it in Python only.*
 
-Furthermore, we tried to merge the click and order data in Python by trying different ID combinations that occure in both datasets. For testing the different combinations we used an inner join in order to be able to recognize easier whether a merging try had success. We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
+*Note: Since we do not use the merged datasets for any in-depth analysis we consider it to be a part of "Data exploration", instead of "Data cleaning". Thus, we implemented it in Python only.*
+
+We tried to merge the click and order data in Python by trying different ID combinations that occure in both datasets. For testing the different combinations we used an inner join in order to be able to recognize easier, whether a merging try had success. We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
 
 ```{python pythonMergingTries, eval=F, echo=F}
 #Recommended Location: "./"
@@ -325,13 +337,10 @@ ids['Shape'] = shapes
 ```
 
 ```{r MergingTries, echo=F}
-path <- '1 Data Preprocessing/mergeIDs.csv'
-mergingTries <- read.csv(file=path)
-kable(mergingTries, row.names = FALSE)
+knitTable('1 Data Preprocessing/mergeIDs.csv', "")
 ```
 
-<br> 
-In this way we were able to discover that it is possible to join on the 'Customer ID' for some instances. Thus, we saved a dataset for the merging results on the Customer ID. But the merged data makes rather less sense since a Customer ID can have multiple order and click rows. Because of this issue, we decided on building a second, smaller data subset containing only the customer information columns of both original datasets. The final merged customer dataset contains 80 attributes for 97 customers. 
+In this way we were able to discover that it is possible to join the datasets on the 'Customer ID' for some instances. Thus, we saved a dataset for the merging results on the Customer ID. But the merged data makes rather less sense since a Customer ID can have multiple order and click rows. Another problem is that the time periods of the dataset do not overlap in any way. Because of this issues, we decided on building a second, smaller data subset containing only the customer information columns of both original datasets. The final merged customer dataset contains 80 attributes for 97 customers. Since only such a minor ratio of data could be merged, we consider the joined dataset as rather unimportant and did not perform any further analytical steps on it.
 
 ```{python pythonMerging, eval=F, echo=F, results = "hide"}
 #Recommended Location: "./1 Data Preprocessing/Python/"
@@ -401,15 +410,15 @@ mergedCustomer.to_csv(path_or_buf=pathCustomers, index=False)
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-# Analyzing the Data {#analysis}
+# Data Analysis {#analysis}
 
-The aim of the data analysis is to extract information, which is suspected to be valuable to the online shop, and prepare it in a way that makes it easily "digestible". The overview of the information is presented in statistical tables and plots.
+The aim of the data analysis is to extract information, which is suspected to be valuable to the online shop, and prepare it in a way that makes it easily "digestible". The overview of the information is presented in summary tables and different kinds of visualizations.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-## Missing Data{#missingData}
+## Missing Data {#missingData}
 
-Before creating overview tables or plots for columns, it makes sense to look which columns actually contain a large quantity of information and which do not. To do a check up on the ratio of filled cells, we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. The first 50 entries in the resulting rankings can be seen in the following two tables (left: Orders, right: Clicks). 
+Before creating overview tables or plots for columns, it makes sense to evaluate which columns actually contain a large quantity of information and which do not. To do a check up on the ratio of filled cells, we created a ranking for both datasets containing column names and the percentage of missing data for each column. Columns with a low percentage of missing data are then preferred in later analysis steps. To offer an impression on this analysis results, the first 20 entries of the resulting rankings can be seen in the following two tables. 
 
 ```{r NARanking, echo=F, padding = 10}
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
@@ -422,10 +431,10 @@ pathNULLAnalysisClicks <- "2 Data Analysis/NAclicks.csv"
 
 orders <- read.csv(file=pathOrders)
 clicks <- read.csv(file=pathClicks)
-
+#-------------------------------------------------------------------------------------
 # Create a DF to save the column names and appropriate NA percentage values
 NAorders <- data.frame(matrix(ncol = 2, nrow = 0))
-x <- c("Column_Name", "NA_percentage")
+x <- c("Order Column", "Order NA %")
 colnames(NAorders) <- x
 
 # Get the NA percentage errors
@@ -434,14 +443,12 @@ for (column in names(orders)){
     NAorders[nrow(NAorders) + 1,] = list(column,percentageNA)
 }
 # Sort by NA percentage ascending
-NAorders <- NAorders[with(NAorders, order(NAorders$NA_percentage)),]
+NAorders <- NAorders[with(NAorders, order(NAorders[["Order NA %"]])),]
 # kable(head(NAorders,50), row.names = FALSE, format = 'latex')
-
-##########################################################################
-
+#-------------------------------------------------------------------------------------
 # Create a DF to save the column names and appropriate NA percentage values
 NAclicks <- data.frame(matrix(ncol = 2, nrow = 0))
-x <- c("Column_Name", "NA_percentage")
+x <- c("Click Column", "Click NA %")
 colnames(NAclicks) <- x
 
 # Get the NA percentage errors
@@ -450,17 +457,29 @@ for (column in names(clicks)){
     NAclicks[nrow(NAclicks) + 1,] = list(column,percentageNA)
 }
 # Sort by NA percentage ascending
-NAclicks <- NAclicks[with(NAclicks, order(NAclicks$NA_percentage)),]
+NAclicks <- NAclicks[with(NAclicks, order(NAclicks[["Click NA %"]])),]
 write.table(NAclicks, file = pathNULLAnalysisClicks, sep=",", row.names=FALSE)
 # kable(head(NAclicks,50), row.names = FALSE, format = 'latex')
+#-------------------------------------------------------------------------------------
+topnumber = 20
 
+# replace points
+NAorders[["Order Column"]] <- str_replace_all(NAorders[["Order Column"]], '[.]', ' ')
+NAclicks[["Click Column"]] <- str_replace_all(NAclicks[["Click Column"]], '[.]', ' ')
+
+# calculate seperators
 df <- data.frame(matrix(ncol = 1, nrow = 0))
-colnames(df) <- c("|   | ")
-for (i in 0:49){
-  df[nrow(df) + 1,] = list(" |    | ")
+colnames(df) <- c(" ")
+for (i in 0:(topnumber-1)){
+  df[nrow(df) + 1,] = list(" ")
 }
 
-knitr::kable(list(head(NAorders,50), df, head(NAclicks,50)), row.names = FALSE, booktabs = TRUE, linesep = " ")
+# make one dataframe of NAs for better format
+df <- bind_cols(head(NAorders,topnumber), df, head(NAclicks, topnumber))
+
+kable(df, row.names = FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "bordered")) %>%
+  column_spec(3, background = "white")
 ```
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -494,24 +513,25 @@ interestingCustomers <- c("City",
                         "Upscale.Speciality.Retail",
                         "Retail.Activity"
                         )
-cat("\n")
+
 for (title in interestingCustomers) {
+  title = str_replace_all(title, "[.]", " ")
   cat(paste("\t *", title, "\n")) 
 }
 ```
-
+  
 2) **Product Data**: The following data columns describe features of the ordered products.
 ```{r ordersProducts, echo=FALSE, results = 'asis'}
 interestingProducts <- c("StockType",
                         "Manufacturer",
                         "BrandName"
                         )
-cat("\n")
 for (title in interestingProducts) {
+  title = str_replace_all(title, "[.]", " ")
   cat(paste("\t *", title, "\n")) 
 }
 ```
-
+  
 3) **Payment Data**: This sections contains columns which describe the payment methods used by the customers.
 ```{r ordersPayment, echo=FALSE, results = 'asis'}
 interestingPayments <- c("Order.Credit.Card.Brand",
@@ -523,12 +543,13 @@ interestingPayments <- c("Order.Credit.Card.Brand",
                         "Premium.Card.Holder",
                         "New.Bank.Card"
                         )
-cat("\n")
+
 for (title in interestingPayments) {
+  title = str_replace_all(title, "[.]", " ")
   cat(paste("\t *", title, "\n")) 
 }
 ```
-
+  
 4) **Order Data**: The order data section contains information describing the order process itself, such as order quantity and price data.
 ```{r ordersOrders, echo=FALSE, results = 'asis'}
 interestingOrders <- c("Order.Line.Quantity",
@@ -540,73 +561,31 @@ interestingOrders <- c("Order.Line.Quantity",
                         "Order.Promotion.Code",
                         "Order.Discount.Amount"
                        )
-cat("\n")
+
 for (title in interestingOrders) {
+  title = str_replace_all(title, "[.]", " ")
   cat(paste("\t *", title, "\n")) 
 }
 ```
 
 ### Clickstream Data 
 
-The clickstream data has three main categories:
+The clickstream data has three main categories: Customer data, product data and time data. The clickstream dataset contains payment methods as well, but the information coming from this attributes gets not regarded in this observation since the payment data is in anyway only available for customers that actually ordered. For analysis purposes only the most important or interesting attributes are discussed in detail. For the full range of columns see the [Appendix](#fullClickstreamTables).
 
 1) **Customer Data**: The data contains a vast collection of information about customers, reaching from usual informations like age, gender, etc. 
-over payment information and finacnial activities to opinions about the shop.
+over financial activities to opinions about the shop.
 ```{r clicksCustomers, echo=FALSE, results = 'asis'}
-clicksCustomerInfo <- c("WhichDoYouWearMostFrequent",
-                        "YourFavoriteLegcareBrand",
-                        "Registration.Gender",
-                        "NumberOfChildren",
-                        "DoYouPurchaseForOthers",
-                        "HowDoYouDressForWork",
-                        "HowManyPairsDoYouPurchase",
-                        "YourFavoriteLegwearBrand",
-                        "WhoMakesPurchasesForYou",
-                        "NumberOfAdults",
-                        "HowDidYouHearAboutUs",
-                        "SendEmail",
-                        "HowOftenDoYouPurchase",
-                        "HowDidYouFindUs",
-                        "City",
+clicksCustomerInfo <- c("City",
                         "US.State",
-                        "Year.of.Birth",
-                        "Email",
+                        "Age",
+                        "Marital.Status",
+                        "Gender",
+                        "Audience",
                         "Truck.Owner",
                         "RV.Owner",
                         "Motorcycle.Owner",
-                        "Value.Of.All.Vehicles",
-                        "Age",
-                        "Other.Indiv...Age",
-                        "Marital.Status",
                         "Working.Woman",
-                        "Mail.Responder",
-                        "Bank.Card.Holder",
-                        "Gas.Card.Holder",
-                        "Upscale.Card.Holder",
-                        "Unknown.Card.Type",
-                        "TE.Card.Holder",
-                        "Premium.Card.Holder",
                         "Presence.Of.Children",
-                        "Number.Of.Adults",
-                        "Estimated.Income.Code",
-                        "Home.Market.Value",
-                        "New.Car.Buyer",
-                        "Vehicle.Lifestyle",
-                        "Property.Type",
-                        "Loan.To.Value.Percent",
-                        "Presence.Of.Pool",
-                        "Year.House.Was.Built",
-                        "Own.Or.Rent.Home",
-                        "Length.Of.Residence",
-                        "Mail.Order.Buyer",
-                        "Year.Home.Was.Bought",
-                        "Home.Purchase.Date",
-                        "Number.Of.Vehicles",
-                        "DMA.No.Mail.Solicitation.Flag",
-                        "DMA.No.Phone.Solicitation.Flag",
-                        "CRA.Income.Classification",
-                        "New.Bank.Card",
-                        "Number.Of.Credit.Lines",
                         "Speciality.Store.Retail",
                         "Oil.Retail.Activity",
                         "Bank.Retail.Activity",
@@ -614,115 +593,56 @@ clicksCustomerInfo <- c("WhichDoYouWearMostFrequent",
                         "Miscellaneous.Retail.Activity",
                         "Upscale.Retail",
                         "Upscale.Speciality.Retail",
-                        "Retail.Activity",
-                        "Dwelling.Size",
-                        "Dataquick.Market.Code",
-                        "Lendable.Home.Equity",
-                        "Home.Size.Range",
-                        "Lot.Size.Range",
-                        "Insurance.Expiry.Month",
-                        "Dwelling.Unit.Size",
-                        "Month.Home.Was.Bought",
-                        "Available.Home.Equity",
-                        "Minority.Census.Tract",
-                        "Year.Of.Structure",
-                        "Gender",
-                        "Occupation",
-                        "Other.Indiv...Gender",
-                        "Other.Indiv...Occupation"
+                        "Retail.Activity"
 )
-cat("\n")
+
 for (title in clicksCustomerInfo) {
+  title = str_replace_all(title, "[.]", " ")
   cat(paste("\t *", title, "\n")) 
 }
 ```
-<br>
-<br>
-2) **Product Data**: The following data columns describe features of products clicked on by the customers.
+  
+2) **Product Data**: The following data columns describe features of products clicked on by the customers. Similar to the customer data, the product data listing is cutted to the most essential attributes.
 ```{r clicksProducts, echo=FALSE, results = 'asis'}
-clicksProducts <- c("BrandName",
-                    "UnitsPerInnerBox",
-                    "PrimaryPackage",
-                    "Depth",
-                    "VendorMinREOrderDollars",
-                    "Height",
-                    "UnitsPerOuterBox",
-                    "StockType",
-                    "Pack",
-                    "ProductForm",
-                    "Look",
-                    "BasicOrFashion",
-                    "MfgStyleCode",
-                    "SaleOrNonSale",
-                    "Length",
-                    "MinQty",
-                    "LeadTime",
-                    "Weight",
-                    "HasDressingRoom",
-                    "ColorOrScent",
-                    "Width",
-                    "Texture",
-                    "Manufacturer",
-                    "ToeFeature",
-                    "Category2",
-                    "Material",
-                    "CategoryCode",
-                    "UnitIncrement",
-                    "WaistControl",
-                    "Collection",
-                    "BodyFeature",
-                    "Audience",
-                    "Category1",
-                    "Product",
-                    "Pattern"
-)
-cat("\n")
+
+clicksProducts <- c("StockType",
+                        "Manufacturer",
+                        "BrandName"
+                        )
+
 for (title in clicksProducts) {
+  title = str_replace_all(title, "[.]", " ")
   cat(paste("\t *", title, "\n")) 
 }
 ```
-<br>
-<br>
-3) **Time Data**: The following data columns describe different dates and times for clicks.
+  
+3) **Time Data**: The following data columns describe different data referring to the time of a clicks.
 ```{r clicksTimeinfo, echo=FALSE, results = 'asis'}
 clicksTimeInfo <- c("Request.Date",
-                    "Request.Date_Time",
-                    "Request.Sequence",
                     "REQUEST_DAY_OF_WEEK",
                     "REQUEST_HOUR_OF_DAY",
-                    "Cookie.First.Visit.Date",
-                    "Cookie.First.Visit.Date_Time",
-                    "Session.First.Request.Date",
-                    "Session.First.Request.Date_Time",
-                    "Session.Start.Login.Count",
-                    "Session.Cookie.ID",
-                    "Session.ID",
-                    "Session.Customer.ID",
-                    "Session.Visit.Count",
-                    "Session.First.Content.ID",
-                    "Session.First.Request.Day.of.Week",
-                    "Session.First.Request.Hour.of.Day"
+                    "Session.Visit.Count"
 )
-cat("\n")
+
 for (title in clicksTimeInfo) {
+  title = str_replace_all(title, "[.]", " ")
   cat(paste("\t *", title, "\n")) 
 }
 ```
-
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-## Statistical Tables 
+## Summary Tables {#sumTabs}
 
-Given a subset of interesting columns, we create two types of statistical tables for each: One table for numerical columns in the subset and another for factors. The statistical table for the numerical data contains the maximum value, minimum value, mean, median and standard deviation for each column. Whereas the factorial tables contain the five most frequent factors as well as their percentage, the ratio of NAs and other factors for each column. For this, the NA percentage gets calculated at first, then the NA values are deleted from the regarded column and the percentage for each value is calcuated.
+Given a subset of interesting columns, we create two types of summary tables for each: One table for numerical columns in the subset and another for factors. The summary table for the numerical data contains the maximum value, minimum value, mean, median and standard deviation for each column. Whereas the factorial tables contain the five most frequent factors as well as their percentage, the ratio of NAs and other factors for each column. For this, the NA percentage gets calculated at first, then the NA values are deleted from the regarded column and the percentage for each value is calcuated.
 
 ```{r createSummaryCSVFiles, echo=F, results = "hide", message=F, warning=F}
 # create tables as csv to keep the following code chunks small
+#interesting columns are already defined above
+pathTableFolder <- "./4 Data Overview/Tables/"
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # Orders
-pathTableFolder <- "./4 Data Overview/Tables/"
-#interesting columns are already defined above
 #-----------------------------------------------------------------------------------
 # order data
 subset <- subset(orders, select=interestingOrders)
@@ -747,126 +667,94 @@ facCol <- summarizeFactorColumns(subset)
 numCol <- summarizeNumericalColumns(subset)
 write.table(facCol, file = paste(pathTableFolder,"CustomerData_Factors.csv"), sep=",", row.names=FALSE)
 write.table(numCol, file = paste(pathTableFolder,"CustomerData_Numerical.csv"), sep=",", row.names=FALSE)
-
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # Clicks
-pathTableFolder <- "./4 Data Overview/Tables/"
 #-----------------------------------------------------------------------------------
-# Clicks
-pathTableFolder <- "./4 Data Overview/Tables/"
-#-----------------------------------------------------------------------------------
-clicksCustomerInfoShort <- c("City",
-                        "US.State",
-                        "Age",
-                        "Marital.Status",
-                        "Gender",
-                        "Audience",
-                        "Truck.Owner",
-                        "RV.Owner",
-                        "Motorcycle.Owner",
-                        "Working.Woman",
-                        "Presence.Of.Children",
-                        "Speciality.Store.Retail",
-                        "Oil.Retail.Activity",
-                        "Bank.Retail.Activity",
-                        "Finance.Retail.Activity",
-                        "Miscellaneous.Retail.Activity",
-                        "Upscale.Retail",
-                        "Upscale.Speciality.Retail",
-                        "Retail.Activity"
-)
-
-clicksProductsShort <- c("StockType",
-                        "Manufacturer",
-                        "BrandName"
-                        )
-
-clicksInterestingPayments <- c("Bank.Card.Holder",
-                          "Gas.Card.Holder",
-                          "Upscale.Card.Holder",
-                          "Unknown.Card.Type",
-                          "TE.Card.Holder",
-                          "Premium.Card.Holder",
-                          "New.Bank.Card"
-                          )
-
+# customer data
 selectUniqueCustomer <- clicks[ which(clicks$Request.Sequence==1), ]
-subset <- subset(selectUniqueCustomer, select=clicksCustomerInfoShort)
+subset <- subset(selectUniqueCustomer, select=clicksCustomerInfo)
 facCol <- summarizeFactorColumns(subset)
 numCol <- summarizeNumericalColumns(subset)
-write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataCustomerShort_Factors.csv"), sep=",", row.names=FALSE)
-write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataCustomerShort_Numerical.csv"), sep=",", row.names=FALSE)
-
-subset <- subset(clicks, select=clicksProductsShort)
+write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataCustomer_Factors_Short.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataCustomer_Numerical_Short.csv"), sep=",", row.names=FALSE)
+#-----------------------------------------------------------------------------------
+# product data
+subset <- subset(clicks, select=clicksProducts)
 facCol <- summarizeFactorColumns(subset)
 numCol <- summarizeNumericalColumns(subset)
-write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataProductsShort_Factors.csv"), sep=",", row.names=FALSE)
-write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataProductsShort_Numerical.csv"), sep=",", row.names=FALSE)
-
-subset <- subset(clicks, select=clicksInterestingPayments)
+write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Factors_Short.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Numerical_Short.csv"), sep=",", row.names=FALSE)
+#-----------------------------------------------------------------------------------
+# time data
+selectUniqueCustomer <- clicks[ which(clicks$Request.Sequence==1), ]
+subset <- subset(clicks, select=clicksTimeInfo)
+datem <- subset %>%
+  mutate(Request.Date=as.Date(Request.Date, format = "%Y-%m-%d")) %>%
+  summarise(min = min(Request.Date), max = max(Request.Date))
+dateList <- c("Request.Date", as.character(datem$max[1]), "", "", as.character(datem$min[1]), "")
+numCol <- summarizeNumericalColumns(subset)
+numCol <- rbind(numCol, dateList) 
 facCol <- summarizeFactorColumns(subset)
-write.table(facCol, file = paste(pathTableFolder,"clicksInterestingPayments_Factors.csv"), sep=",", row.names=FALSE)
-
+write.table(facCol, file = paste(pathTableFolder,"ClickstreamTime_Factors_Short.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"ClickstreamTime_Numerical_Short.csv"), sep=",", row.names=FALSE)
 ```
 
 ### Order Data 
 
-In the following section the statistical tables generated for the purpose of describing the order data are shown. Additionally, the most important or interesting analysis results are emphasized and shortly explained.
+In the following section the summary tables generated for the purpose of describing the order data are shown. Additionally, the most important or interesting analysis results are emphasized and shortly explained. Important to note is that the analysis is based on each order. That means the data of a customer can possibly be regarded multiple times in the customer analysis if he ordered more than once in the shop.
 
-*Note: To support a better visualization, more relevant columns are highligthed in black color.*
+*Note: To support a better visualization, the most relevant columns are highligthed in black color.*
 
 #### Customer Data 
 
-Only the age can be regarded as a numerical customer data column here. As most intersting in this summary might appear the mean and the median, which both imply an average customer segment consisting of people in their late 30s.
-
+Only the age can be regarded as a numerical customer data column here. As most intersting in this summary might appear the mean and the median, which both imply an average customer segment consisting of people in their late 30s.  
 ```{r OrderCustomerNum, echo=FALSE}
-knitTable("4 Data Overview/Tables/ CustomerData_Numerical.csv") %>%
-  row_spec(1, bold = T, color = "white", background = "#000000")
+knitTable("4 Data Overview/Tables/ CustomerData_Numerical.csv", "Variable") %>%
+  column_spec(3, bold = T, color = "white", background = "#000000") %>%
+  column_spec(4, bold = T, color = "white", background = "#000000")
 ```
 
-The following data summary shows some social data for the shop's customer segment. Since all of the available data for the country column contains the value 'United States', it is highly probable that the online shop exclusively delivers customer located in the US. This was the reason for us to choose a map of the United States in order to visualize the customers' locations later on in the plotting. Furthermore, the data clearly shows that the main customer audience targeted are women.   
-
+The following data summary shows some social data for the shop's customer segment. Since all of the available data for the country column contains the value 'United States', it is highly probable that the online shop exclusively delivers customers located in the US. This was the reason for us to choose a map of the United States in order to visualize the customers' locations later on in the plotting. From this overview we can already see that New York is clearly leading the order cities. Furthermore, the data clearly shows that the main customer audience targeted are women.  
+For an appropriate analysis some average values of the US should be regarded, such as population density or ratio of persons with children.  
 ```{r OrderCustomerFac, echo=FALSE}
-knitTable("4 Data Overview/Tables/ CustomerData_Factors.csv") %>%
+knitTable("4 Data Overview/Tables/ CustomerData_Factors.csv", "Variable") %>%
+  row_spec(1, bold = T, color = "white", background = "#000000") %>%
   row_spec(2, bold = T, color = "white", background = "#000000") %>%
   row_spec(5, bold = T, color = "white", background = "#000000") %>%
   row_spec(6, bold = T, color = "white", background = "#000000")
 ```
 
-#### Product Data 
+#### Product Data {#SumOrderProduct}
 
-The selected columns belonging to the product information section show only factorial values. The statistical overview for the product data reveals that most of the sold articles are replenishable. The strongest brand in the current orders is American Essential, which seems to manufacture its articles by itself. Important is to recognize that the presented data is biased in a way: Because the given dataset shows only ordered products, it can be assumed that the popularity of articles distorts all percentual information referring to the products. Thus, we can not make any assumptions referring to the original product palette the store offers.
-
+The selected columns belonging to the product information section show only factorial values. The statistical overview for the product data reveals that most of the sold articles are replenishable. The strongest brand in the current orders is American Essential, which seems to manufacture its articles by itself. Important is to recognize that the presented data is skewed in a way: Because the given dataset shows only ordered products, it can be assumed that the popularity of articles distorts all percentual information referring to the products. Thus, we can not make any assumptions referring to the original product palette the store offers. By this reason the following table should be regarede as a popularity overview for product attributes.  
 ```{r OrderProductFac, echo=FALSE}
-knitTable("4 Data Overview/Tables/ ProductData_Factors.csv") %>%
+knitTable("4 Data Overview/Tables/ ProductData_Factors.csv", "Variable") %>%
   column_spec(2, bold = T, color = "white", background = "#000000")
 ```
 
 #### Payment Data 
 
-When it comes to the data concerning the used payment methods, there are only factorial columns as well. The most used credit card is by far the VISA card. Furthermore almost a fifth of the customers uses a premium card. From this information it could be deduced how wealthy the customer segment is by comparing the ratio of premium cards to the one in the whole population.
-
+When it comes to the data concerning the used payment methods, there are only factorial columns as well. The most used credit card is by far the VISA card. Furthermore almost a fifth of the customers uses a premium card. From this information it could be deduced how wealthy the customer segment is by comparing the ratio of premium cards to the one in the whole population.  
 ```{r OrderPayFac, echo=FALSE}
-knitTable("4 Data Overview/Tables/ PaymentMethodData_Factors.csv") %>%
+knitTable("4 Data Overview/Tables/ PaymentMethodData_Factors.csv", "Variable") %>%
   row_spec(1, bold = T, color = "white", background = "#000000") %>%
   row_spec(8, bold = T, color = "white", background = "#000000")
 ```
 
 #### Order Process Data 
 
-The numerical data for the order process shows that a customer usally buys one product per order. Also the order line amount implies that the store offers rather inexpensive articles. Furthermore, the minimum value for both the order line quantity and the order line amount is negative, which hints to the assumption of eather the order data containing returns as well or having errors in it. Through the discount amount it is possible to state that the store offers a maximum of a 50% price reduction for the given time period. Also the buyed articles got by average a discount of about 9%. Again it can be assumed that this data is not representative for the shop's offer in general, because it is probable that articles with a higher discount are bought more often.
-
+The numerical data for the order process shows that a customer usally buys one product per order. Also the order line amount implies that the store offers rather inexpensive articles. Furthermore, the minimum value for both the order line quantity and the order line amount is negative, which hints to the assumption of eather the order data containing returns as well or having errors in it. Through the discount amount it is possible to state that the store offers a maximum of a 50% price reduction for the given time period. Also the buyed articles got by average a discount of about 9%. Again it can be assumed that this data is not representative for the shop's offer in general, because it is probable that articles with a higher discount are bought more often.  
 ```{r OrderOrderNum, echo=FALSE}
-knitTable("4 Data Overview/Tables/ OrderData_Numerical.csv") %>%
+knitTable("4 Data Overview/Tables/ OrderData_Numerical.csv", "Variable") %>%
   row_spec(1, bold = T, color = "white", background = "#000000") %>%
   row_spec(3, bold = T, color = "white", background = "#000000") %>%
   row_spec(5, bold = T, color = "white", background = "#000000")
 ```
 
-The factors for the order process demonstrate that the 'FRIEND' discount is used most often and in the majority of the orders. (At this point it would be relevant for the interpretation to know for whom and under which circumstances this discount is given.) Also the weekday summary could be relevant for sales purposes, by example for finding out the most successfull time for showing ads to possible customers.
+The factors for the order process demonstrate that the 'FRIEND' discount is used most often and in the majority of the orders. (At this point it would be relevant for the interpretation to know for whom and under which circumstances this discount is given.) Also the weekday summary could be relevant for sales purposes, by example for finding out the most successfull time for showing ads to possible customers: From this overview, it can be assumed that the weekday Wednesday could have a high chance for ad responds.
 ```{r OrderOrderFac, echo=FALSE}
-knitTable("4 Data Overview/Tables/ OrderData_Factors.csv")  %>%
+knitTable("4 Data Overview/Tables/ OrderData_Factors.csv", "Variable")  %>%
   row_spec(3, bold = T, color = "white", background = "#000000")
 ```
 
@@ -874,56 +762,108 @@ knitTable("4 Data Overview/Tables/ OrderData_Factors.csv")  %>%
 
 ### Clickstream Data 
 
-The following tables resemble only the most important columns from the clickstream dataset. Interesting details are discussed in short texts. For the full range of columns see the [Appendix](#fullClickstreamTables).
+The following tables display only the most important columns from the clickstream dataset. Interesting details are discussed in short texts. For the full range of columns see the [Appendix](#fullClickstreamTables).
 
 #### Customer Data 
 
-The age is very similar to that of the [Order Data](#orderCustomerData), averaging at 37.58, with a median of 36. This shows that buyers do not differ to viewers in respect to their age.
+Since the clickstream dataset contains a row for every click of a customer the social information for a user gets easily multiplied by the browsing behaviour. Thus, the data has a high probability of being skewed when it comes to customer information. Therefore, we calcuated the customer summary based on only one row per session. 
 
+The age has its average at 37.58 and its median of 36, implying a main customership in their late 30s.
 ```{r ClicksCustomerFac, echo=FALSE}
-knitTable("4 Data Overview/Tables/ ClickstreamDataCustomerShort_Numerical.csv") %>%
-  row_spec(1, bold = T, color = "white", background = "#000000")
+knitTable("4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical_Short.csv", "Variable") %>%
+  column_spec(3, bold = T, color = "white", background = "#000000") %>%
+  column_spec(4, bold = T, color = "white", background = "#000000")
 ```
 
-The same can be said in regards to the location compared to the [Order Data](#orderCustomerData), in that there are only minor differences. Additionally, the gender distribution is very similar, heavily pointing out the shop's main target group are women. <br>
-*For all details see the [full customer data table](#clicksCustomerFullTable).*
-
+The highest ranked cities for the clickstream sessions are San Francisco and New York, which each have a ratio of about 2% on the sessions. Additionally, the gender distribution is very clear weighted, heavily pointing out the shop's main target group are women.  
+*For all details see the [full customer data table](#clicksCustomerFullTable).* 
 ```{r ClicksCustomerNum, echo=FALSE}
-knitTable("4 Data Overview/Tables/ ClickstreamDataCustomerShort_Factors.csv") %>%
+knitTable("4 Data Overview/Tables/ ClickstreamDataCustomer_Factors_Short.csv", "Variable") %>%
+  row_spec(1, bold = T, color = "white", background = "#000000") %>%
   row_spec(4, bold = T, color = "white", background = "#000000") %>%
   row_spec(5, bold = T, color = "white", background = "#000000")
 ```
 
 #### Product Data 
 
-In the clickstream dataset most of the products are only viewed and not bought. That leads to some interesting distinctions to the [Order Product Data](#orderProductData). Seasonal 1* is 10% higher than in the [Order Product Data](#orderProductData) and decreasing the replenishable part with the same amount. Donna Karan is leading the top manufacturer and the top brands, but is closely followed by its competitors. However, when compared to the [Order Product Data](#orderProductData) this company is only in the 4th spot and its product not at all in the top 5, leading to the assumption that customers do not inherently buy that what is most viewed. <br>
-*For all details see the [full products data table](#clicksProductsFullTable).*
-
+The most common stock type among the viewed products is "replenishable". The strongest brand in the current orders is DKNY, which seems to manufacture its articles by itself.  
+*For all details see the [full products data table](#clicksProductsFullTable).*  
 ```{r ClicksProductsFac, echo=FALSE}
-knitTable("4 Data Overview/Tables/ ClickstreamDataProductsShort_Factors.csv") %>%
+knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Factors_Short.csv", "Variable") %>%
   column_spec(2, bold = T, color = "white", background = "#000000")
 ```
 
-#### Payment Data
+#### Time Data
 
-The payment data from the clickstream set is not as reliable, as this kind of information should only be available when purchases were made and so the data should be quite similar to the [Order payment data](#orderPaymentData). Interestingly the data sets differ more than expected, most importantly in the amount of premium cards which is lower by about 5% in the clickstream set, and new credit cards are reported at all.
+At Saturday the shop can register its highest visitor rates, which seems reasonable since at the weekend people usually have the most time for online shopping. At the 27. April, a Thursday in the year 2000, the shop had the most viewers for the given time period. As their way no big holiday coming up, this high activity may be due to weather circumstances, which have normally a high influence in online shopping behaviour.  
+```{r ClicksTimeFac, echo=FALSE}
+knitTable("4 Data Overview/Tables/ ClickstreamTime_Factors_Short.csv", "Variable") %>%
+  column_spec(2, bold = T, color = "white", background = "#000000")
+```
 
-```{r ClicksPaymentFac, echo=FALSE}
-knitTable("4 Data Overview/Tables/ clicksInterestingPayments_Factors.csv") %>%
-  row_spec(6, bold = T, color = "white", background = "#000000")
+The request hour of the day shows an equally weighted viewer number for the morning and afternoon hours. This implies an unusual high activity in the night and morning hours. The session visit count gives an information on which number of visit the actual session is for a customer. The maximum value of 974 seems very high for an observation period of only about half a month. This in combination with the unusual high activity during the night and morning points to automated bots being active on the website.  
+```{r ClicksTimeNum, echo=FALSE}
+knitTable("4 Data Overview/Tables/ ClickstreamTime_Numerical_Short.csv", "Variable") %>%
+  row_spec(1, bold = T, color = "white", background = "#000000") %>%
+  row_spec(2, bold = T, color = "white", background = "#000000")
 ```
 
 #### Calculated Data {#calcData}
 
-Since not all interesting data can be recorded through simply summaring the existing columns, we decided to add calculated columns. The session duration gives the time in minutes a customer spend on the website, which gets calculated through the timestamps on the first and last click of a session. The click number represents how much clicks a customer made during one session. For both these values, the max values indicate that there could be bot activity on the website.
-
+Since not all interesting data can be recorded through simply summaring the existing columns, we decided to add calculated columns. The session duration gives the time in minutes a customer spend on the website, which gets calculated through the timestamps on the first and last click of a session. The click number represents how much clicks a customer made during one session. For both these values, the max values indicate that there could be bot activity on the website.  
 ```{r ClicksCalc, echo=FALSE}
-knitTable("4 Data Overview/Tables/ ClickstreamData_Calc.csv")
+knitTable("4 Data Overview/Tables/ ClickstreamData_Calc.csv", "Variable")
+```
+
+<!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
+### Comparison
+
+When comparing the product and customer information for the order and click dataset directly some intersting observations can be made.
+
+#### Customer Data
+
+**Age:** The summarised age values of the click and order dataset are similar, but nor entirely equal. The median is indeed equal for both datasets. However, the mean differs a little and is lower for the click data, indicating that young people might browse more than buy.  
+```{r CustomerNumCompare, echo=FALSE}
+compare("4 Data Overview/Tables/ CustomerData_Numerical.csv", "4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical_Short.csv", "Age")
+```
+
+**City:** From the following overview can be observed that especially people from New York tend to order relativly often compared to their browsing amount. But since a lot of the click data for the cities is not available, the comparison is possibly not that meaningful.  
+```{r CustomerCityCompare, echo=FALSE}
+compare("4 Data Overview/Tables/ CustomerData_Factors.csv", "4 Data Overview/Tables/ ClickstreamDataCustomer_Factors_Short.csv", "City")
+```
+
+**Audience:** The confrontation of the audience for both datasets displays that more women and children products get viewed than buyed, whereas the opposite can be said for men products. Since it can be assumed that usually women look for children products, this observation shows that male users are the more target buyers. This could be interesting by example for discount offerings, because an indecisive potential customer is more likely to be affected by such offers than a determined one. 
+```{r CustomerAudienceCompare, echo=FALSE}
+compare("4 Data Overview/Tables/ CustomerData_Factors.csv", "4 Data Overview/Tables/ ClickstreamDataCustomer_Factors_Short.csv", "Audience")
+```
+
+**Children:** From the now presented overview table can be seen that people with children tend to view less in ratio to buying than childless users. This effect could be explained by parents having rather less time. For the purpose of optimization, this discovery should be taken into account and the shop website could meet the needs of parents through increased user comfort.  
+```{r CustomerChildrenCompare, echo=FALSE}
+compare("4 Data Overview/Tables/ CustomerData_Factors.csv", "4 Data Overview/Tables/ ClickstreamDataCustomer_Factors_Short.csv", "Presence.Of.Children")
+```
+
+#### Product Data
+
+**Stock type:** The seasonal part is 10% higher in the click data than in the order data and reduced the replenishable part by the same amount. This indicates in ratio a high interest of the users on seasonal products, but a rather low interest on buying them. This could suggest that the prices or quality of seasonal products is not liked by customers very much.  
+```{r CustomerStockCompare, echo=FALSE}
+compare("4 Data Overview/Tables/ ProductData_Factors.csv", "4 Data Overview/Tables/ ClickstreamDataProducts_Factors_Short.csv", "StockType")
+```
+
+Donna Karan is leading the top manufacturer and the top brands, but is closely followed by its competitors. Showy is also the lack of presence of American Essentials in the click dataset, since it leads both the manufacturer and brands ranking for the order data. This indicates that American Essentials has a very high rate of order in ratio to product views.
+
+**Manufacturer**   
+```{r CustomerManuCompare, echo=FALSE}
+compare("4 Data Overview/Tables/ ProductData_Factors.csv", "4 Data Overview/Tables/ ClickstreamDataProducts_Factors_Short.csv", "Manufacturer")
+```
+**Brand**  
+```{r CustomerBrandCompare, echo=FALSE}
+compare("4 Data Overview/Tables/ ProductData_Factors.csv", "4 Data Overview/Tables/ ClickstreamDataProducts_Factors_Short.csv", "BrandName")
 ```
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-## Plotting 
+## Visualizations {#plots}
+
 Some information is too complex to be compressed into a single table without making it too confusing or it's simply easier to understand if presented as a plot. The plot types used are time series plots, stacked bar plots, distribution curves, lorenz curves and maps.
 
 ```{r Plotting, echo=FALSE, eval=FALSE, results="hide", message=F, warning=F}
@@ -1015,19 +955,23 @@ ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=
 #Plotting product data
 #-----------------------------------------------------------------------------------
 #Manufacturer lorenz curve
-plotBarAndLorenz(orders, "Manufacturer") +
-        ggtitle("Lorenz Curve Manufacturers")
-ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzManufacturer.png",sep=""), width=12, height=13)
+beautify(plotLorenzCurve(orders, "Manufacturer") +
+         ggtitle("Lorenz Curve Manufacturers")) +
+         theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzManufacturer.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #Product ID lorenz curve
-plotBarAndLorenz(orders, "Order.Line.Subassortment.ID") +
-  ggtitle("Lorenz Curve Products")
-ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzProducts.png",sep=""), width=20, height=7)
+beautify(plotLorenzCurve(orders, "Order.Line.Subassortment.ID") +
+         ggtitle("Lorenz Curve Products")) +
+        theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzProducts.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #BrandName lorenz curve
-plotBarAndLorenz(orders, "BrandName") +
-  ggtitle("Lorenz Curve Brands")
-ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzBrandName.png",sep=""), width=12, height=13)
+beautify(plotLorenzCurve(orders, "BrandName") +
+        ggtitle("Lorenz Curve Brands")) +
+        theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzBrandName.png",sep=""), width=5, height=5)
+#-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 #StockPerBrand
 top <- orders
@@ -1042,7 +986,6 @@ print(top)
 # Stacked Plot
 p1 <- ggplot(top, aes(fill=StockType, y=amount, x=BrandName)) + 
   geom_bar( stat="identity") +
-  scale_fill_grey() +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size=centralSize)) +
   ggtitle("Stock Type per Brand")
@@ -1059,7 +1002,6 @@ print(top)
 # Stacked Plot
 p2 <- ggplot(top, aes(fill=StockType, y=amount, x=Manufacturer)) + 
   geom_bar( stat="identity") +
-  scale_fill_grey() +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size=centralSize)) +
   ggtitle("Stock Type per Manufacurer")
@@ -1082,7 +1024,6 @@ print(top)
 p1 <- beautify(ggplot(top, aes(fill=Premium, y=amount, x=CardBrand)) + 
   geom_bar( stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  scale_fill_grey() +
   ggtitle("Ratio of Premium Cards per Brand"))
 #Upscale Card per Card Brand
 top <- orders
@@ -1098,7 +1039,6 @@ print(top)
 p2 <- beautify(ggplot(top, aes(fill=Upscale, y=amount, x=CardBrand)) + 
   geom_bar( stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  scale_fill_grey()+
   ggtitle("Ratio of Upscale Cards per Brand"))
 ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardBrand.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 #-----------------------------------------------------------------------------------
@@ -1173,14 +1113,14 @@ cities <- head(plotData, 100)
 print(cities)
 ggplot() + 
   geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
-  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="black", alpha = .15) +
+  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="orange", alpha = .5) +
   geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
   labs(title = "Top 100 Customer Cities (weighted by order amount)") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
         axis.title.x=element_blank(), axis.title.y=element_blank(),
         panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank())
-ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities_weighted.png",sep=""), width=13)
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities_weighted.png",sep=""), width=10)
 
 #most important cities (map)
 states <- usStates %>% filter(State != "Alaska") #TODO: Possible bug? Why isn't this bugging the weighted version??
@@ -1193,16 +1133,16 @@ plotData <- na.omit(plotData) #drop cities without orders
 plotData <- arrange(plotData, desc(count))
 cities <- head(plotData, 100)
 print(cities)
-ggplot() + 
+ggplot() +
   geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
-  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="black", alpha = .15) +
+  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="orange", alpha = .5) +
   geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
   labs(title = "Top 100 Customer Cities") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
         axis.title.x=element_blank(), axis.title.y=element_blank(),
         panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank())
-ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=13)
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=15)
 #-----------------------------------------------------------------------------------
 #age data (weighted)
 p1 <- beautify(ggplot(orders, aes(x=Age)) + 
@@ -1232,91 +1172,111 @@ ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age.png",sep=""), mult
 ```
 
 #### Customer Data 
+
 The customer data of the order data can be viewed from two perspectives: One way is to use every single order row for the creation of the visualizations and therby create a weighted view on the data, in which customers that have bought more products are more respected. Another possibility is to display the customer information just for every unique customer in the order data and disregard the number of orders a customer made. The following plottings will show both of this perspectives.
 
-Firstly, we genereted some density curves for the attribute age to visualize the distribution of the customership. Also, we differentiated between the genders for this. The curves all show a fast rise in customership for the ages 20 to 40, which decreases slowly after a peak at about 35 to 40. When comparing the weighted and the normal graph, a slightly shift of the curve can be observed. This indicates that in general older people tend to order more. This is especially relevant for an older male customership, which is shown by the peak at about 55 in the male curve of the weighted density plot. Additionally, a less wide peak can be observed for the male customers, which has its maximum shortly before the age of 40. Furthermore, it should be regarded, that the gender plot shows a prozentual curve for each gender, but the ratio of customers differs by gender. 
-
+Firstly, we genereted some density curves for the attribute age to visualize the distribution of the customership. Also, we differentiated between the genders for this. The curves all show a fast rise in customership for the ages 20 to 40, which decreases slowly after a peak at about 35 to 40. When comparing the weighted and the normal graph, a slightly shift of the curve can be observed. This indicates that in general older people tend to order more. This is especially relevant for an older male customership, which is shown by the peak at about 55 in the male curve of the weighted density plot. Additionally, a less wide peak can be observed for the male customers, which has its maximum shortly before the age of 40. Furthermore, it should be regarded, that the gender plot shows a prozentual curve for each gender, but the ratio of customers differs by gender.  
 ```{r OrderPlotAge,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Age_weighted.png', 1))
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Age.png', 1))
 ```
 
-In order to show the customer location, we generated a map of the United States, which shows the cities with the highest customer numbers. From this it can be observed that the west coast of the US orders in general the most. The difference between the weighted and the other customer graph shows that the customership from the large cities like New York or San Franscisco tends to have high order numbers since the large circles at this cities disappear, when we look at the non-weighted graph. 
 
+In order to show the customer location, we generated a map of the United States, which shows the cities with the highest customer numbers. From this it can be observed that the west coast of the US orders in general the most. The difference between the weighted and the other customer graph shows that the customership from the large cities like New York or San Franscisco tends to have high order numbers since the large circles at this cities disappear, when we look at the non-weighted graph.  
 ```{r OrderPlotCities,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Cities_weighted.png', 1))
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Cities.png', 1))
 ```
 
-To visualize the importance of different areas, we created a heatmap for the different US States. Here we can see that California and New York are the most important customer states. This is probably highly influenced by the big cities in this states. Here, the distorting factor of population density must be taken into account. 
 
+To visualize the importance of different areas, we created a heatmap for the different US States. Here we can see that California and New York are the most important customer states. This is probably highly influenced by the big cities in this states. Here, the distorting factor of population density must be taken into account.  
 ```{r OrderPlotStates,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/States_weighted.png', 1))
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/States.png', 1))
 ```
 
 #### Product Data
+
 For the product Data, it has to be regarded that we here visualize the orders and thereby the characteristics of more often bought products have a higher influence. Because of this, the following plots should be seen as popularity graphs of different product attributes.
 
-The following stacked bar plot shows the stock types for the top brands and manufactures. Most of them have a replenishable assortment. The biggest brands and manufacturers seem to have mixed stock types, which contain partly seasonal products. 
+The following stacked bar plot shows the stock types for the top brands and manufactures. Most of them have a replenishable assortment. The biggest brands and manufacturers seem to have mixed stock types, which contain partly seasonal products.     
 ```{r OrderPlotStockPer,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/StockPer.png', 1))
 ```
+<br><br>
 
-
-The lorenz curve of the products shows that only a quarter of the whole product quantity is responsible for about 75% of the ordered products. This indicates that some products have a very high popularity.
-```{r OrderPlotProducts,echo=FALSE}
+```{r OrderPlotProducts, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzProducts.png', 1))
 ```
-
-The manufacturer lorenz curve shows a real high ratio on orders for the biggest manufacturer, which leads to the assumptions that the popularity of some manufacturers is even higher than the product popularity.
-```{r OrderPlotManufacturers,echo=FALSE}
+<br><br><br><br><br><br>
+The lorenz curve of the products shows that only a quarter of the whole product quantity is responsible for about 75% of the ordered products. This indicates that some products have a very high popularity.  The curve is pretty steady, which indicates that the product popularity slowly and steadily decreases over the ranking.  
+<br><br><br><br><br><br>
+  
+```{r OrderPlotManufacturers, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzManufacturer.png', 1))
 ```
-
-The brand lorenz curve looks a little more flat, indicating a higher relevance for the manufacturer than for the brand.
-```{r OrderPlotBrands,echo=FALSE}
+<br><br><br><br><br><br>
+The manufacturer lorenz curve shows a real high ratio on orders for the biggest manufacturer, which leads to the assumptions that the popularity of some manufacturers is even higher than the product popularity. Furthermore, the graph seems to be a little pointy showing that the manufacturer popularity makes a relative high jump after the top 9 manufacturers.  
+<br><br><br><br><br><br>
+  
+```{r OrderPlotBrands, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzBrandName.png', 1))
 ```
+<br><br><br><br><br><br>
+The brand lorenz curve looks a little more flat, indicating a higher relevance for the manufacturer than for the brand. The curve here is a little pointy at two parts. The first part can be explained due to the high ratio of American Essentials on the orders (as we know from the [summary tables](#SumOrderProduct)). Another interesting anomaly in the curve can be observed after the top 11. brands, because the ratio of the following brands decreases strongly after this point.
+<br><br><br><br><br><br>
 
 #### Payment Data 
 
-The stacked bar plot for credit card brands shows the ratio of each brand on premium and on upscale cards. The card brand AMEX is here noticable with a relative high ratio of premium and upscale cards.
+The stacked bar plot for credit card brands shows the ratio of each brand on premium and on upscale cards. The card brand AMEX is here noticable with a relative high ratio of premium and upscale cards.   
 ```{r OrderPlotCards,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Payment Method Data/CardBrand.png', 1))
 ```
 
 #### Order Process Data 
+
 For the order process data some graphs referring to the order amount and price were created. It has to be respected again that the order data can deform the graphs, by example it is imaginable that the customers tend to buy the cheaper products and therefore the average product price seems lower.
 
-The density curve for the discount amount shows 3 peaks: The first one has a medium height and is around a discount of 0%, the second one is around the 10% mark and is pretty large, whereas the last peak is at a discount of 50% and is rather low. This might indicate that customers buy rather targeted than randomly.
+The density curve for the discount amount shows 3 peaks: The first one has a medium height and is around a discount of 0%, the second one is around the 10% mark and is pretty large, whereas the last peak is at a discount of 50% and is rather low. This might indicate that customers buy rather targeted than randomly.   
 ```{r OrderPlotDiscouts,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Order Data Plots/Order Discounts.png', 1))
 ```
 
-A density curve reflecting the order time is shown by the next plot. As to be expected the order amount goes down through the night. During the day the ordering is relative stable with some small peaks at 10 a.m. and in the afternoon. The activity in the afternoon can be explained by the average working hours, which mostly allow people only to spend time on online shopping at the afternoon and evening.
+A density curve reflecting the order time is shown by the next plot. As to be expected the order amount goes down through the night. During the day the ordering is relative stable with some small peaks at 10 a.m. and in the afternoon. The activity in the afternoon can be explained by the average working hours, which mostly allow people only to spend time on online shopping at the afternoon and evening.  
 ```{r OrderPlotTime,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Order Data Plots/Order Time.png', 1))
 ```
 
-Next, there is displayed a graph, which summarizes some information on order behaviour. From this visulalization we can learn that the online shop sells products of a low price segments, but usually receives orders contaning a rather high amount (peak at 3-15) of articles. The different history plots on the right indicate a high activity in the first half of February, which drops in the beginning of the second month half and than slowly rises again. The first half could possibly be explained through customers buying presents for the valentines day (14th February).
+Next, there is displayed a graph, which summarizes some information on order behaviour. From this visulalization we can learn that the online shop sells products of a low price segments, but usually receives orders contaning a rather high amount (peak at 3-15) of articles. The different history plots on the right indicate a high activity in the first half of February, which drops in the beginning of the second month half and than slowly rises again. The first half could possibly be explained through customers buying presents for the valentines day (14th February).  
 ```{r OrderPlotPrice,echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Order Data Plots/Order Price.png', 1))
 ```
 
-### Clickstream Data 
-
-Especially interesting for analysing purposes is the time component that comes with the clickstream dataset. Each clickstream consists of timestamps and a number in a sequence.
+### Clickstream Data
 
 ```{r ClicksPlots, echo=FALSE, eval=FALSE, results="hide", message=F, warning=F}
 #-----------------------------------------------------------------------------------
 #Plotting
 #-----------------------------------------------------------------------------------
 #Density Hour of Day
+#Lorenz Curve Brands
+beautify(plotLorenzCurve(clicks, "BrandName") +
+        ggtitle("Lorenz Curve Brands")) +
+        theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzBrands.png",sep=""), width=5, height=5)
+#-----------------------------------------------------------------------------------
+#Lorenz Curve Products
+beautify(plotLorenzCurve(clicks, "Product") +
+        ggtitle("Lorenz Curve Products")) +
+        theme(axis.text.x = element_blank(), axis.text.y = element_blank())  
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzProducts.png",sep=""), width=5, height=5)
+#-----------------------------------------------------------------------------------
+#Density Hour of Day
 beautify(ggplot(clicks, aes(x=REQUEST_HOUR_OF_DAY)) +
            geom_density() +
            scale_x_continuous(name="Hour of Day")) +
   ggtitle("Density of Clicks over Hour of Day")
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickTime.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #Density of time between first and recent click
 SeqAndTime <- clicks %>% # select sequence and time
@@ -1362,16 +1322,20 @@ calc <- data.frame("Session Duration" = diffV$totalMinutes)
 clickNum <- data.frame("Click Number" = clickNum)
 diffV <- subset(diffV, totalMinutes<40) # only select rows with less than 40 mins
                                         # for visual reasons
+print(diffV)
+
 
 # plot the data
 beautify(ggplot(diffV, aes(totalMinutes)) +
   geom_density() +
   ggtitle("Density of Session Duration (under 40 minutes)"))
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/SessionDuration.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #History of Clicks
 hourGroup <- clicks %>%
-  select(Request.Date, REQUEST_HOUR_OF_DAY)
-hourGroup <- add_count(hourGroup, sort = FALSE, name = "count")
+  select(Request.Date, REQUEST_HOUR_OF_DAY) %>%
+  group_by(Request.Date, REQUEST_HOUR_OF_DAY) %>%
+  summarize(count = n())
 
 hourGroup$datetime <- paste0(hourGroup$REQUEST_HOUR_OF_DAY, ":00:00")
 hourGroup$datetime <- paste(hourGroup$Request.Date, hourGroup$datetime)
@@ -1380,7 +1344,56 @@ hourGroup$datetime <- as.POSIXct(hourGroup$datetime, format = "%Y-%m-%d %H:%M:%S
 beautify(ggplot(hourGroup, aes(x = datetime, y=count)) +
   geom_line() +
   ggtitle("History of Clicks per Hour"))
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickHistory.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
+# US States heatmap
+states <- usStates
+states$State <- tolower(states$State)
+gusa <- map_data("state")
+plotData <- merge(clicks, states, by.x="US.State", group = group, by.y="Abbreviation")
+plotData <-tabyl(plotData$State, sort = TRUE)
+names(plotData) <- c("region", "count", "percentage")
+print(plotData)
+top <- head(arrange(plotData, desc(count)), 10)
+top <- top$region
+centroids <- summarize(group_by(gusa, region), x = mean(range(long)), y = mean(range(lat))) #Calculate centroids
+names(centroids)[1] <- "state"
+centroids <- centroids[centroids$state %in% top,]
+plotData <- left_join(gusa, plotData)
+plotData[is.na(plotData)] <- 0
+ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
+  geom_polygon(aes(group=group, fill=count), color = "black", size = 0.3) +
+  labs(x = NULL, y = NULL, fill = "Count", title = "Customer Hotspots (weighted by traffic)") +
+  scale_fill_gradient(low = "white", high = "black") +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(), axis.title.y=element_blank(),
+        panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank()) +
+  #geom_label_repel(data = centroids, aes(x, y, label=state), force=2, segment.color="#fd9409", nudge_x=0.5) +
+  coord_map()
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/States_weighted.png",sep=""), width=13)
+#-----------------------------------------------------------------------------------
+#most important cities (map)
+states <- usStates %>% filter(State != "Alaska")
+plotData <- merge(clicks, states, by.x="US.State", by.y="Abbreviation")
+plotData$name<- with(plotData, paste0(City, " ", US.State)) #new column with city and state
+plotData <-tabyl(plotData$name, sort = TRUE)
+names(plotData) <- c("name", "count", "percentage")
+plotData <- left_join(us.cities, plotData)
+plotData <- na.omit(plotData) #drop cities without orders
+plotData <- arrange(plotData, desc(count))
+cities <- head(plotData, 100)
+print(cities)
+ggplot() + 
+  geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
+  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="black", alpha = .15) +
+  geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
+  labs(title = "Top 100 Customer Cities (weighted by traffic)") +
+  theme(axis.line=element_blank(),axis.text.x=element_blank(),
+        axis.text.y=element_blank(),axis.ticks=element_blank(),
+        axis.title.x=element_blank(), axis.title.y=element_blank(),
+        panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank())
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Cities_weighted.png",sep=""), width=13)
 #-----------------------------------------------------------------------------------
 #print calc columns
 calcCol <- summarizeNumericalColumns(calc)
@@ -1390,35 +1403,100 @@ calcCol <- rbind(calcCol, calcCol2)
 write.table(calcCol, file = paste(pathTableFolder,"ClickstreamData_Calc.csv"), sep=",", row.names=FALSE)
 ```
 
-#### Click time per Day
+#### Customer Data
 
-Most of the licks are accumulated in the morning and then descending over day. The extreme spike at around 2 in the morning can be neglected as it seems to be bot activity with extremly long session times and sequences.
+The map shows clearly a very high browsing activity for the large US cities. Especially the east coast at the area around New York are a high ratio of viewers located.  
+```{r ClicksPlotCities, echo=FALSE}
+knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/Cities_weighted.png', 1))
+```
 
+The US states plot shows that there is a high activity in California and New York. In general, there is rather a lower activity at the inside of the state.
+```{r ClicksPlotStates, echo=FALSE}
+knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/States_weighted.png', 1))
+```
+
+#### Product Data
+
+```{r ClickPlotProducts, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
+knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzProducts.png', 1))
+```
+<br><br><br><br><br><br><br>
+The lorenz curve for the products is rather flat, which indicates there are no big outliers for the product popularity counted by views. Furthermore, the curve seems to be a little pointy at about 60% of the products, which implies a product segment of about 40% with a really low interest rate.
+<br><br><br><br><br><br><br>
+  
+```{r ClickPlotManufacturers, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
+knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzManufacturers.png', 1))
+```
+<br><br><br><br><br><br><br>
+The following graph appears a bit erratic, indicating that manufacturers can be divided into several popularity groups. Additionally, the curve is rather extended, which shows an highly unequal distribution for manufacturers viewed. This implies a high importance of the manufacturer for the viewership. 
+<br><br><br><br><br><br><br>
+  
+```{r ClickPlotBrands, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
+knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzBrands.png', 1))
+```
+<br><br><br><br><br><br><br>
+Whereas the brand lorenz curves shows a more equal distributed popularity, because it is overall rather flat. At about 50% of the brands, a pointy part can be seen in the graph, which devides the brands in a rather popular half and a rather unpopular one.
+<br><br><br><br><br><br><br>
+
+#### Time Data
+
+Especially interesting for analysing purposes is the time component that comes with the clickstream dataset. Each clickstream consists of timestamps and a number in a sequence.
+
+The following plot shows that most of the clicks are accumulated in the morning and then descending over day. The extreme spike at around 2 a.m. can be neglected as it seems to be bot activity with extremly long session times and sequences.  
 ```{r ClicksTime, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/ClickTime.png', 1))
 ```
 
-#### Click time overall
-
-The above mentioned behavior is also visible in this graph. Overall there is more activity during the middle of months and less towards the end. Also, the seasonal component of the clickstream data set is visible very well.
-
+The above mentioned behavior is also visible in the click time overall. Generally, there is more activity during the middle of April and less towards the end. Also, the seasonal component of the clickstream data set is visible very well in this kind of visualization.  
 ```{r ClicksTimeHistory, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/ClickHistory.png', 1))
 ```
 
-#### Session length
-
-While the session length on average is about 8 min, the median only is at about 2 min (see [table](#calcData)). This is visible in the graph where the high point is also at about 2 min indicating the skewness of the time data. Most sessions last only around 10 min, which leads to the assumption that products should be displayed well as the customers do not waste much time on searching for them.
-
+While the session length on average is about 8 min, the median only is at about 2 min (see [table](#calcData)). This is visible in the graph where the high point is also at about 2 min indicating the skewness of the time data. Most sessions last only around 10 min, which leads to the assumption that products should be displayed well as the customers do not waste much time on searching for them. For a better visualization we left out sessions with a duration over 40 minutes.
 ```{r ClicksSessionLength, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/SessionDuration.png', 1))
 ```
 
 
+### Comparison
+For some of the graphs a direct comparison makes sense in order to visualize the differences between the orders and clicks dataset.
+
+#### Customer Data
+
+The maps clearly show the numerical difference in the both dataset. Especially Chicago and Dellas have to be highlighted because both this cities have a really high viewer amount, but a rather small customership.
+
+**Orders Map**  
+```{r ComCities,echo=FALSE}
+knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Cities_weighted.png', 1))
+```
+
+**Clicks Map**  
+```{r ComClicksPlotCities, echo=FALSE}
+knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/Cities_weighted.png', 1))
+```
+
+#### Product Data
+In the following the product data lorenz curves for both datasets will be compared. For this the order plot gets always displayed on the left and the click plot on the right. For all plots it can be observed that the curve for the order data is more extended. Thus, it can be stated that the orders contain a higher inequality for the popularity of product attributes. This means people seem to decide for rather the same products or brands, despite having a bigger variance in the viewed products. 
+
+```{r ComProducts, echo=FALSE, out.width= "50%", out.extra='style="float:left; padding:10px"'}
+knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzProducts.png', 1))
+knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzProducts.png', 1))
+```
+
+```{r ComManu, echo=FALSE, out.width= "50%", out.extra='style="float:left; padding:10px"'}
+knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzManufacturer.png', 1))
+knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzManufacturers.png', 1))
+```
+
+```{r ComBrands, echo=FALSE, out.width= "50%", out.extra='style="float:left; padding:10px"'}
+knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzBrandName.png', 1))
+knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzBrands.png', 1))
+```
+
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-# Evaluating Recomendation Systems 
+# Recommendation Evaluation {#recomm}
 
 In addition to analyzing the order and clickstream data, we have to analyze the performance of different recommendation models. The performance of three different recommendation systems was measured:
 
@@ -1471,7 +1549,7 @@ kable(head(experiment,10), row.names = FALSE) %>%
     kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
 ```
 
-## The Profit Oriented Recommendation System 
+## Profit Oriented Recommendation
 
 Now, we do an inference analysis for the profit oriented recommendation system. Firstly, we look at the p-value and the corresponding plot:
 
@@ -1528,7 +1606,7 @@ print(viz_plot)
 
 As we can see, there is a 95% chance that for the global population customers, who get profit oriented recommendations, spend on average `r lowerBound`€-`r upperBound`€ more than people who get random recommendations.
 
-## The Ranking Based Recommendation System 
+## Ranking Based Recommendation
 
 Now we do an inference analysis for the ranking based recommendation system. Firstly, we look at the p-value and the corresponding plot:
 
@@ -1582,24 +1660,24 @@ print(viz_plot)
 
 Since the confidence interval includes the value 0, it shows us that the effect is statistically insignificant.
 
-## Conclusion 
+## Implications of the Evaluation
 
 To sum it up, the company should use the profit oriented recommendation system, since out of the two tested systems it causes the largest increase in sales. The ranking based recommendation system does not cause any statistically relevant difference in sales. However if the effect was something else than sales in Euro per person, then the results could be different. The company should ask itself if the goal of their recommendation system should really be to increase sales. Maybe at some point in time it could introduce a subscription business model, similar to that of Amazon. In that case it might also want to increase the percentage of customers that have a subscription.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-# Predicting customer behaviour {#model}
+# Order Prediction {#model}
 
-Following the inference analysis our next task is to predict whether or not a person browsing the online-shop will end up purchasing something, based on the browsing behaviour on the site.
+Following the inference analysis our next task is to predict whether or not a person browsing the online-shop will end up purchasing something, based on the browsing behaviour on the site. Since only the behaviour should be regarded for the predictions, we left out any customer information. But it should be regarded that an includence of these information could improve the performance of the prediciton model.
 
-First of all the relevant data had to be extracted, or engineered, from the clickstream data and put into a seperate dataset, to be used as the input data for a prediction model. The resulting data set contains one row per session. For each session the following attributes are used:
+First of all the relevant data had to be extracted or engineered from the clickstream data and was then used to build a seperate dataset, which represents the input data for a prediction model. The resulting data set contains one row per session. For each session the following attributes are used:
 
-* The number of clicks during that session
-* The session duration (in seconds)
-* The hour of day at which the session was started
-* The day of week at which the session was started
-* Whether the session contains an order (this was extracted by looking if the customer visited the URL "checkout/thankyou")
+* The number of clicks during a session
+* The session duration in seconds
+* The hour of day at the beginning of a session
+* The day of week at the beginning of a session
+* Whether the session contains an order (extracted by the URL "checkout/thankyou")
 
 ```{python prepareModelInputData, eval=F, echo=F, results = "hide"}
 #Recommended Location: "./3 Data Modelling/Python/"
@@ -1641,6 +1719,7 @@ for index, row in clicksOrig.iterrows():
     dt = row['Request Date'] + ' ' + row['Request Date_Time']
     maxTime = datetime.datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
 
+df.to_csv("../prediction_data.csv", index=False)
 
 # one hot encode where needed
 df['REQUEST_HOUR_OF_DAY'] = df['REQUEST_HOUR_OF_DAY'].apply(lambda x: "{}{}".format('Hour_', x))
@@ -1654,9 +1733,17 @@ df = df.join(one_hot)
 df.to_csv(pathResult, index=False)
 ```
 
-Since the last two attributes have to be one-hot-encoded, it is not possible to show the head of the dataset in this report. However an important thing to note is that about 99% of sessions do not contain an order. In addition to that, sessions consisting of only one click are ignored, since they offer no valuable information.
+Since the last two attributes have to be one-hot-encoded, it is only possible to show a subset of the data before this processing step:
+```{r inputData, echo=FALSE}
+df <- read.csv(file="3 Data Modelling/prediction_data.csv")
+df <- head(df, 10)
+kable(df, row.names = FALSE) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
+```
 
-After preparing the data the next step is training and testing a model. The model of choice is a decision tree, since it allows to easily understand the decision making process of the model, and since it removes the need for dimensionality reduction and feature scaling, thus reducing the required work. The evaluation metric used during the Grid Search is roc-score. However, depending on the evolving needs of the company, one might want to chose a different evaluation metric.
+However an important thing to note is that about 99% of sessions do not contain an order. In addition to that, sessions consisting of only one click are ignored, since they offer no valuable information, because by example attributes like the session duration cannot be calculated.
+
+After preparing the data the next step is to train and test a model. The model of choice is a decision tree, since it allows to easily understand the decision making process of the model. Since it removes the need for dimensionality reduction and feature scaling, it also reduces the required work. The evaluation metric used during the grid search is ROC-score. However, depending on the evolving needs of the company, one might want to chose a different evaluation metric.
 
 ```{python createTree, eval=F, echo=F, results = "hide"}
 #Recommended Location: "./3 Data Modelling/Python/"
@@ -1801,7 +1888,7 @@ y_predictions = clf.predict(X_test)
 
 cm = confusion_matrix(y_test, y_predictions,classes)
 print_confusion_matrix(cm,classes)
-plt.savefig(pathConfusionMatrix)
+plt.savefig(pathConfusionMatrix, cmap='gray')
 plt.show()
 
 
@@ -1809,6 +1896,13 @@ accuracy = round(accuracy_score(y_test, y_predictions),2)
 f1 = round(recall_score(y_test, y_predictions, average="binary", pos_label="Yes"),2)
 print("Accuracy: "+str(accuracy))
 print("F1: "+str(f1))
+# Convert y to int for roc scoring
+y_test = y_test.replace("No",0)
+y_test = y_test.replace("Yes",1)
+y_predictions[y_predictions == "No"] = 0
+y_predictions[y_predictions == "Yes"] = 1
+roc = roc_auc_score(y_test, y_predictions)
+print("ROC AUC score: "+str(roc))
 
 dot_data = tree.export_graphviz(clf, out_file=None, feature_names=X_train_val.columns, class_names = clf.classes_,
                                 label = 'all', filled = True, leaves_parallel= False, impurity = True, node_ids = False,
@@ -1835,41 +1929,166 @@ It should be noted that if the company prefers a model with a higher performance
 
 # Summary {#summary}
 
+- Bot activity
+
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 # Appendix {#appendix}
 
+
 ## Full Clickstream Tables {#fullClickstreamTables}
+
+The clickstream dataset contains a high quantity of information. Thus, not all attributes are displayed in the summary tables above, but can be seen in the followiing overview tables.
 
 ### Customer Data {#clicksCustomerFullTable}
 
 ```{r clicksCustomerFullTable, echo=FALSE}
+clicksCustomerInfo <- c("WhichDoYouWearMostFrequent",
+                        "YourFavoriteLegcareBrand",
+                        "Registration.Gender",
+                        "NumberOfChildren",
+                        "DoYouPurchaseForOthers",
+                        "HowDoYouDressForWork",
+                        "HowManyPairsDoYouPurchase",
+                        "YourFavoriteLegwearBrand",
+                        "WhoMakesPurchasesForYou",
+                        "NumberOfAdults",
+                        "HowDidYouHearAboutUs",
+                        "SendEmail",
+                        "HowOftenDoYouPurchase",
+                        "HowDidYouFindUs",
+                        "City",
+                        "US.State",
+                        "Year.of.Birth",
+                        "Email",
+                        "Truck.Owner",
+                        "RV.Owner",
+                        "Motorcycle.Owner",
+                        "Value.Of.All.Vehicles",
+                        "Age",
+                        "Other.Indiv...Age",
+                        "Marital.Status",
+                        "Working.Woman",
+                        "Mail.Responder",
+                        "Bank.Card.Holder",
+                        "Gas.Card.Holder",
+                        "Upscale.Card.Holder",
+                        "Unknown.Card.Type",
+                        "TE.Card.Holder",
+                        "Premium.Card.Holder",
+                        "Presence.Of.Children",
+                        "Number.Of.Adults",
+                        "Estimated.Income.Code",
+                        "Home.Market.Value",
+                        "New.Car.Buyer",
+                        "Vehicle.Lifestyle",
+                        "Property.Type",
+                        "Loan.To.Value.Percent",
+                        "Presence.Of.Pool",
+                        "Year.House.Was.Built",
+                        "Own.Or.Rent.Home",
+                        "Length.Of.Residence",
+                        "Mail.Order.Buyer",
+                        "Year.Home.Was.Bought",
+                        "Home.Purchase.Date",
+                        "Number.Of.Vehicles",
+                        "DMA.No.Mail.Solicitation.Flag",
+                        "DMA.No.Phone.Solicitation.Flag",
+                        "CRA.Income.Classification",
+                        "New.Bank.Card",
+                        "Number.Of.Credit.Lines",
+                        "Speciality.Store.Retail",
+                        "Oil.Retail.Activity",
+                        "Bank.Retail.Activity",
+                        "Finance.Retail.Activity",
+                        "Miscellaneous.Retail.Activity",
+                        "Upscale.Retail",
+                        "Upscale.Speciality.Retail",
+                        "Retail.Activity",
+                        "Dwelling.Size",
+                        "Dataquick.Market.Code",
+                        "Lendable.Home.Equity",
+                        "Home.Size.Range",
+                        "Lot.Size.Range",
+                        "Insurance.Expiry.Month",
+                        "Dwelling.Unit.Size",
+                        "Month.Home.Was.Bought",
+                        "Available.Home.Equity",
+                        "Minority.Census.Tract",
+                        "Year.Of.Structure",
+                        "Gender",
+                        "Occupation",
+                        "Other.Indiv...Gender",
+                        "Other.Indiv...Occupation"
+)
+
 selectUniqueCustomer <- clicks[ which(clicks$Request.Sequence==1), ]
 subset <- subset(selectUniqueCustomer, select=clicksCustomerInfo)
 facCol <- summarizeFactorColumns(subset)
 numCol <- summarizeNumericalColumns(subset)
-write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataCustomer_Factors.csv"), sep=",", row.names=FALSE)
-write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataCustomer_Numerical.csv"), sep=",", row.names=FALSE)
+write.table(facCol, file = paste(pathTableFolder,"ClickstreamCustomer_Factors_Long.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"ClickstreamCustomer_Numerical_Long.csv"), sep=",", row.names=FALSE)
 
-knitTable("4 Data Overview/Tables/ ClickstreamDataCustomer_Factors.csv")
-knitTable("4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical.csv")
+knitTable("4 Data Overview/Tables/ ClickstreamCustomer_Factors_Long.csv", "Variable")
+knitTable("4 Data Overview/Tables/ ClickstreamCustomer_Numerical_Long.csv", "Variable")
 ```
 
 
 ### Product Data {#clicksProductsFullTable}
 
 ```{r clicksProductsFullTable, echo=FALSE}
+clicksProducts <- c("BrandName",
+                    "UnitsPerInnerBox",
+                    "PrimaryPackage",
+                    "Depth",
+                    "VendorMinREOrderDollars",
+                    "Height",
+                    "UnitsPerOuterBox",
+                    "StockType",
+                    "Pack",
+                    "ProductForm",
+                    "Look",
+                    "BasicOrFashion",
+                    "MfgStyleCode",
+                    "SaleOrNonSale",
+                    "Length",
+                    "MinQty",
+                    "LeadTime",
+                    "Weight",
+                    "HasDressingRoom",
+                    "ColorOrScent",
+                    "Width",
+                    "Texture",
+                    "Manufacturer",
+                    "ToeFeature",
+                    "Category2",
+                    "Material",
+                    "CategoryCode",
+                    "UnitIncrement",
+                    "WaistControl",
+                    "Collection",
+                    "BodyFeature",
+                    "Audience",
+                    "Category1",
+                    "Product",
+                    "Pattern"
+)
+
 subset <- subset(clicks, select=clicksProducts)
 facCol <- summarizeFactorColumns(subset)
 numCol <- summarizeNumericalColumns(subset)
-write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Factors.csv"), sep=",", row.names=FALSE)
-write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Numerical.csv"), sep=",", row.names=FALSE)
+write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Factors_Long.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Numerical_Long.csv"), sep=",", row.names=FALSE)
 
-knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Factors.csv")
-knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Numerical.csv")
+knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Factors_Long.csv", "Variable")
+knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Numerical_Long.csv", "Variable")
 ```
 
+<!--------------------------------------------------------------------------------------------------------- -->
+<!--------------------------------------------------------------------------------------------------------- -->
+
+<!-- plotting functions -->
 ```{r sourceCode,echo=FALSE,eval=FALSE}
 library(gridExtra)
 library(dplyr)

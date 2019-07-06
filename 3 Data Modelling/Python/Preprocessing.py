@@ -35,6 +35,7 @@ for index, row in clicksOrig.iterrows():
     dt = row['Request Date'] + ' ' + row['Request Date_Time']
     maxTime = datetime.datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
 
+df.to_csv("../prediction_data.csv", index=False)
 
 # one hot encode where needed
 df['REQUEST_HOUR_OF_DAY'] = df['REQUEST_HOUR_OF_DAY'].apply(lambda x: "{}{}".format('Hour_', x))

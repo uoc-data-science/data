@@ -153,10 +153,9 @@ plotLorenzCurve <- function(df, ColumnName) {
   LorenzFinal_df$percentage <- LorenzCurve_df$L #replace the percentage column with entries from calculation 
   countOfEntries <- LorenzFinal_df[, ColumnName] %>% tabyl() %>% select(2) %>% sum() #count the entries for visual reasons
   # plot
-  ggplot(data=LorenzFinal_df, aes_string(x=ColumnName, y="percentage", group=1)) +
+  ggplot(data=LorenzFinal_df, aes_string(x=ColumnName, y="percentage", group=1, axes=F)) +
     geom_point() +
     geom_line() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
     geom_abline(slope = 1/(countOfEntries-1), intercept = -1/(countOfEntries-1))
 }
 #-----------------------------------------------------------------------------------
