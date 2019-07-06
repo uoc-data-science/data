@@ -11,12 +11,12 @@ require("knitr")
 #knitr::opts_knit$set(root.dir = "F:/Github/ourdata/data")
 
 #Philipp_root
-#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
 
-knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
 
 #laurenz_root
-knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
 
 ```
 ```{r setup, include=FALSE}
@@ -55,12 +55,13 @@ file.copy(paste(origin_orders,"order_columns.txt",sep = "/"),des_under)
 ```
 
 
-## Get the data 
+## Get the data orders
 
 ```{r}
 library(tidyverse)
 library(stringi)
 library(hms)
+library(naniar)
 
 rootDir <- knitr::opts_knit$get("root.dir")
 headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
@@ -77,26 +78,61 @@ result <- stri_extract_first(obj_list, regex="[A-z ,]+")
 dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
 result <- gsub(" ", "_", result)
 
+orderData <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+orderData$order_time <- parse_time(orderData$"Order_Line_Date_Time","%H\\:%M\\:%S")
+head(orderData)
+```
+
+## Get the clicks data
+
+```{r}
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "01_data_understanding/clickstream_columns.txt", sep="/")
+dataPath <- paste(rootDir, "00_raw_data/clickstream_data.csv", sep="/")
+dataPath2 <- paste(rootDir, "00_raw_data/clickstream_data_part_2.csv", sep="/")
+
+# prepare column name list
+headersFile = file(headersPath, "r")
+headerNames <- list()
+#http://r.789695.n4.nabble.com/How-to-read-plain-text-documents-into-a-vector-td901794.html
+obj_list <- readLines(headersFile)
+
+#To convert to a vector, do the following:
+result <- stri_extract_first(obj_list, regex="[A-z ,]+")
+dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
+result <- gsub(" ", "_", result)
+
 dataframe <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
-dataframe$order_time <- parse_time(dataframe$"Order_Line_Date_Time","%H\\:%M\\:%S")
-head(dataframe)
+dataframe2 <- read_csv(dataPath2, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+
+
+clicksData <- rbind(dataframe,dataframe2)
+
+head(clicksData)
 ```
 
 ## Replacing "?" and "NULL" with nan
 ```{r}
-library(naniar)
-na_strings <- c("?", "NULL")
-df2 <- dataframe %>% replace_with_na_all(condition = ~.x %in% na_strings)
-## dataframe <- str_replace_all(dataframe, ";", ",")
-head(df2)
+cleanNas <- function(x){
+  na_strings <- c("?", "NULL")
+  df2 <- x %>% replace_with_na_all(condition = ~.x %in% na_strings)
+  ## dataframe <- str_replace_all(dataframe, ";", ",")
+  return (df2)
+}
+
+clicksData <- cleanNas(clicksData)
+orderData <- cleanNas(orderData)
 
 ```
 
 ## Clean_dataset
 ```{r}
 #dataframe[colSums(!is.na(dataframe)) > 0]
-dataframe <- dataframe[rowSums(!is.na(dataframe)) > 0,colSums(!is.na(dataframe)) > 0]
-dataframe
+dropEmptyRows <- function(x){
+  return(x[rowSums(!is.na(x)) > 0,colSums(!is.na(x)) > 0])
+}
+clicksData <- dropEmptyRows(clicksData)
+orderData <- dropEmptyRows(orderData)
 ```
 ```{r}
 # Vergleiche Spalten, ob Dopplungen vorkommen
@@ -216,7 +252,7 @@ ggplot(data= Customer_Product_heatmap)+
 ```
 
 
-
+## Experiment
 
 ```{r include=false}
 rootDir <- knitr::opts_knit$get("root.dir")
@@ -244,6 +280,11 @@ ggplot() %>%
 #  + geom_vline(xintercept=19.25+rkgExp$conf.int[1], color="green")
 ```
 
+## Prediction
+
+```{r}
+
+```
 
 
 
