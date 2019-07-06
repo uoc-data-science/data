@@ -1,5 +1,5 @@
 "Variable","Top 1st","Top 2nd","Top 3rd","Top 4th","Top 5th","Others","Not Available"
-"Order.Credit.Card.Brand","VISA: 59.94%","MC: 25.43%","AMEX: 14.31%","DISC: 0.31%","","0%","16.71%"
+"Order.Credit.Card.Brand","VISA: 59.94%","MC: 25.43%","AMEX: 14.31%","DISC: 0.31%","","0.01%","16.71%"
 "Bank.Card.Holder","True: 86.57%","False: 13.43%","","","","0%","22.22%"
 "Gas.Card.Holder","True: 75.81%","False: 24.19%","","","","0%","22.22%"
 "Upscale.Card.Holder","True: 54.1%","False: 45.9%","","","","0%","22.22%"

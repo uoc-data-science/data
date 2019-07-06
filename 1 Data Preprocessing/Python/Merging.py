@@ -4,8 +4,8 @@ import pandas as pd
 pathOrders = '../../0 Data/order_data_cleaned_P.csv'
 pathClicks = '../../0 Data/clickstream_data_cleaned_P.csv'
 
-pathClickCustomer1 = '../../4 Data Overview/Tables/ ClickstreamDataCustomer_Factors.csv'
-pathClickCustomer2 = '../../4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical.csv'
+pathClickCustomer1 = '../../4 Data Overview/Tables/ ClickstreamDataCustomer_Factors_Long.csv'
+pathClickCustomer2 = '../../4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical_Long.csv'
 pathOrderCustomer1 = '../../4 Data Overview/Tables/ CustomerData_Factors.csv'
 pathOrderCustomer2 = '../../4 Data Overview/Tables/ CustomerData_Numerical.csv'
 

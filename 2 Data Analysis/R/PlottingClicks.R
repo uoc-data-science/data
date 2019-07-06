@@ -51,6 +51,7 @@ clicksCustomer <- c("City",
 selectUniqueCustomer <- clicks[ which(clicks$Request.Sequence==1), ]
 subset <- subset(clicks, select=clicksCustomer)
 facCol <- summarizeFactorColumns(subset)
+print(facCol)
 numCol <- summarizeNumericalColumns(subset)
 write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataCustomer_Factors_Short.csv"), sep=",", row.names=FALSE)
 write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataCustomer_Numerical_Short.csv"), sep=",", row.names=FALSE)
@@ -64,7 +65,6 @@ subset <- subset(clicks, select=clicksProducts)
 facCol <- summarizeFactorColumns(subset)
 numCol <- summarizeNumericalColumns(subset)
 write.table(facCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Factors_Short.csv"), sep=",", row.names=FALSE)
-write.table(numCol, file = paste(pathTableFolder,"ClickstreamDataProducts_Numerical_Short.csv"), sep=",", row.names=FALSE)
 
 clicksTime <- c("Request.Date",
                     "REQUEST_DAY_OF_WEEK",
@@ -92,19 +92,19 @@ write.table(numCol, file = paste(pathTableFolder,"ClickstreamTime_Numerical_Shor
 #-----------------------------------------------------------------------------------
 #Lorenz Curve Brands
 beautify(plotLorenzCurve(clicks, "BrandName") +
-        ggtitle("Lorenz Curve Brands")) +
+        ggtitle("Clicks: Lorenz Curve Brands")) +
         theme(axis.text.x = element_blank(), axis.text.y = element_blank())
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzBrands.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #Lorenz Curve Products
 beautify(plotLorenzCurve(clicks, "Product") +
-        ggtitle("Lorenz Curve Products")) +
+        ggtitle("Clicks: Lorenz Curve Products")) +
         theme(axis.text.x = element_blank(), axis.text.y = element_blank())  
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzProducts.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #Lorenz Curve Manufacturers
 beautify(plotLorenzCurve(clicks, "Manufacturer") +
-           ggtitle("Lorenz Curve Products")) +
+           ggtitle("Clicks: Lorenz Curve Products")) +
   theme(axis.text.x = element_blank(), axis.text.y = element_blank())  
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzManufacturers.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzManufacturers
 beautify(ggplot(clicks, aes(x=REQUEST_HOUR_OF_DAY)) +
            geom_density() +
            scale_x_continuous(name="Hour of Day")) +
-  ggtitle("Density of Clicks over Hour of Day")
+  ggtitle("Clicks: Density of Clicks over Hour of Day")
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickTime.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #Density of time between first and recent click
@@ -165,7 +165,7 @@ print(diffV)
 # plot the data
 beautify(ggplot(diffV, aes(totalMinutes)) +
   geom_density() +
-  ggtitle("Density of Session Duration (under 40 minutes)"))
+  ggtitle("Clicks: Density of Session Duration (under 40 minutes)"))
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/SessionDuration.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #History of Clicks
@@ -180,7 +180,7 @@ hourGroup$datetime <- as.POSIXct(hourGroup$datetime, format = "%Y-%m-%d %H:%M:%S
    
 beautify(ggplot(hourGroup, aes(x = datetime, y=count)) +
   geom_line() +
-  ggtitle("History of Clicks per Hour"))
+  ggtitle("Clicks: History of Clicks per Hour"))
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickHistory.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 # US States heatmap
@@ -200,7 +200,7 @@ plotData <- left_join(gusa, plotData)
 plotData[is.na(plotData)] <- 0
 ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
   geom_polygon(aes(group=group, fill=count), color = "black", size = 0.3) +
-  labs(x = NULL, y = NULL, fill = "Count", title = "Customer Hotspots (weighted by traffic)") +
+  labs(x = NULL, y = NULL, fill = "Count", title = "Clicks: Customer Hotspots (weighted by traffic)") +
   scale_fill_gradient(low = "white", high = "black") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
@@ -225,7 +225,7 @@ ggplot() +
   geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
   geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="orange", alpha = .5) +
   geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
-  labs(title = "Top 100 Customer Cities (weighted by traffic)") +
+  labs(title = "Clicks: Top 100 Customer Cities (weighted by traffic)") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
         axis.title.x=element_blank(), axis.title.y=element_blank(),

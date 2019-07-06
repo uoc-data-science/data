@@ -1,6 +1,6 @@
 "Variable","Top 1st","Top 2nd","Top 3rd","Top 4th","Top 5th","Others","Not Available"
-"City","San Francisco: 2.31%","New York: 2.18%","Chicago: 1.35%","Stamford: 1.09%","Dallas: 0.71%","0%","96.92%"
-"US.State","CA: 13.28%","NY: 11.1%","TX: 5.97%","PA: 5.39%","IL: 4.68%","0%","96.92%"
+"City","San Francisco: 2.31%","New York: 2.18%","Chicago: 1.35%","Stamford: 1.09%","Dallas: 0.71%","92.36%","96.92%"
+"US.State","CA: 13.28%","NY: 11.1%","TX: 5.97%","PA: 5.39%","IL: 4.68%","59.58%","96.92%"
 "Marital.Status","Married: 61.8%","Single: 24.7%","Inferred Married: 7%","Inferred Single: 6.5%","","0%","98.02%"
 "Gender","Female: 83.33%","Male: 16.67%","","","","0%","98.43%"
 "Audience","Women: 85.44%","Children: 10.27%","Men: 4.29%","","","0%","98.25%"

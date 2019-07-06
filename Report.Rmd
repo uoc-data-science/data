@@ -1,7 +1,7 @@
 ---
 title: "Group 1 Report"
 author: "Julian Cornea, Kim Ferres, Jan Löffelmann"
-date: "23-05-2019"
+date: "06-07-2019"
 output:
   bookdown::html_document2:
     toc: yes
@@ -12,7 +12,6 @@ tables: yes
 
 <!--centers the text -->
 <style>div {text-align: justify}</style>
-
 
 ```{r importingMyLibraries, echo=F, results = "hide", message=F, warning=F}
 #load libraries
@@ -85,15 +84,7 @@ Both datasets share a considerable amount of columns. However, since not every c
 
 # Data Manipulation {#cleaning}
 
-Before we started cleaning the data, we copied it to the folder "0 Data". The reason for this was to avoid accidentally altering the original dataset by separating the edited datasets from the original ones. The cleaned data and further forms of the datasets were also saved to this folder. Before explaining the cleaning process, it makes sense to get an overview of the content of the aforementioned folder. It can be described as follows:
-
-* Each file has a suffix depending on what language was used for creating it. Files created with a Python script have the suffix "_P", while files created with R have the suffix "_R". 
-* For both datasets three types of files are created:  
-    + A copy of the original dataset (e.g. "order_data_R.csv")
-    + A cleaned version of that dataset (e.g. "order_data_cleaned_R.csv")
-    + A smaller version of the cleaned data, which allows quick viewing and testing of the technical functionality of the coding (e.g. "order_data_small_R.csv")
-
-<!-- TODO: Task description of the modelling task -->
+Before we started cleaning the data, we copied it to a seperated folder. The reason for this was to avoid accidentally altering the original dataset by separating the edited datasets from the original ones. The cleaned data and further forms of the datasets were also saved to this folder. For a structure overview of the aforementioned folder see the [Appendix](#dataFolderStructure).
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -215,11 +206,10 @@ write.table(clicks_small, file = pathClicksSmall, sep=",", row.names=FALSE)
 A similar cleaning process to the one explained above has been implemented in Python.
 
 *Note: Python coding chunks are excutable in RMarkdown in general, but the Python environment is not persistent across different python chunks for the preview function ro run coding. Despite this, the chunks are compiled together, when the document is knitted.*  
-*To execute the provided you may need to enter your Python path in a R coding block by "use_python()". If this does not work, copy the Python coding into the Python IDE of your choice, ideally under the recommended location, which is mentioned at the top of each code block. The path is always relative to the repository.*
+*To execute the provided you may need to enter your Python path in a R coding block by "use_python()". If this does not work, copy the Python coding into the Python IDE of your choice, ideally under the main repository directory "./".*  
+*In addition to having the packages installed, the software "graphviz" needs to be installed. If any bugs related to graphviz prevent you from running the code, you can use the decision tree figure provided in this report as a reference.* 
 
 ```{python pythonCleaning, eval=F, echo=F, results = "hide"}
-#Recommended Location: "./"
-
 import shutil
 import pandas as pd
  
@@ -311,13 +301,11 @@ diffPrint(target=ordersP,current=orders)
 
 ## Merging 
 
-*Note: Since we do not use the merged datasets for any in-depth analysis we consider it to be a part of "Data exploration", instead of "Data cleaning". Thus, we implemented it in Python only.*
+*Note: As we explain in this subchapter, the merged data is too small to be beneficial for any useful purpose. This is why we did not implement the merging in R after the coding in Python.*
 
 We tried to merge the click and order data in Python by trying different ID combinations that occure in both datasets. For testing the different combinations we used an inner join in order to be able to recognize easier, whether a merging try had success. We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
 
 ```{python pythonMergingTries, eval=F, echo=F}
-#Recommended Location: "./"
-
 import pandas as pd
 
 pathIds = '1 Data Preprocessing/mergeIDs.csv'
@@ -348,17 +336,17 @@ In this way we were able to discover that it is possible to join the datasets on
 import pandas as pd
 
 # sources
-pathOrders = '../../0 Data/order_data_cleaned_P.csv'
-pathClicks = '../../0 Data/clickstream_data_cleaned_P.csv'
+pathOrders = '0 Data/order_data_cleaned_P.csv'
+pathClicks = '0 Data/clickstream_data_cleaned_P.csv'
 
-pathClickCustomer1 = '../../4 Data Overview/Tables/ ClickstreamDataCustomer_Factors.csv'
-pathClickCustomer2 = '../../4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical.csv'
-pathOrderCustomer1 = '../../4 Data Overview/Tables/ CustomerData_Factors.csv'
-pathOrderCustomer2 = '../../4 Data Overview/Tables/ CustomerData_Numerical.csv'
+pathClickCustomer1 = '4 Data Overview/Tables/ ClickstreamDataCustomer_Factors.csv'
+pathClickCustomer2 = '4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical.csv'
+pathOrderCustomer1 = '4 Data Overview/Tables/ CustomerData_Factors.csv'
+pathOrderCustomer2 = '4 Data Overview/Tables/ CustomerData_Numerical.csv'
 
 # results
-pathMerge = "../../0 Data/merged_P.csv"
-pathCustomers = "../../0 Data/merged_Customers_P.csv"
+pathMerge = "0 Data/merged_P.csv"
+pathCustomers = "0 Data/merged_Customers_P.csv"
 
 #############################################################################
 # normal merge
@@ -784,7 +772,7 @@ knitTable("4 Data Overview/Tables/ ClickstreamDataCustomer_Factors_Short.csv", "
   row_spec(5, bold = T, color = "white", background = "#000000")
 ```
 
-#### Product Data 
+#### Product Data {#SumClickProduct}
 
 The most common stock type among the viewed products is "replenishable". The strongest brand in the current orders is DKNY, which seems to manufacture its articles by itself.  
 *For all details see the [full products data table](#clicksProductsFullTable).*  
@@ -877,10 +865,6 @@ usStates <- read.csv(file="2 Data Analysis/states.csv")
 ### Order Data 
 
 ```{r OrderPlots, echo=FALSE, eval=FALSE, results="hide", message=F, warning=F}
-#-----------------------------------------------------------------------------------
-#-----------------------------------------------------------------------------------
-#Plotting Order Process Data
-#-----------------------------------------------------------------------------------
 # Distribution of order amount, unit price, order quantity
 p1 <- ggplot(orders, aes(x=Order.Line.Amount)) + 
       geom_density() +
@@ -888,7 +872,7 @@ p1 <- ggplot(orders, aes(x=Order.Line.Amount)) +
                          limits = c(-0.5,45.5),
                          breaks = round(seq(0, 45, by = 3),1)) +
       scale_y_continuous(limits = c(0,0.15)) +
-      ggtitle("Distribution of the Order Amount")
+      ggtitle("Orders: Distribution of the Order Amount")
 p1 <- beautify(p1)
 
 p2 <- ggplot(orders, aes(x=Order.Line.Unit.List.Price)) + 
@@ -896,7 +880,7 @@ p2 <- ggplot(orders, aes(x=Order.Line.Unit.List.Price)) +
       scale_x_continuous(name="Order Line Unit List Price",
                          limits = c(-0.5,45.5),
                          breaks = round(seq(0, 45, by = 3),1)) +
-      ggtitle("Distrubution of the Unit List Price")
+      ggtitle("Orders: Distrubution of the Unit List Price")
 p2 <- beautify(p2)
 
 plotData <- data.frame(matrix(ncol = 2, nrow = 0))
@@ -917,22 +901,22 @@ p3 <- ggplot(data=plotData, aes(x=Date, y=Over_12_dollar_percentage, group=1)) +
   geom_point() +
   scale_x_discrete(breaks = c(head(plotData,1)$Date, tail(plotData,1)$Date)) +
   scale_y_continuous(name="Orders over $12 in %")+
-  ggtitle("History of Expenses over $ 12 in Percent")
+  ggtitle("Orders: History of Expenses over $ 12 in Percent")
 p3 <- beautify(p3)
 
 p4 <- meanOverTime(orders,"Order.Line.Date","Order.Line.Amount","Ø Amount in $") +
       theme_classic() +
-      ggtitle("History of Average Order Amount")
+      ggtitle("Orders: History of Average Order Amount")
 p4 <- beautify(p4)
 
 p5 <- meanOverTime(orders,"Order.Line.Date","Order.Line.Unit.List.Price","Ø Price in $") +
       theme_classic() +
-      ggtitle("History of Average Unit List Price")
+      ggtitle("Orders: History of Average Unit List Price")
 p5 <- beautify(p5)
 
 p6 <- meanOverTime(orders,"Order.Line.Date","Order.Line.Quantity","Ø Quantity") +
       theme_classic() +
-      ggtitle("History of Average Order Quantity")
+      ggtitle("Orders: History of Average Order Quantity")
 p6 <- beautify(p6)
 
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p2, p3, p4, p5, p6, cols=2), width=15, height=12)
@@ -941,14 +925,14 @@ ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),
 beautify(ggplot(orders, aes(x=Order.Line.Hour.of.Day)) +
   geom_density() +
   scale_x_continuous(name="Hour of Day")) +
-  ggtitle("Density of Orders over Hour of Day")
+  ggtitle("Orders: Density of Orders over Hour of Day")
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Time.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 # Order Discounts: Distribution of discounts
 beautify(ggplot(orders, aes(x=Order.Discount.Amount)) +
   geom_density() +
   scale_x_continuous(name="Discount Amount") +
-  ggtitle("Density of Discount"))
+  ggtitle("Orders: Density of Discount"))
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
@@ -956,22 +940,21 @@ ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=
 #-----------------------------------------------------------------------------------
 #Manufacturer lorenz curve
 beautify(plotLorenzCurve(orders, "Manufacturer") +
-         ggtitle("Lorenz Curve Manufacturers")) +
-         theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+           ggtitle("Orders: Lorenz Curve Manufacturers")) +
+  theme(axis.text.x = element_blank(), axis.text.y = element_blank())
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzManufacturer.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #Product ID lorenz curve
 beautify(plotLorenzCurve(orders, "Order.Line.Subassortment.ID") +
-         ggtitle("Lorenz Curve Products")) +
-        theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+           ggtitle("Orders: Lorenz Curve Products")) +
+  theme(axis.text.x = element_blank(), axis.text.y = element_blank())
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzProducts.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #BrandName lorenz curve
 beautify(plotLorenzCurve(orders, "BrandName") +
-        ggtitle("Lorenz Curve Brands")) +
-        theme(axis.text.x = element_blank(), axis.text.y = element_blank())
+           ggtitle("Orders: Lorenz Curve Brands")) +
+  theme(axis.text.x = element_blank(), axis.text.y = element_blank())
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzBrandName.png",sep=""), width=5, height=5)
-#-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 #StockPerBrand
 top <- orders
@@ -986,9 +969,10 @@ print(top)
 # Stacked Plot
 p1 <- ggplot(top, aes(fill=StockType, y=amount, x=BrandName)) + 
   geom_bar( stat="identity") +
+  scale_fill_grey() +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size=centralSize)) +
-  ggtitle("Stock Type per Brand")
+  ggtitle("Orders: Stock Type per Brand")
 #StockPerManufacturer
 top <- orders
 top <- table(top$StockType, top$Manufacturer, useNA="always")
@@ -1002,9 +986,10 @@ print(top)
 # Stacked Plot
 p2 <- ggplot(top, aes(fill=StockType, y=amount, x=Manufacturer)) + 
   geom_bar( stat="identity") +
+  scale_fill_grey() +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size=centralSize)) +
-  ggtitle("Stock Type per Manufacurer")
+  ggtitle("Orders: Stock Type per Manufacurer")
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/StockPer.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
@@ -1024,7 +1009,8 @@ print(top)
 p1 <- beautify(ggplot(top, aes(fill=Premium, y=amount, x=CardBrand)) + 
   geom_bar( stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  ggtitle("Ratio of Premium Cards per Brand"))
+  scale_fill_grey() +
+  ggtitle("Orders: Ratio of Premium Cards per Brand"))
 #Upscale Card per Card Brand
 top <- orders
 top <- table(top$Upscale.Card.Holder, top$Order.Credit.Card.Brand, useNA="always")
@@ -1039,7 +1025,8 @@ print(top)
 p2 <- beautify(ggplot(top, aes(fill=Upscale, y=amount, x=CardBrand)) + 
   geom_bar( stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  ggtitle("Ratio of Upscale Cards per Brand"))
+  scale_fill_grey()+
+  ggtitle("Orders: Ratio of Upscale Cards per Brand"))
 ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardBrand.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
@@ -1062,7 +1049,7 @@ plotData <- left_join(gusa, plotData)
 plotData[is.na(plotData)] <- 0
 ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
   geom_polygon(aes(group=group, fill=count), color = "black", size = 0.3) +
-  labs(x = NULL, y = NULL, fill = "Count", title = "Customer Hotspots (weighted by order amount)") +
+  labs(x = NULL, y = NULL, fill = "Count", title = "Orders: Customer Hotspots (weighted by order amount)") +
   scale_fill_gradient(low = "white", high = "black") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
@@ -1090,7 +1077,7 @@ plotData <- left_join(gusa, plotData)
 plotData[is.na(plotData)] <- 0
 ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
   geom_polygon(aes(group=group, fill=count), color = "black", size = 0.3) +
-  labs(x = NULL, y = NULL, fill = "Count", title = "Customer Hotspots") +
+  labs(x = NULL, y = NULL, fill = "Count", title = "Orders: Customer Hotspots") +
   scale_fill_gradient(low = "white", high = "black") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
@@ -1100,7 +1087,7 @@ ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
   coord_map()
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/States.png",sep=""), bg = "transparent", width=13)
 #-----------------------------------------------------------------------------------
-#most important cities (map weighted)
+#most important cities (map) (weighted)
 states <- usStates
 plotData <- merge(orders, states, by.x="US.State", by.y="Abbreviation")
 plotData$name<- with(plotData, paste0(City, " ", US.State)) #new column with city and state
@@ -1115,12 +1102,12 @@ ggplot() +
   geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
   geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="orange", alpha = .5) +
   geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
-  labs(title = "Top 100 Customer Cities (weighted by order amount)") +
+  labs(title = "Orders: Top 100 Customer Cities (weighted by order amount)") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
         axis.title.x=element_blank(), axis.title.y=element_blank(),
         panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank())
-ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities_weighted.png",sep=""), width=10)
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities_weighted.png",sep=""), width=13)
 
 #most important cities (map)
 states <- usStates %>% filter(State != "Alaska") #TODO: Possible bug? Why isn't this bugging the weighted version??
@@ -1133,27 +1120,27 @@ plotData <- na.omit(plotData) #drop cities without orders
 plotData <- arrange(plotData, desc(count))
 cities <- head(plotData, 100)
 print(cities)
-ggplot() +
+ggplot() + 
   geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
   geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="orange", alpha = .5) +
   geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
-  labs(title = "Top 100 Customer Cities") +
+  labs(title = "Orders: Top 100 Customer Cities") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
         axis.title.x=element_blank(), axis.title.y=element_blank(),
         panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank())
-ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=15)
+ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), width=13)
 #-----------------------------------------------------------------------------------
 #age data (weighted)
 p1 <- beautify(ggplot(orders, aes(x=Age)) + 
   geom_density() +
   scale_x_continuous(name="Age")) +
-  labs(title = "Age Distribution (weighted by order amount)")
+  labs(title = "Orders: Age Distribution (weighted by order amount)")
 
 plotData <- na.omit(orders %>% select(Age, Gender))
 p2 <-beautify(ggplot(plotData) + 
   stat_density(aes(x=Age, linetype=Gender), geom="line", position="identity") +
-  labs(title = "Age Distribution per Gender (weighted by order amount)") +
+  labs(title = "Orders: Age Distribution per Gender (weighted by order amount)") +
   scale_linetype_discrete(guide=guide_legend(override.aes=aes(colour="black"))))
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age_weighted.png",sep=""), multiplot(p1,p2, cols=2), width=16, height=5)
 
@@ -1161,12 +1148,12 @@ ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age_weighted.png",sep=
 p1 <- beautify(ggplot(ordersDistinctCustomer, aes(x=Age)) + 
                  geom_density() +
                  scale_x_continuous(name="Age")) +
-  labs(title = "Age Distribution")
+  labs(title = "Orders: Age Distribution")
 
 plotData <- na.omit(ordersDistinctCustomer %>% select(Age, Gender))
 p2 <-beautify(ggplot(plotData) + 
                 stat_density(aes(x=Age, linetype=Gender), geom="line", position="identity") +
-                labs(title = "Age Distribution per Gender") +
+                labs(title = "Orders: Age Distribution per Gender") +
                 scale_linetype_discrete(guide=guide_legend(override.aes=aes(colour="black"))))
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age.png",sep=""), multiplot(p1,p2, cols=2), width=16, height=5)
 ```
@@ -1183,14 +1170,14 @@ knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Age.png
 
 
 In order to show the customer location, we generated a map of the United States, which shows the cities with the highest customer numbers. From this it can be observed that the west coast of the US orders in general the most. The difference between the weighted and the other customer graph shows that the customership from the large cities like New York or San Franscisco tends to have high order numbers since the large circles at this cities disappear, when we look at the non-weighted graph.  
-```{r OrderPlotCities,echo=FALSE}
+```{r OrderPlotCities,echo=FALSE, }
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Cities_weighted.png', 1))
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/Cities.png', 1))
 ```
 
 
 To visualize the importance of different areas, we created a heatmap for the different US States. Here we can see that California and New York are the most important customer states. This is probably highly influenced by the big cities in this states. Here, the distorting factor of population density must be taken into account.  
-```{r OrderPlotStates,echo=FALSE}
+```{r OrderPlotStates,echo=FALSE, out.width = "100%"}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/States_weighted.png', 1))
 knitr::include_graphics(rep('./4 Data Overview/Plots/Customer Data Plots/States.png', 1))
 ```
@@ -1204,6 +1191,8 @@ The following stacked bar plot shows the stock types for the top brands and manu
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/StockPer.png', 1))
 ```
 <br><br>
+
+*Note: For the lorenz curves we dropped the x-tick labels for a better readability. For details see the top attributes for products in the [summary tables](#SumOrderProduct).*
 
 ```{r OrderPlotProducts, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzProducts.png', 1))
@@ -1255,27 +1244,29 @@ knitr::include_graphics(rep('./4 Data Overview/Plots/Order Data Plots/Order Pric
 ### Clickstream Data
 
 ```{r ClicksPlots, echo=FALSE, eval=FALSE, results="hide", message=F, warning=F}
-#-----------------------------------------------------------------------------------
-#Plotting
-#-----------------------------------------------------------------------------------
-#Density Hour of Day
 #Lorenz Curve Brands
 beautify(plotLorenzCurve(clicks, "BrandName") +
-        ggtitle("Lorenz Curve Brands")) +
+        ggtitle("Clicks: Lorenz Curve Brands")) +
         theme(axis.text.x = element_blank(), axis.text.y = element_blank())
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzBrands.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #Lorenz Curve Products
 beautify(plotLorenzCurve(clicks, "Product") +
-        ggtitle("Lorenz Curve Products")) +
+        ggtitle("Clicks: Lorenz Curve Products")) +
         theme(axis.text.x = element_blank(), axis.text.y = element_blank())  
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzProducts.png",sep=""), width=5, height=5)
+#-----------------------------------------------------------------------------------
+#Lorenz Curve Manufacturers
+beautify(plotLorenzCurve(clicks, "Manufacturer") +
+           ggtitle("Clicks: Lorenz Curve Products")) +
+  theme(axis.text.x = element_blank(), axis.text.y = element_blank())  
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/LorenzManufacturers.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #Density Hour of Day
 beautify(ggplot(clicks, aes(x=REQUEST_HOUR_OF_DAY)) +
            geom_density() +
            scale_x_continuous(name="Hour of Day")) +
-  ggtitle("Density of Clicks over Hour of Day")
+  ggtitle("Clicks: Density of Clicks over Hour of Day")
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickTime.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #Density of time between first and recent click
@@ -1328,7 +1319,7 @@ print(diffV)
 # plot the data
 beautify(ggplot(diffV, aes(totalMinutes)) +
   geom_density() +
-  ggtitle("Density of Session Duration (under 40 minutes)"))
+  ggtitle("Clicks: Density of Session Duration (under 40 minutes)"))
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/SessionDuration.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #History of Clicks
@@ -1343,7 +1334,7 @@ hourGroup$datetime <- as.POSIXct(hourGroup$datetime, format = "%Y-%m-%d %H:%M:%S
    
 beautify(ggplot(hourGroup, aes(x = datetime, y=count)) +
   geom_line() +
-  ggtitle("History of Clicks per Hour"))
+  ggtitle("Clicks: History of Clicks per Hour"))
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickHistory.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 # US States heatmap
@@ -1363,7 +1354,7 @@ plotData <- left_join(gusa, plotData)
 plotData[is.na(plotData)] <- 0
 ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
   geom_polygon(aes(group=group, fill=count), color = "black", size = 0.3) +
-  labs(x = NULL, y = NULL, fill = "Count", title = "Customer Hotspots (weighted by traffic)") +
+  labs(x = NULL, y = NULL, fill = "Count", title = "Clicks: Customer Hotspots (weighted by traffic)") +
   scale_fill_gradient(low = "white", high = "black") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
@@ -1386,21 +1377,14 @@ cities <- head(plotData, 100)
 print(cities)
 ggplot() + 
   geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
-  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="black", alpha = .15) +
+  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="orange", alpha = .5) +
   geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
-  labs(title = "Top 100 Customer Cities (weighted by traffic)") +
+  labs(title = "Clicks: Top 100 Customer Cities (weighted by traffic)") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
         axis.title.x=element_blank(), axis.title.y=element_blank(),
         panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank())
-ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Cities_weighted.png",sep=""), width=13)
-#-----------------------------------------------------------------------------------
-#print calc columns
-calcCol <- summarizeNumericalColumns(calc)
-calcCol2 <- summarizeNumericalColumns(clickNum)
-calcCol <- rbind(calcCol, calcCol2)
-
-write.table(calcCol, file = paste(pathTableFolder,"ClickstreamData_Calc.csv"), sep=",", row.names=FALSE)
+ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Cities_weighted.png",sep=""), width=15)
 ```
 
 #### Customer Data
@@ -1410,12 +1394,14 @@ The map shows clearly a very high browsing activity for the large US cities. Esp
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/Cities_weighted.png', 1))
 ```
 
-The US states plot shows that there is a high activity in California and New York. In general, there is rather a lower activity at the inside of the state.
+The US states plot shows that there is a high activity in California and New York. In general, there is rather a lower activity at the inside of the state.  
 ```{r ClicksPlotStates, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/States_weighted.png', 1))
 ```
 
 #### Product Data
+
+*Note: For the lorenz curves we dropped the x-tick labels for a better readability. For details see the top attributes for products in the [summary tables](#SumClickProduct).*
 
 ```{r ClickPlotProducts, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzProducts.png', 1))
@@ -1436,7 +1422,7 @@ knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/Lore
 ```
 <br><br><br><br><br><br><br>
 Whereas the brand lorenz curves shows a more equal distributed popularity, because it is overall rather flat. At about 50% of the brands, a pointy part can be seen in the graph, which devides the brands in a rather popular half and a rather unpopular one.
-<br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br>
 
 #### Time Data
 
@@ -1452,7 +1438,7 @@ The above mentioned behavior is also visible in the click time overall. Generall
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/ClickHistory.png', 1))
 ```
 
-While the session length on average is about 8 min, the median only is at about 2 min (see [table](#calcData)). This is visible in the graph where the high point is also at about 2 min indicating the skewness of the time data. Most sessions last only around 10 min, which leads to the assumption that products should be displayed well as the customers do not waste much time on searching for them. For a better visualization we left out sessions with a duration over 40 minutes.
+While the session length on average is about 8 min, the median only is at about 2 min (see [table](#calcData)). This is visible in the graph where the high point is also at about 2 min indicating the skewness of the time data. Most sessions last only around 10 min, which leads to the assumption that products should be displayed well as the customers do not waste much time on searching for them. For a better visualization we left out sessions with a duration over 40 minutes.  
 ```{r ClicksSessionLength, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/SessionDuration.png', 1))
 ```
@@ -1476,7 +1462,10 @@ knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/Citi
 ```
 
 #### Product Data
-In the following the product data lorenz curves for both datasets will be compared. For this the order plot gets always displayed on the left and the click plot on the right. For all plots it can be observed that the curve for the order data is more extended. Thus, it can be stated that the orders contain a higher inequality for the popularity of product attributes. This means people seem to decide for rather the same products or brands, despite having a bigger variance in the viewed products. 
+
+*Note: For the lorenz curves we dropped the x-tick labels for a better readability. For details see the top attributes for products in the [summary tables](#sumTabs).*
+
+In the following the product data lorenz curves for both datasets will be compared. For this the order plot gets always displayed **on the left and the click plot on the right**. For all plots it can be observed that the curve for the order data is more extended. Thus, it can be stated that the orders contain a higher inequality for the popularity of product attributes. This means people seem to decide for rather the same products or brands, despite having a bigger variance in the viewed products. 
 
 ```{r ComProducts, echo=FALSE, out.width= "50%", out.extra='style="float:left; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzProducts.png', 1))
@@ -1553,7 +1542,7 @@ kable(head(experiment,10), row.names = FALSE) %>%
 
 Now, we do an inference analysis for the profit oriented recommendation system. Firstly, we look at the p-value and the corresponding plot:
 
-```{r InferenceProfitP, echo=FALSE}
+```{r InferenceProfitP, echo=FALSE, out.width= "51%"}
 # Do inference analysis
 # Part 1: Test if the profit oriented recommendation system causes a significant difference in sales
 
@@ -1669,8 +1658,10 @@ To sum it up, the company should use the profit oriented recommendation system, 
 
 # Order Prediction {#model}
 
-Following the inference analysis our next task is to predict whether or not a person browsing the online-shop will end up purchasing something, based on the browsing behaviour on the site. Since only the behaviour should be regarded for the predictions, we left out any customer information. But it should be regarded that an includence of these information could improve the performance of the prediciton model.
+Following the inference analysis our next task is to predict whether or not a person browsing the online-shop will end up purchasing something, based on the browsing behaviour on the site. Since the vast majority of click sessions do not contain any customer information, due to unregistered users browsing the website, or registered users not being logged in, we decided to omit that type of data for our prototypes. However, it is technically possible to include these attributes, which should be considered when developing a more advanced version of our prediction models.
 
+
+## Data Preparation {#modelData}
 First of all the relevant data had to be extracted or engineered from the clickstream data and was then used to build a seperate dataset, which represents the input data for a prediction model. The resulting data set contains one row per session. For each session the following attributes are used:
 
 * The number of clicks during a session
@@ -1686,8 +1677,8 @@ import pandas as pd
 import datetime
 import numpy as np
 
-pathClicks = '../../0 Data/clickstream_data_cleaned_P.csv'
-pathResult = "../prediction_input_data.csv"
+pathClicks = '0 Data/clickstream_data_cleaned_P.csv'
+pathResult = "3 Data Modelling/prediction_input_data.csv"
 
 #############################################################################
 
@@ -1741,12 +1732,21 @@ kable(df, row.names = FALSE) %>%
     kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
 ```
 
-However an important thing to note is that about 99% of sessions do not contain an order. In addition to that, sessions consisting of only one click are ignored, since they offer no valuable information, because by example attributes like the session duration cannot be calculated.
+However, an important thing to note is that about 99% of sessions do not contain an order. In addition to that, sessions consisting of only one click are ignored, since they offer no valuable information, because attributes like the session duration cannot be calculated.
 
-After preparing the data the next step is to train and test a model. The model of choice is a decision tree, since it allows to easily understand the decision making process of the model. Since it removes the need for dimensionality reduction and feature scaling, it also reduces the required work. The evaluation metric used during the grid search is ROC-score. However, depending on the evolving needs of the company, one might want to chose a different evaluation metric.
+## Handling Bias and Variance {#modelBias}
+
+To handle model variance and bias we use the GridSearch approach. This allows us to get the optimal bias-variance trade off for each model, without having to inspect the source of variance or bias and fine tune model parameters manually. This way we do not need bias or variance related plots, such as learning curves. 
+
+While our approach optimises the bias variance trade off for each model, it does not account for bias and variance differences between several models. The two types of models we use for our problem are decision trees and random forrests. By design random forrests have less bias and more variance than decision trees. This means, that depending on the performance of both models we can see if our main problem is too much bias or variance in the data. For example, if random forrests were to perform better than decision trees it would mean that our main problem is too much bias in the data.
+
+It should also be mentioned that depending on the business goal, the ratio of positive and negative instances in the training set should be adjusted. We use a 1-2 ratio of positives and negatives. Increasing the amount of negatives would cause a model to have an increased rate of true negatives and less false positives, however, it would also increase the rate of false negatives. Increasing the amount of positive instanced in the training set would have the reverse effet.
+
+## Decision Trees {#modelTree}
+
+The first model of choice is a decision tree, because it allows to easily understand the decision making process of the model. Since it removes the need for dimensionality reduction and feature scaling it also reduces the required amount ofwork. The evaluation metric used during the grid search is ROC-score. However, depending on the evolving needs of the company, one might want to chose a different evaluation metric.
 
 ```{python createTree, eval=F, echo=F, results = "hide"}
-#Recommended Location: "./3 Data Modelling/Python/"
 #Note: In addition to having the packages installed, the software "graphviz" also needs to be installed. If any bugs related to graphviz prevent you from running the code, you can use the figure provided in this chapter as a reference.
 
 import numpy as np
@@ -1770,13 +1770,12 @@ import pydotplus
 
 import math
 
-pathInput = '../prediction_input_data.csv'
-pathConfusionMatrix = "../cm_tree.png"
-pathTreeVisualization = "../graphviz_tree.png"
+pathInput = '3 Data Modelling/prediction_input_data.csv'
+pathConfusionMatrix = "3 Data Modelling/cm_tree.png"
+pathTreeVisualization = "3 Data Modelling/graphviz_tree.png"
 
 # --------------------------Utility functions--------------------------------
-#Methode zum Plotten einer Confusion Matrix
-#Quelle: https://gist.github.com/shaypal5/94c53d765083101efc0240d776a23823
+#Source: https://gist.github.com/shaypal5/94c53d765083101efc0240d776a23823
 
 def print_confusion_matrix(confusion_matrix, class_names, figsize=(10, 7), fontsize=14):
     """Prints a confusion matrix, as returned by sklearn.metrics.confusion_matrix, as a heatmap.
@@ -1813,8 +1812,7 @@ def print_confusion_matrix(confusion_matrix, class_names, figsize=(10, 7), fonts
     plt.xlabel('Predicted label')
     return fig
 
-# Methode zum Entfernen doppelter Blätter
-# Quelle: https://stackoverflow.com/questions/51397109/prune-unnecessary-leaves-in-sklearn-decisiontreeclassifier
+# Source: https://stackoverflow.com/questions/51397109/prune-unnecessary-leaves-in-sklearn-decisiontreeclassifier
 
 from sklearn.tree._tree import TREE_LEAF
 
@@ -1855,7 +1853,7 @@ df.Ordered = df.Ordered.astype('str', copy=False)
 subset0 = df.loc[df['Ordered'] == 'Yes']
 subset0 = subset0.sample(n=math.ceil(len(subset0.index)/2))
 subset1 = df.loc[df['Ordered'] == 'No']
-subset1 = subset1.sample(n=math.ceil(len(subset0.index)*2))
+subset1 = subset1.sample(n=math.ceil(len(subset0.index)))
 
 train = subset1.append(subset0)
 test = df[~df.isin(train)].dropna()
@@ -1888,7 +1886,7 @@ y_predictions = clf.predict(X_test)
 
 cm = confusion_matrix(y_test, y_predictions,classes)
 print_confusion_matrix(cm,classes)
-plt.savefig(pathConfusionMatrix, cmap='gray')
+plt.savefig(pathConfusionMatrix)
 plt.show()
 
 
@@ -1901,7 +1899,7 @@ y_test = y_test.replace("No",0)
 y_test = y_test.replace("Yes",1)
 y_predictions[y_predictions == "No"] = 0
 y_predictions[y_predictions == "Yes"] = 1
-roc = roc_auc_score(y_test, y_predictions)
+roc = round(roc_auc_score(y_test, y_predictions),2)
 print("ROC AUC score: "+str(roc))
 
 dot_data = tree.export_graphviz(clf, out_file=None, feature_names=X_train_val.columns, class_names = clf.classes_,
@@ -1912,17 +1910,169 @@ graph = pydotplus.graph_from_dot_data(dot_data)
 graph.write_png(pathTreeVisualization)
 ```
 
-Since the training set is created by using random samples, model performance can vary during each run. However, on average the accuracy should be around 90%, the F1 score at around 93% and the ROC score at around 95%. Also, on average the most important features are the number of clicks and the session duration. 
+Since the training set is created by using random samples, model performance can vary during each run. 
+However, on average the following could be observed:  
 
-The confusion matrix can be seen below. As you can see, the model classifies around 95% of sessions, which contain an order, correctly. However, only around 89% of instances, which do not contain an order, are classified correctly. This brings up the following question: How should each classification type be weighted? To answer this the company should first ask itself "How, if at all, do we want to target session users differently?". For example, one idea could be to offer discounts to visitors, which have a high click rate during short sessions, as this could imply unsatisfaction with the price or quality of the visited products.
+* Accuracy around 90%  
+* F1 score around 95%  
+* ROC score around 93%
+
+Also, normally, the most important features are the number of clicks and the session duration. 
+
+The confusion matrix can be seen below. As you can see, the model classifies around 95% of sessions, which contain an order, correctly. However, only around 86% of instances, which do not contain an order, are classified correctly. This brings up the following question: How should each classification type be weighted? To answer this the company should first ask itself "How, if at all, do we want to target session users differently?". For example, one idea could be to offer discounts to visitors, which have a high click rate during short sessions, as this could imply unsatisfaction with the price or quality of the visited products.
 
 ![Decision Tree - Confusion Matrix](./3 Data Modelling/cm_tree.png)
 
-As mentioned above the main reason for choosing a decision tree is the ease of understanding its logic and the automatic feature filtering. Below you can see a visualization of the decision tree. It has three layers. The only variables of interest are the session duration and the number of clicks during the session. As you can see, whenever a session has over 10.5 clicks and lasts for longer than 141 seconds the tree predicts that it contains an order. 
+As mentioned above the main reason for choosing a decision tree is the ease of understanding its logic and the automatic feature filtering. Below you can see a visualization of the decision tree. It has four layers. The only variables of interest are the session duration and the number of clicks during the session. For example, in this case whenever a session has over 10.5 clicks and lasts for longer than 289.5 seconds the tree predicts that the session contains an order. On the other hand if a session has less than (or precisely) 8.5 clicks the tree predicts that it does not contain an order.
 
 ![Decision Tree Vizualized](./3 Data Modelling/graphviz_tree.png)
 
-It should be noted that if the company prefers a model with a higher performance and less traceability, other models should be considered as well. Among them are Logistic Regression, Random Forest and Neural Networks. Methods for automatic dimensionality reduction, such as PCA, or for iterative model improvements, such as Bagging or Boosting, should also be considered in that case.
+## Random Forrest {#modelForrest}
+
+The second model of choice is a random forrest. A random forrest is an ensemble model made up of several decision trees. Due to the structure of a random forrest it has less bias than a single decision tree, but it suffers from higher variance. It also offers less insight into the logic of the model, since it is made up of several trees. However, depending on the forrest complexity, it is still possible to present an overview of that logic. For example if the forrest is made up of only 5 trees, each tree could be visualized. However, the more trees a forrest is made out of, the less transparency it offers.
+
+```{python createForrest, eval=F, echo=F, results = "hide"}
+import numpy as np
+import pandas as pd
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import GridSearchCV
+
+from sklearn.ensemble import RandomForestClassifier
+
+import math
+
+pathInput = '3 Data Modelling/prediction_input_data.csv'
+pathConfusionMatrix = "3 Data Modelling/cm_forest.png"
+
+# --------------------------Utility functions--------------------------------
+# Source: https://gist.github.com/shaypal5/94c53d765083101efc0240d776a23823
+
+def print_confusion_matrix(confusion_matrix, class_names, figsize=(10, 7), fontsize=14):
+    """Prints a confusion matrix, as returned by sklearn.metrics.confusion_matrix, as a heatmap.
+
+    Arguments
+    ---------
+    confusion_matrix: numpy.ndarray
+        The numpy.ndarray object returned from a call to sklearn.metrics.confusion_matrix.
+        Similarly constructed ndarrays can also be used.
+    class_names: list
+        An ordered list of class names, in the order they index the given confusion matrix.
+    figsize: tuple
+        A 2-long tuple, the first value determining the horizontal size of the ouputted figure,
+        the second determining the vertical size. Defaults to (10,7).
+    fontsize: int
+        Font size for axes labels. Defaults to 14.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The resulting confusion matrix figure
+    """
+    df_cm = pd.DataFrame(
+        confusion_matrix, index=class_names, columns=class_names,
+    )
+    fig = plt.figure(figsize=figsize)
+    try:
+        heatmap = sns.heatmap(df_cm, annot=True, fmt="d")
+    except ValueError:
+        raise ValueError("Confusion matrix values must be integers.")
+    heatmap.yaxis.set_ticklabels(heatmap.yaxis.get_ticklabels(), rotation=0, ha='right', fontsize=fontsize)
+    heatmap.xaxis.set_ticklabels(heatmap.xaxis.get_ticklabels(), rotation=45, ha='right', fontsize=fontsize)
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    return fig
+
+# --------------------------Utility functions--------------------------------
+
+
+df = pd.read_csv(pathInput,sep=',',encoding='utf-8')
+df.Ordered = df.Ordered.astype('str', copy=False)
+
+subset0 = df.loc[df['Ordered'] == 'Yes']
+subset0 = subset0.sample(n=math.ceil(len(subset0.index)/2))
+subset1 = df.loc[df['Ordered'] == 'No']
+subset1 = subset1.sample(n=math.ceil(len(subset0.index)))
+
+train = subset1.append(subset0)
+test = df[~df.isin(train)].dropna()
+
+X_train_val = train.drop('Ordered', axis=1)
+y_train_val = train.loc[:,'Ordered']
+X_test = test.drop('Ordered', axis=1)
+y_test = test.loc[:,'Ordered']
+
+classes = ['No','Yes']
+
+parameters = {'n_estimators':[10,25,50],
+              'max_depth':[2,3,4],
+              'min_samples_leaf':[1,0.0025,0.01],
+              'min_impurity_decrease':[0, 0.05,0.1]}
+
+clf = GridSearchCV(estimator=RandomForestClassifier(), param_grid=parameters, scoring ='roc_auc', n_jobs=-1, cv=10)
+clf.fit(X_train_val, y_train_val)
+
+print('Best score for data1:', clf.best_score_)
+print('Best number of estimators:', clf.best_estimator_.n_estimators)
+print('Best Depth:',clf.best_estimator_.max_depth)
+print('Best Min Samples Leaf:',clf.best_estimator_.min_samples_leaf)
+print('Best Min Impurity Decrease:',clf.best_estimator_.min_impurity_decrease)
+
+clf = RandomForestClassifier(
+    n_estimators = clf.best_estimator_.n_estimators,
+    max_depth = clf.best_estimator_.max_depth,
+    min_samples_leaf = clf.best_estimator_.min_samples_leaf,
+    min_impurity_decrease=clf.best_estimator_.min_impurity_decrease).fit(X_train_val,y_train_val)
+y_predictions = clf.predict(X_test)
+
+cm = confusion_matrix(y_test, y_predictions,classes)
+print_confusion_matrix(cm,classes)
+plt.savefig(pathConfusionMatrix)
+plt.show()
+
+
+accuracy = round(accuracy_score(y_test, y_predictions),2)
+f1 = round(recall_score(y_test, y_predictions, average="binary", pos_label="Yes"),2)
+print("Accuracy: "+str(accuracy))
+print("F1: "+str(f1))
+# Convert y to int for roc scoring
+y_test = y_test.replace("No",0)
+y_test = y_test.replace("Yes",1)
+y_predictions[y_predictions == "No"] = 0
+y_predictions[y_predictions == "Yes"] = 1
+roc = round(roc_auc_score(y_test, y_predictions),2)
+print("ROC AUC score: "+str(roc))
+```
+
+Again, since the training set is created by using random samples, model performance can vary during each run.
+The following values values could be observed on average:  
+
+* Accuracy around 88%  
+* F1 score around 93%   
+* ROC score around 90%  
+
+This shows a 1%-3% percentage drop in performance compared to the previous decision tree model. This indicates a high variance in the data, which favors a decision tree more than a random forrest.
+
+The confusion matrix can be seen below. The model classifies around 98% of sessions, that contain an order, correctly. On the other hand it predicts that around 85% of sessions, which do not contain an order, do contain one.  
+
+In this case it looks like the model simply trades a lower ratio of false negatives for a higher ratio of false positives, compared to the decision tree. However, on average the ratio of both false positives and false negatives is slightly higher when compared to the decision tree model.
+
+![Random Forrest - Confusion Matrix](./3 Data Modelling/cm_forest.png)
+
+## Conclusion {#modelConclusion}
+
+First of all it should be evaluated which correct and false predictions are important. For example, the company might want to offer discounts to potential customers, who would normally not order something during their session. In that case the ratio of false positives should be kept down as the company does not want to offer discounts to too many people, who would order a product anyway.  
+After this evaluation a fitting performance measurement metric can be chosen. Depending on the metric the performance ranking of different models can change. In addition to that the ratio of positive and negative instances used to train the model should be adjusted, as it was described in this chapter.  
+Another important question is how important model transparency is. If it is not required at all to understand how the model predicts, and why, more models and modelling strategies should be considered. For example neural networks would become an option. Or methods for automatic dimensionality reduction, such as PCA, or for iterative model improvements, such as Bagging or Boosting, should also be evaluated.  
+In addition, it should be considered whether a continuous training of the model is a good idea. On one hand it offers the advantge of staying up to date by feeding the newest customer behaviour data to the model. On the other hand it would require a higher investment in monitoring software and personnel as well as IT security. The reason for that is that continous learning creates the risk of model corruption, which requires constant performance monitoring, regular model backups and a quick way to switch to an older version of the model.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -1935,6 +2085,16 @@ It should be noted that if the company prefers a model with a higher performance
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 # Appendix {#appendix}
+
+## Data Folder Structure {#dataFolderStructure}
+
+To get an overview of the content of the "0 Data" folder:
+
+* Each file has a suffix depending on what language was used for creating it. Files created with a Python script have the suffix "_P", while files created with R have the suffix "_R". 
+* For both datasets three types of files are created:  
+    + A copy of the original dataset (e.g. "order_data_R.csv")
+    + A cleaned version of that dataset (e.g. "order_data_cleaned_R.csv")
+    + A smaller version of the cleaned data, which allows quick viewing and testing of the technical functionality of the coding (e.g. "order_data_small_R.csv")
 
 
 ## Full Clickstream Tables {#fullClickstreamTables}
@@ -2113,17 +2273,16 @@ giveTop <- function(df, column, first, percentage){
   naRow <- top %>%
     filter(top[[1]] == "Not Available")
   naRow <- naRow[,1:3]
+  if (nrow(naRow)>0){naRow[1,3] <- round(naRow[1,3]*100, digits = 2)}
   
   totalCount <- sum(top$n) # used when only the top x columns are requested
   if (percentage == TRUE){
     df <- subset(df, select=c(column))
     df <- na.omit(df)
-    
+
     top <- (tabyl(df[[column]])) #create frequency table
+    
     top[,c(1)] <- as.character(top[,c(1)])
-    if (nrow(naRow)>0){
-      top[nrow(top) + 1,] = naRow
-    }
     
     top <- top %>% select(1, 3)
     names(top) <- c(column, "percentage") #rename
@@ -2137,13 +2296,13 @@ giveTop <- function(df, column, first, percentage){
   }
   #get the highest rating x columns only
   if (first != 0){
-    if("Not Available" %in% top[,1]){
-      first <- first+1
-    }
     top <- head(top, first)
     if(percentage == TRUE){
       others <- max((100 - sum(top$percentage)),0) #Possible bug without max: others < 0 due to rounding
       top[nrow(top) + 1,] = list("Others",others)
+      if (nrow(naRow)>0){
+        top[nrow(top) + 1,] = naRow %>% select(1, 3)
+      }
       top <- arrange(top, desc(percentage))
     }
     else{
@@ -2151,7 +2310,14 @@ giveTop <- function(df, column, first, percentage){
       top[nrow(top) + 1,] = list("Others",others)
       top <- arrange(top, desc(amount))
     }
-    
+  }
+  else {
+    if (percentage==TRUE){
+      if (nrow(naRow)>0){
+        top[nrow(top) + 1,] = naRow %>% select(1, 3)
+      }
+      top <- arrange(top, desc(percentage))
+    }
   }
   top[[column]] <- factor(top[[column]], levels=top[[column]]) #lockOrder
   return(top)
@@ -2245,10 +2411,9 @@ plotLorenzCurve <- function(df, ColumnName) {
   LorenzFinal_df$percentage <- LorenzCurve_df$L #replace the percentage column with entries from calculation 
   countOfEntries <- LorenzFinal_df[, ColumnName] %>% tabyl() %>% select(2) %>% sum() #count the entries for visual reasons
   # plot
-  ggplot(data=LorenzFinal_df, aes_string(x=ColumnName, y="percentage", group=1)) +
+  ggplot(data=LorenzFinal_df, aes_string(x=ColumnName, y="percentage", group=1, axes=F)) +
     geom_point() +
     geom_line() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.3, hjust = 1)) +
     geom_abline(slope = 1/(countOfEntries-1), intercept = -1/(countOfEntries-1))
 }
 #-----------------------------------------------------------------------------------

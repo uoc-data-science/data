@@ -21,17 +21,16 @@ giveTop <- function(df, column, first, percentage){
   naRow <- top %>%
     filter(top[[1]] == "Not Available")
   naRow <- naRow[,1:3]
+  if (nrow(naRow)>0){naRow[1,3] <- round(naRow[1,3]*100, digits = 2)}
   
   totalCount <- sum(top$n) # used when only the top x columns are requested
   if (percentage == TRUE){
     df <- subset(df, select=c(column))
     df <- na.omit(df)
-    
+
     top <- (tabyl(df[[column]])) #create frequency table
+    
     top[,c(1)] <- as.character(top[,c(1)])
-    if (nrow(naRow)>0){
-      top[nrow(top) + 1,] = naRow
-    }
     
     top <- top %>% select(1, 3)
     names(top) <- c(column, "percentage") #rename
@@ -45,13 +44,13 @@ giveTop <- function(df, column, first, percentage){
   }
   #get the highest rating x columns only
   if (first != 0){
-    if("Not Available" %in% top[,1]){
-      first <- first+1
-    }
     top <- head(top, first)
     if(percentage == TRUE){
       others <- max((100 - sum(top$percentage)),0) #Possible bug without max: others < 0 due to rounding
       top[nrow(top) + 1,] = list("Others",others)
+      if (nrow(naRow)>0){
+        top[nrow(top) + 1,] = naRow %>% select(1, 3)
+      }
       top <- arrange(top, desc(percentage))
     }
     else{
@@ -59,7 +58,14 @@ giveTop <- function(df, column, first, percentage){
       top[nrow(top) + 1,] = list("Others",others)
       top <- arrange(top, desc(amount))
     }
-    
+  }
+  else {
+    if (percentage==TRUE){
+      if (nrow(naRow)>0){
+        top[nrow(top) + 1,] = naRow %>% select(1, 3)
+      }
+      top <- arrange(top, desc(percentage))
+    }
   }
   top[[column]] <- factor(top[[column]], levels=top[[column]]) #lockOrder
   return(top)

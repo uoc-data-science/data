@@ -110,7 +110,7 @@ p1 <- ggplot(orders, aes(x=Order.Line.Amount)) +
                          limits = c(-0.5,45.5),
                          breaks = round(seq(0, 45, by = 3),1)) +
       scale_y_continuous(limits = c(0,0.15)) +
-      ggtitle("Distribution of the Order Amount")
+      ggtitle("Orders: Distribution of the Order Amount")
 p1 <- beautify(p1)
 
 p2 <- ggplot(orders, aes(x=Order.Line.Unit.List.Price)) + 
@@ -118,7 +118,7 @@ p2 <- ggplot(orders, aes(x=Order.Line.Unit.List.Price)) +
       scale_x_continuous(name="Order Line Unit List Price",
                          limits = c(-0.5,45.5),
                          breaks = round(seq(0, 45, by = 3),1)) +
-      ggtitle("Distrubution of the Unit List Price")
+      ggtitle("Orders: Distrubution of the Unit List Price")
 p2 <- beautify(p2)
 
 plotData <- data.frame(matrix(ncol = 2, nrow = 0))
@@ -139,22 +139,22 @@ p3 <- ggplot(data=plotData, aes(x=Date, y=Over_12_dollar_percentage, group=1)) +
   geom_point() +
   scale_x_discrete(breaks = c(head(plotData,1)$Date, tail(plotData,1)$Date)) +
   scale_y_continuous(name="Orders over $12 in %")+
-  ggtitle("History of Expenses over $ 12 in Percent")
+  ggtitle("Orders: History of Expenses over $ 12 in Percent")
 p3 <- beautify(p3)
 
 p4 <- meanOverTime(orders,"Order.Line.Date","Order.Line.Amount","Ø Amount in $") +
       theme_classic() +
-      ggtitle("History of Average Order Amount")
+      ggtitle("Orders: History of Average Order Amount")
 p4 <- beautify(p4)
 
 p5 <- meanOverTime(orders,"Order.Line.Date","Order.Line.Unit.List.Price","Ø Price in $") +
       theme_classic() +
-      ggtitle("History of Average Unit List Price")
+      ggtitle("Orders: History of Average Unit List Price")
 p5 <- beautify(p5)
 
 p6 <- meanOverTime(orders,"Order.Line.Date","Order.Line.Quantity","Ø Quantity") +
       theme_classic() +
-      ggtitle("History of Average Order Quantity")
+      ggtitle("Orders: History of Average Order Quantity")
 p6 <- beautify(p6)
 
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),multiplot(p1, p2, p3, p4, p5, p6, cols=2), width=15, height=12)
@@ -163,36 +163,34 @@ ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Price.png",sep=""),
 beautify(ggplot(orders, aes(x=Order.Line.Hour.of.Day)) +
   geom_density() +
   scale_x_continuous(name="Hour of Day")) +
-  ggtitle("Density of Orders over Hour of Day")
+  ggtitle("Orders: Density of Orders over Hour of Day")
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Time.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 # Order Discounts: Distribution of discounts
 beautify(ggplot(orders, aes(x=Order.Discount.Amount)) +
   geom_density() +
   scale_x_continuous(name="Discount Amount") +
-  ggtitle("Density of Discount"))
+  ggtitle("Orders: Density of Discount"))
 ggsave(filename=paste(pathPlotFolder,"Order Data Plots/Order Discounts.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 #Plotting product data
 #-----------------------------------------------------------------------------------
-#Plotting product data
-#-----------------------------------------------------------------------------------
 #Manufacturer lorenz curve
 beautify(plotLorenzCurve(orders, "Manufacturer") +
-           ggtitle("Lorenz Curve Manufacturers")) +
+           ggtitle("Orders: Lorenz Curve Manufacturers")) +
   theme(axis.text.x = element_blank(), axis.text.y = element_blank())
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzManufacturer.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #Product ID lorenz curve
 beautify(plotLorenzCurve(orders, "Order.Line.Subassortment.ID") +
-           ggtitle("Lorenz Curve Products")) +
+           ggtitle("Orders: Lorenz Curve Products")) +
   theme(axis.text.x = element_blank(), axis.text.y = element_blank())
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzProducts.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
 #BrandName lorenz curve
 beautify(plotLorenzCurve(orders, "BrandName") +
-           ggtitle("Lorenz Curve Brands")) +
+           ggtitle("Orders: Lorenz Curve Brands")) +
   theme(axis.text.x = element_blank(), axis.text.y = element_blank())
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzBrandName.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
@@ -212,7 +210,7 @@ p1 <- ggplot(top, aes(fill=StockType, y=amount, x=BrandName)) +
   scale_fill_grey() +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size=centralSize)) +
-  ggtitle("Stock Type per Brand")
+  ggtitle("Orders: Stock Type per Brand")
 #StockPerManufacturer
 top <- orders
 top <- table(top$StockType, top$Manufacturer, useNA="always")
@@ -229,7 +227,7 @@ p2 <- ggplot(top, aes(fill=StockType, y=amount, x=Manufacturer)) +
   scale_fill_grey() +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size=centralSize)) +
-  ggtitle("Stock Type per Manufacurer")
+  ggtitle("Orders: Stock Type per Manufacurer")
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/StockPer.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
@@ -250,7 +248,7 @@ p1 <- beautify(ggplot(top, aes(fill=Premium, y=amount, x=CardBrand)) +
   geom_bar( stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   scale_fill_grey() +
-  ggtitle("Ratio of Premium Cards per Brand"))
+  ggtitle("Orders: Ratio of Premium Cards per Brand"))
 #Upscale Card per Card Brand
 top <- orders
 top <- table(top$Upscale.Card.Holder, top$Order.Credit.Card.Brand, useNA="always")
@@ -266,7 +264,7 @@ p2 <- beautify(ggplot(top, aes(fill=Upscale, y=amount, x=CardBrand)) +
   geom_bar( stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   scale_fill_grey()+
-  ggtitle("Ratio of Upscale Cards per Brand"))
+  ggtitle("Orders: Ratio of Upscale Cards per Brand"))
 ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardBrand.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
@@ -289,7 +287,7 @@ plotData <- left_join(gusa, plotData)
 plotData[is.na(plotData)] <- 0
 ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
   geom_polygon(aes(group=group, fill=count), color = "black", size = 0.3) +
-  labs(x = NULL, y = NULL, fill = "Count", title = "Customer Hotspots (weighted by order amount)") +
+  labs(x = NULL, y = NULL, fill = "Count", title = "Orders: Customer Hotspots (weighted by order amount)") +
   scale_fill_gradient(low = "white", high = "black") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
@@ -317,7 +315,7 @@ plotData <- left_join(gusa, plotData)
 plotData[is.na(plotData)] <- 0
 ggplot(data = plotData, mapping = aes(x = long, y = lat)) +
   geom_polygon(aes(group=group, fill=count), color = "black", size = 0.3) +
-  labs(x = NULL, y = NULL, fill = "Count", title = "Customer Hotspots") +
+  labs(x = NULL, y = NULL, fill = "Count", title = "Orders: Customer Hotspots") +
   scale_fill_gradient(low = "white", high = "black") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
@@ -340,9 +338,9 @@ cities <- head(plotData, 100)
 print(cities)
 ggplot() + 
   geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
-  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="black", alpha = .15) +
+  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="orange", alpha = .5) +
   geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
-  labs(title = "Top 100 Customer Cities (weighted by order amount)") +
+  labs(title = "Orders: Top 100 Customer Cities (weighted by order amount)") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
         axis.title.x=element_blank(), axis.title.y=element_blank(),
@@ -362,9 +360,9 @@ cities <- head(plotData, 100)
 print(cities)
 ggplot() + 
   geom_map(data=map_data("state"), map=map_data("state"), aes(map_id=region),fill="grey", color="white", size=0.15) +
-  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="black", alpha = .15) +
+  geom_point(cities, mapping = aes(x = long, y = lat), size=(cities$count)/5, color="orange", alpha = .5) +
   geom_text(data=cities,aes(x=long, y=lat, label=name), color = "black", check_overlap = TRUE, size = 3) +
-  labs(title = "Top 100 Customer Cities") +
+  labs(title = "Orders: Top 100 Customer Cities") +
   theme(axis.line=element_blank(),axis.text.x=element_blank(),
         axis.text.y=element_blank(),axis.ticks=element_blank(),
         axis.title.x=element_blank(), axis.title.y=element_blank(),
@@ -375,12 +373,12 @@ ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Cities.png",sep=""), w
 p1 <- beautify(ggplot(orders, aes(x=Age)) + 
   geom_density() +
   scale_x_continuous(name="Age")) +
-  labs(title = "Age Distribution (weighted by order amount)")
+  labs(title = "Orders: Age Distribution (weighted by order amount)")
 
 plotData <- na.omit(orders %>% select(Age, Gender))
 p2 <-beautify(ggplot(plotData) + 
   stat_density(aes(x=Age, linetype=Gender), geom="line", position="identity") +
-  labs(title = "Age Distribution per Gender (weighted by order amount)") +
+  labs(title = "Orders: Age Distribution per Gender (weighted by order amount)") +
   scale_linetype_discrete(guide=guide_legend(override.aes=aes(colour="black"))))
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age_weighted.png",sep=""), multiplot(p1,p2, cols=2), width=16, height=5)
 
@@ -388,12 +386,12 @@ ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age_weighted.png",sep=
 p1 <- beautify(ggplot(ordersDistinctCustomer, aes(x=Age)) + 
                  geom_density() +
                  scale_x_continuous(name="Age")) +
-  labs(title = "Age Distribution")
+  labs(title = "Orders: Age Distribution")
 
 plotData <- na.omit(ordersDistinctCustomer %>% select(Age, Gender))
 p2 <-beautify(ggplot(plotData) + 
                 stat_density(aes(x=Age, linetype=Gender), geom="line", position="identity") +
-                labs(title = "Age Distribution per Gender") +
+                labs(title = "Orders: Age Distribution per Gender") +
                 scale_linetype_discrete(guide=guide_legend(override.aes=aes(colour="black"))))
 ggsave(filename=paste(pathPlotFolder,"Customer Data Plots/Age.png",sep=""), multiplot(p1,p2, cols=2), width=16, height=5)
 #-----------------------------------------------------------------------------------
