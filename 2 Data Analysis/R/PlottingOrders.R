@@ -185,6 +185,7 @@ ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzManufacturer.png"
 #Product ID lorenz curve
 beautify(plotLorenzCurve(orders, "Order.Line.Subassortment.ID") +
            ggtitle("Orders: Lorenz Curve Products")) +
+           scale_x_discrete(name="Product") +
   theme(axis.text.x = element_blank(), axis.text.y = element_blank())
 ggsave(filename=paste(pathPlotFolder,"Product Data Plots/LorenzProducts.png",sep=""), width=5, height=5)
 #-----------------------------------------------------------------------------------
@@ -207,7 +208,6 @@ print(top)
 # Stacked Plot
 p1 <- ggplot(top, aes(fill=StockType, y=amount, x=BrandName)) + 
   geom_bar( stat="identity") +
-  scale_fill_grey() +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size=centralSize)) +
   ggtitle("Orders: Stock Type per Brand")
@@ -224,7 +224,6 @@ print(top)
 # Stacked Plot
 p2 <- ggplot(top, aes(fill=StockType, y=amount, x=Manufacturer)) + 
   geom_bar( stat="identity") +
-  scale_fill_grey() +
   theme_classic() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, size=centralSize)) +
   ggtitle("Orders: Stock Type per Manufacurer")
@@ -247,7 +246,6 @@ print(top)
 p1 <- beautify(ggplot(top, aes(fill=Premium, y=amount, x=CardBrand)) + 
   geom_bar( stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  scale_fill_grey() +
   ggtitle("Orders: Ratio of Premium Cards per Brand"))
 #Upscale Card per Card Brand
 top <- orders
@@ -263,7 +261,6 @@ print(top)
 p2 <- beautify(ggplot(top, aes(fill=Upscale, y=amount, x=CardBrand)) + 
   geom_bar( stat="identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  scale_fill_grey()+
   ggtitle("Orders: Ratio of Upscale Cards per Brand"))
 ggsave(filename=paste(pathPlotFolder,"Payment Method Data/CardBrand.png",sep=""),multiplot(p1, p2, cols=2), width=15)
 #-----------------------------------------------------------------------------------
