@@ -1387,12 +1387,12 @@ ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/Cities_weighted.png
 
 #### Customer Data
 
-The map shows clearly a very high browsing activity for the large US cities. Especially the east coast at the area around New York are a high ratio of viewers located.  
+The map clearly shows a very high browsing activity for the large US cities. Especially the east coast at the area around New York has a high ratio of online shop visitors.  
 ```{r ClicksPlotCities, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/Cities_weighted.png', 1))
 ```
 
-The US states plot shows that there is a high activity in California and New York. In general, there is rather a lower activity at the inside of the state.  
+The US states plot shows that there is a high activity in California and New York. In general, there is a lower activity at the states in the center.  
 ```{r ClicksPlotStates, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/States_weighted.png', 1))
 ```
@@ -1412,31 +1412,31 @@ The lorenz curve for the products is rather flat, which indicates there are no b
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzManufacturers.png', 1))
 ```
 <br><br><br><br><br><br><br>
-The following graph appears a bit erratic, indicating that manufacturers can be divided into several popularity groups. Additionally, the curve is rather extended, which shows an highly unequal distribution for manufacturers viewed. This implies a high importance of the manufacturer for the viewership. 
+The following graph appears a bit erratic, indicating that manufacturers can be divided into several popularity groups. Additionally, the curve is rather extended, which shows a highly unequal distribution for manufacturers viewed. This implies a high importance of the manufacturer for the viewership. 
 <br><br><br><br><br><br><br>
   
 ```{r ClickPlotBrands, echo=FALSE, out.width= "51%", out.extra='style="float:right; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/LorenzBrands.png', 1))
 ```
 <br><br><br><br><br><br><br>
-Whereas the brand lorenz curves shows a more equal distributed popularity, because it is overall rather flat. At about 50% of the brands, a pointy part can be seen in the graph, which divides the brands in a rather popular half and a rather unpopular one.
+Whereas the brand lorenz curves shows a more equally distributed popularity, because it is overall rather flat. At about 50% of the brands, a pointy part can be seen in the graph, which divides the brands in a rather popular half and a rather unpopular one.
 <br><br><br><br><br><br><br><br><br>
 
 #### Time Data
 
-Especially interesting for analysing purposes is the time component that comes with the clickstream dataset. Each clickstream consists of timestamps and a number in a sequence.
+Especially interesting for analysis purposes is the time component that comes with the clickstream dataset. Each clickstream consists of timestamps and a number in a sequence.
 
-The following plot shows that most of the clicks are accumulated in the morning and then descending over day. The extreme spike at around 2 a.m. can be neglected as it seems to be bot activity with extremely long session times and sequences.  
+The following plot shows that most of the clicks are accumulated in the morning and then descend over day. The extreme spike at around 2 a.m. can be neglected as it seems to be bot activity with extremely long session times and sequences.  
 ```{r ClicksTime, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/ClickTime.png', 1))
 ```
 
-The above mentioned behavior is also visible in the click time overall. Generally, there is more activity during the middle of April and less towards the end. Also, the seasonal component of the clickstream data set is visible very well in this kind of visualization.  
+The mentioned behavior is also visible in the click time overall. Generally, there is more activity during the middle of April and less towards the end. Also, the seasonal component of the clickstream data set is visible very well in this kind of visualization.  
 ```{r ClicksTimeHistory, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/ClickHistory.png', 1))
 ```
 
-While the session length on average is about 8 min, the median only is at about 2 min (see [table](#calcData)). This is visible in the graph where the high point is also at about 2 min indicating the skewness of the time data. Most sessions last only around 10 min, which leads to the assumption that products should be displayed well as the customers do not waste much time on searching for them. For a better visualization we left out sessions with a duration over 40 minutes.  
+While the session length on average is about 8 minutes, the median lies at about 2 minutes (see [table](#calcData)). This is visible in the graph where the high point is also at about 2 minutes, indicating the skewness of the time data. Most sessions last only around 10 minutes, which leads to the assumption that products should be displayed well as the customers do not waste much time on searching for them. For a better visualization we left out sessions with a duration over 40 minutes.  
 ```{r ClicksSessionLength, echo=FALSE}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/SessionDuration.png', 1))
 ```
@@ -1447,7 +1447,7 @@ For some of the graphs a direct comparison makes sense in order to visualize the
 
 #### Customer Data
 
-The maps clearly show the numerical difference in the both dataset. Especially Chicago and Dallas have to be highlighted because both this cities have a really high viewer amount, but a rather small customership.
+The maps clearly show the numerical difference in both dataset. Especially Chicago and Dallas have to be highlighted because both cities have a really high viewer amount, but a rather small customership. One possible reason for this effect would be that the acitve bots originate from these two cities. The bot presence from Dallas could be explained by the high ratio of IT experts living there.
 
 **Orders Map**  
 ```{r ComCities,echo=FALSE}
@@ -1461,9 +1461,9 @@ knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/Citi
 
 #### Product Data
 
-*Note: For the lorenz curves we dropped the x-axis tick labels for a better readability. For details see the top attributes for products in the [summary tables](#sumTabs).*
+*Note: For the lorenz curves we dropped the x-axis tick labels for a better readability. For details see the top attributes for products in the [summary tables](#SumOrderProduct).*
 
-In the following the product data lorenz curves for both datasets will be compared. For this the order plot gets always displayed **on the left and the click plot on the right**. For all plots it can be observed that the curve for the order data is more extended. Thus, it can be stated that the orders contain a higher inequality for the popularity of product attributes. This means people seem to decide for rather the same products or brands, despite having a bigger variance in the viewed products. 
+In the following the product data lorenz curves for both datasets will be compared. In each case the order plot is displayed **on the left and the click plot on the right**. For all plots it can be observed that the curve for the order data is more tilted towards the upper left corner. Thus, it can be stated that the orders contain a higher inequality for the popularity of product attributes. This means that people usually seem to pick the same products or brands, despite having a bigger variance in the viewed products. 
 
 ```{r ComProducts, echo=FALSE, out.width= "50%", out.extra='style="float:left; padding:10px"'}
 knitr::include_graphics(rep('./4 Data Overview/Plots/Product Data Plots/LorenzProducts.png', 1))
@@ -1485,24 +1485,24 @@ knitr::include_graphics(rep('./4 Data Overview/Plots/Clickstream Data Plots/Lore
 
 # Recommendation Evaluation {#recomm}
 
-In addition to analyzing the order and clickstream data, we have to analyze the performance of different recommendation models. The performance of three different recommendation systems was measured:
+In addition to analyzing the order and clickstream data, we analyzed the performance of different recommendation models. The performance of three different recommendation systems was measured:
 
 * A profit based recommendation system: This one recommends products that shall fit the taste of the subject, but also generate high revenue shares.
 * A ranking based recommendation system: This one recommends best performing products according to their sales rank.
 * A random recommendation system: This one was used as a baseline treatment.
 
-The evaluation of the profit and ranking based recommendation systems is done using inference analysis, specifically using the computational paradigm instead of the mathematical one. One test for each of the two recommendation systems is carried out with the null hypothesis always being that the system does not cause different sales than a purely random recommendation system. During each test we randomize our sample data 1000 times, using either permutation or bootstrapping, and measure the p-value and confidence interval. The test statistic, we always use, is the difference in mean between the group using the profit or ranking based Recomendation system and the group using the random recommendation system. 
+The evaluation of the profit and ranking based recommendation systems was done using inference analysis, specifically using the computational paradigm instead of the mathematical one. One test for each of the two recommendation systems was carried out with the null hypothesis always being that the system does not cause different sales than a purely random recommendation system. During each test we randomize our sample data 1000 times, using either permutation or bootstrapping, and measure the p-value and confidence interval. The test statistic, we always use, is the difference in mean between the group, using the profit or ranking based recomendation system, and the group using the random recommendation system. 
 If the null hypothesis was true, then the test statistic value for our sample would not significantly differ from the distribution of the test statistic for our randomized data. Our default alpha for the confidence interval is 5%, but since we conduct a total of two tests, we have to apply the Bonferroni correction and adjust the alpha we specify for our confidence interval to 2.5%.
 
-Before diving into the inference analysis itself, we have to reformat our data for the recommendation systems into a form that is suitable for inference analysis. We want to have a data frame in which one row equals one customer, who was exposed to a recommendation system. We use three columns:
+Before diving into the inference analysis itself, we had to reformat our data for the recommendation systems into a shape that is suitable for inference analysis. We want to have a data frame in which one row equals one customer, who was exposed to a recommendation system. We use three columns:
 
 * Sales: The sales in Euro per customer.
 * Used_Profit_Oriented_recommendations: 1 if the customer was exposed to the profit oriented recommendation system, otherwise 0.
 * Used_Top_recommendations: 1 if the customer was exposed to the ranking based recommendation system, otherwise 0.
 
-If the value in column Used_Top_recommendations and Used_Profit_Oriented_recommendations is 0, it means that the random recommendation system was used.
+If the value in the columns Used_Top_recommendations and Used_Profit_Oriented_recommendations is 0, it means that the random recommendation system was used.
 
-In the following code block we reformat the data and print the first 10 rows of the reformatted table.
+In the following table you can see the first 10 rows of the reformatted dataset:
 
 ```{r InferenceReformat, echo=FALSE}
 pathExperiment <- "experiment/experimental_results.csv"
@@ -1538,9 +1538,9 @@ kable(head(experiment,10), row.names = FALSE) %>%
 
 ## Profit Oriented Recommendation
 
-Now, we do an inference analysis for the profit oriented recommendation system. Firstly, we look at the p-value and the corresponding plot:
+We executed an inference analysis for the profit oriented recommendation system. Firstly, we look at the p-value and the corresponding plot:
 
-```{r InferenceProfitP, echo=FALSE, out.width= "51%"}
+```{r InferenceProfitP, echo=FALSE}
 # Do inference analysis
 # Part 1: Test if the profit oriented recommendation system causes a significant difference in sales
 
@@ -1565,11 +1565,11 @@ viz_plot <- viz_plot + shade_p_value(obs_stat, direction = "two_sided", color = 
 print(viz_plot)
 ```
 
-The plot shows us the distribution of the test statistic for the 1000 randomized samples. The test statistic value for our sample is represented by a black line. The two-sided p-value regions are marked by a grey background. If our null hypothesis were true, then the test statistic value of our sample would be somewhere in the distribution of the test statistic for the randomized samples. Every test statistic value for a randomized sample, which lies in the p-value region, increases the p-value.
+The plot shows us the distribution of the test statistic for the 1000 randomized samples. The test statistic value for our sample is represented by a black line. The two-sided p-value regions are marked by a grey background. If our null hypothesis was true, then the test statistic value of our sample would be somewhere in the distribution of the test statistic for the randomized samples. Every test statistic value for a randomized sample, which lies in the p-value region, increases the p-value.
 
-As we can see the test statistic value of our sample is pretty far away from the test statistic values of the randomized samples. This already shows, without looking at the p-value itself, that the profit oriented recommendation system causes a significant difference in the sales in Euro. The value of the p-value is 0, which reaffirms our interpretation of the plot.
+As we can see, the test statistic value of our sample is pretty far away from the test statistic values of the randomized samples. This already shows, without looking at the p-value itself, that the profit oriented recommendation system causes a significant difference in the sales in Euro. The p-value is 0, which reaffirms our interpretation of the plot.
 
-Now, we look at the confidence interval:
+Next, we look at the confidence interval:
 
 ```{r InferenceProfitCI, echo=FALSE}
 bootstrap_stat <- experiment %>%
@@ -1591,11 +1591,11 @@ viz_plot <- viz_plot + shade_confidence_interval(ci, color = "black", fill = "gr
 print(viz_plot)
 ```
 
-As we can see, there is a 95% chance that for the global population customers, who get profit oriented recommendations, spend on average `r lowerBound`€-`r upperBound`€ more than people who get random recommendations.
+As we can see, there is a 95% chance that if the shop starts using the profit oriented recommendation system for all customers, they would spend on average `r lowerBound`€-`r upperBound`€ more than before.
 
 ## Ranking Based Recommendation
 
-Now we do an inference analysis for the ranking based recommendation system. Firstly, we look at the p-value and the corresponding plot:
+The next step was to perform an inference analysis for the ranking based recommendation system. Firstly, we look at the p-value and the corresponding plot:
 
 ```{r InferenceRankingP, echo=FALSE}
 # Part 2: Test if the popular products recommendation system causes a significant difference in sales
@@ -1621,9 +1621,9 @@ viz_plot <- viz_plot + shade_p_value(obs_stat, direction = "two_sided", color = 
 print(viz_plot)
 ```
 
-In this plot quite some portions of the distribution of the test statistic for our random samples lie in the p-value zone. This is also shown by the p-value `r as.data.frame(p_val)[1,1]`, which greater than 0.025. This means that for our alpha = 0.05 the effect of the ranking based recommendation system is statistically insignificant.
+In this plot some instances of the distribution of the test statistic for our random samples lie in the p-value zone. This is also shown by the p-value `r as.data.frame(p_val)[1,1]`, which is greater than 0.025. This means that for our alpha = 0.05 the effect of the ranking based recommendation system is statistically insignificant.
 
-Now we look at the confidence interval:
+Let us look at the confidence interval:
 
 ```{r InferenceRankingCI, echo=FALSE}
 bootstrap_stat <- experiment %>%
@@ -1649,18 +1649,18 @@ Since the confidence interval includes the value 0, it shows us that the effect 
 
 ## Implications of the Evaluation
 
-To sum it up, the company should use the profit oriented recommendation system, since out of the two tested systems it causes the largest increase in sales. The ranking based recommendation system does not cause any statistically relevant difference in sales. However if the effect was something else than sales in Euro per person, then the results could be different. The company should ask itself if the goal of their recommendation system should really be to increase sales. Maybe at some point in time it could introduce a subscription business model, similar to that of Amazon. In that case it might also want to increase the percentage of customers that have a subscription.
+To sum it up, the company should use the profit oriented recommendation system, since out of the two tested systems it causes the largest increase in revenue. The ranking based recommendation system does not cause any statistically relevant difference in sales. However if the effect was something else than sales in Euro per person, then the results could be different. The company should ask itself if increasing revenue should really be their only goal for using recommendation systems. Maybe at some point in time the organization could introduce a subscription business model, similar to that of Amazon. In that case it might also be important to increase the percentage of customers that have a subscription.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
 # Order Prediction {#model}
 
-Following the inference analysis our next task is to predict whether or not a person browsing the online-shop will end up purchasing something, based on the browsing behaviour on the site. Since the vast majority of click sessions do not contain any customer information, due to unregistered users browsing the website, or registered users not being logged in, we decided to omit that type of data for our prototypes. However, it is technically possible to include these attributes, which should be considered when developing a more advanced version of our prediction models.
+Following the inference analysis our next task was to predict, whether or not a person browsing the online shop will end up purchasing something, based on the browsing behaviour on the site. Since the vast majority of click sessions do not contain any customer information, due to unregistered users browsing the website or registered users not being logged in, we decided to omit that type of data for our prototypes. However, it is technically possible to include these attributes, which should be considered when developing a more advanced version of our prediction models.
 
 
 ## Data Preparation {#modelData}
-First of all the relevant data had to be extracted or engineered from the clickstream data and was then used to build a separate dataset, which represents the input data for a prediction model. The resulting data set contains one row per session. For each session the following attributes are used:
+First of all, the relevant data had to be extracted or engineered from the clickstream data and was used to build a separate dataset, which represents the input data for a prediction model. The resulting data set contains one row per session. For each session the following attributes are used:
 
 * The number of clicks during a session
 * The session duration in seconds
@@ -1736,9 +1736,9 @@ However, an important thing to note is that about 99% of sessions do not contain
 
 To handle model variance and bias we use the GridSearch approach. This allows us to get the optimal bias-variance trade off for each model, without having to inspect the source of variance or bias and fine tune model parameters manually. This way we do not need bias or variance related plots, such as learning curves. 
 
-While our approach optimises the bias variance trade off for each model, it does not account for bias and variance differences between several models. The two types of models we use for our problem are decision trees and random forests. By design random forests have less bias and more variance than decision trees. This means, that depending on the performance of both models we can see if our main problem is too much bias or variance in the data. For example, if random forests were to perform better than decision trees it would mean that our main problem is too much bias in the data.
+While our approach optimises the bias variance trade off for each model, it does not account for bias and variance differences between several models. The two types of models we use for our problem are decision trees and random forests. By design, random forests have less bias and more variance than decision trees. This means, that depending on the performance of both models, we can see if our main problem is too much bias or variance in the data. For example, if random forests were to perform better than decision trees, it would mean that our main problem is too much bias in the data.
 
-It should also be mentioned that depending on the business goal, the ratio of positive and negative instances in the training set should be adjusted. We use a 1-2 ratio of positives and negatives. Increasing the amount of negatives would cause a model to have an increased rate of true negatives and less false positives, however, it would also increase the rate of false negatives. Increasing the amount of positive instanced in the training set would have the reverse effect.
+It should also be mentioned that depending on the business goal, the ratio of positive and negative instances in the training set should be adjusted. We use a 1:2 ratio of positives and negatives. Increasing the amount of negatives would cause a model to have an increased rate of true negatives and less false positives. However, it would also increase the rate of false negatives. Increasing the amount of positive instanced in the training set would have the reverse effect.
 
 ## Decision Trees {#modelTree}
 
@@ -1911,23 +1911,23 @@ graph.write_png(pathTreeVisualization)
 Since the training set is created by using random samples, model performance can vary during each run. 
 However, on average the following could be observed:  
 
-* Accuracy around 90%  
-* F1 score around 95%  
-* ROC score around 93%
+* Accuracy ≈ 90%  
+* F1 score ≈ 95%  
+* ROC score ≈ 93%
 
 Also, normally, the most important features are the number of clicks and the session duration. 
 
-The confusion matrix can be seen below. As you can see, the model classifies around 95% of sessions, which contain an order, correctly. However, only around 86% of instances, which do not contain an order, are classified correctly. This brings up the following question: How should each classification type be weighted? To answer this the company should first ask itself "How, if at all, do we want to target session users differently?". For example, one idea could be to offer discounts to visitors, which have a high click rate during short sessions, as this could imply unsatisfaction with the price or quality of the visited products.
+The confusion matrix can be seen below. As you can see, the model classifies around 95% of sessions, which contain an order, correctly. However, only around 86% of instances, which do not contain an order, are classified correctly. This brings up the following question: How should each classification type be weighted? To answer this the company should first ask itself: "How, if at all, do we want to target session users differently?" For example, one idea could be to offer discounts to visitors, which have a high click rate during short sessions, as this could imply unsatisfaction with the price or quality of the visited products.
 
 ![Decision Tree - Confusion Matrix](./3 Data Modelling/cm_tree.png)
 
-As mentioned above the main reason for choosing a decision tree is the ease of understanding its logic and the automatic feature filtering. Below you can see a visualization of the decision tree. It has four layers. The only variables of interest are the session duration and the number of clicks during the session. For example, in this case whenever a session has over 10.5 clicks and lasts for longer than 289.5 seconds the tree predicts that the session contains an order. On the other hand if a session has less than (or precisely) 8.5 clicks the tree predicts that it does not contain an order.
+As mentioned above, the main reason for choosing a decision tree is the ease of understanding its logic and the automatic feature filtering. Below you can see a visualization of the decision tree. It has four layers. The only variables of interest are the session duration and the number of clicks during the session. For example, in this case whenever a session has over 10.5 clicks and lasts for longer than 289.5 seconds the tree will predict that the session contains an order. On the other hand if a session has less than (or precisely) 8.5 clicks, the tree will predict that it does not contain an order.
 
 ![Decision Tree Vizualized](./3 Data Modelling/graphviz_tree.png)
 
 ## Random Forest {#modelForest}
 
-The second model of choice is a random forest. A random forest is an ensemble model made up of several decision trees. Due to the structure of a random forest it has less bias than a single decision tree, but it suffers from higher variance. It also offers less insight into the logic of the model, since it is made up of several trees. However, depending on the forest complexity, it is still possible to present an overview of that logic. For example if the forest is made up of only 5 trees, each tree could be visualized. However, the more trees a forest is made out of, the less transparency it offers.
+The second model of choice is a random forest. A random forest is an ensemble model made up of several decision trees. Due to the structure of a random forest it has less bias than a single decision tree, but it suffers from higher variance. It also offers less insight into the logic of the model, since it is made up of several trees. But depending on the forest complexity, it is still possible to present an overview of that logic. For example if the forest is made up of only 5 trees, each tree could be visualized. However, the more trees a forest is made out of, the less transparency it offers.
 
 ```{python createforest, eval=F, echo=F, results = "hide"}
 import numpy as np
@@ -2051,25 +2051,25 @@ print("ROC AUC score: "+str(roc))
 ```
 
 Again, since the training set is created by using random samples, model performance can vary during each run.
-The following values values could be observed on average:  
+The following values could be observed on average:  
 
-* Accuracy around 88%  
-* F1 score around 93%   
-* ROC score around 90%  
+* Accuracy ≈ 88%  
+* F1 score ≈ 93%   
+* ROC score ≈ 90%  
 
 This shows a 1%-3% percentage drop in performance compared to the previous decision tree model. This indicates a high variance in the data, which favors a decision tree more than a random forest.
 
 The confusion matrix can be seen below. The model classifies around 98% of sessions, that contain an order, correctly. On the other hand it predicts that around 85% of sessions, which do not contain an order, do contain one.  
 
-In this case it looks like the model simply trades a lower ratio of false negatives for a higher ratio of false positives, compared to the decision tree. However, on average the ratio of both false positives and false negatives is slightly higher when compared to the decision tree model.
+In this case it looks like the model simply trades a lower ratio of false negatives for a higher ratio of false positives, compared to the decision tree. But on average the ratio of both, false positives and false negatives, is slightly higher when compared to the decision tree model.
 
 ![Random forest - Confusion Matrix](./3 Data Modelling/cm_forest.png)
 
 ## Conclusion {#modelConclusion}
 
-First of all it should be evaluated which correct and false predictions are important. For example, the company might want to offer discounts to potential customers, who would normally not order something during their session. In that case the ratio of false positives should be kept down as the company does not want to offer discounts to too many people, who would order a product anyway.  
-After this evaluation a fitting performance measurement metric can be chosen. Depending on the metric the performance ranking of different models can change. In addition to that the ratio of positive and negative instances used to train the model should be adjusted, as it was described in this chapter.  
-Another important question is how important model transparency is. If it is not required at all to understand how the model predicts, and why, more models and modelling strategies should be considered. For example neural networks would become an option. Or methods for automatic dimensionality reduction, such as PCA, or for iterative model improvements, such as Bagging or Boosting, should also be evaluated.  
+First of all it should be evaluated which correct and false predictions are important. For example, the company might want to offer discounts to potential customers, who would normally not order something during their session. In that case the ratio of false negatives should be kept down as the company does not want to offer discounts to too many people, who would order a product anyway.  
+After this evaluation a fitting performance measurement metric can be chosen. Depending on the metric the performance ranking of different models can change. In addition to that, the ratio of positive and negative instances used to train the model should be adjusted, as it was described in this chapter.  
+Another important question is how relevant model transparency is. If it is not required at all to understand how the model predicts, and why, more models and modelling strategies should be considered. For example neural networks would become an option, or methods for automatic dimensionality reduction, such as PCA, or for iterative model improvements, such as Bagging or Boosting, should also be evaluated.  
 In addition, it should be considered whether a continuous training of the model is a good idea. On one hand it offers the advantge of staying up to date by feeding the newest customer behaviour data to the model. On the other hand it would require a higher investment in monitoring software and personnel as well as IT security. The reason for that is that continous learning creates the risk of model corruption, which requires constant performance monitoring, regular model backups and a quick way to switch to an older version of the model.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -2077,7 +2077,16 @@ In addition, it should be considered whether a continuous training of the model 
 
 # Conclusion {#summary}
 
-- Bot activity
+Finally, we would like to summarise our most important findings and point out some recommendations for the shop.
+
+The analysis of the given datasets, in the shape of summary tables as well as visualizations, points out some interesting aspects for business decisions of the company providing the online shop. But for all of these results it has to be respected that the compared datasets refer to different time periods and therfore the results might not be that comparable.
+To address the most important discoveries: It could be observed that younger customer groups tend to browse more and buy less than the older ones. This might indicate a possible application area for special discounts on products adressed towards a rather young customership. The audience analysis results can be regarded as another important finding, because the comparison of both datasets showed that products for men are bought with comparably less browsing activity.  This points towards a more goal-oriented customer base, which reduces the relevance for discounts on these products. Furthermore, it could be observed that significantly more seasonal products are viewed than bought. This probably hints towards a customer dissactisfaction regarding seasonal products. Hence, it should be considered to revise the price model for these product groups. From the order manufacturers' lorenz curve it can be seen that the first ranked quarter of manufacturers has a very high effectivity. Thus, the shop could think about reducing the products created by unpopular manufacturers.
+
+The company should use the profit recommendation system for all customers to increase the revenue. At the same time it should be evaluated if the revenue is the only important metric for recommendation system performance. Other metrics could be the rate of non-customer to customer conversion or the customer subscription rate.
+
+Furthermore, the application of a predictive model requires a cost-benefit matrix to be constructed, which requires developing a strategy for dealing with buyers and non-buyers browsing the shop. One possible strategy is to offer discounts to browsing visitors, which are not likely to order a product during their browsing session. For that example the predictive models, we developed, offer a great performance already, since over 99,95% of predictions, that a visitor will not buy something, are correct. It should be noted however, that it is hard to estimate how many of these people could be tilted towards buying a product after being offered a discount.
+
+During our analysis of the data we discovered traces pointing towards automated bots being active on the online shop. This is problematic, since it distorts the results of our analysis and the usefulness of input data for our predictive models. The company should consider investing some resources into spotting bot activity and its sources, to exclude data from bot activity from future analysis results as well as from input data for predictive models.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
