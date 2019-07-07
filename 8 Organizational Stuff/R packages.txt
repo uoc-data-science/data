@@ -1,7 +1,0 @@
-LIST OF PACKAGES REQUIRED TO RUN OUR R SCRIPTS
-
--ggplot2
--gridExtra
--dplyr
--janitor
--diffobj

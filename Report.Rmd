@@ -56,6 +56,8 @@ compare <- function(path1, path2, column){
   kable(df, row.names = FALSE) %>%
     kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
 }
+
+use_python('/anaconda3/bin/python', required = TRUE)
 ```
 
 ```{r ref.label="sourceCode",echo=FALSE}
@@ -94,7 +96,7 @@ Before we started cleaning the data, we copied it to a separated folder. The rea
 The cleaning process consists of the following steps:
 
 1. Copy the original datasets
-```{r copyFiles, eval=F, echo=F, results = "hide"}
+```{r copyFiles, eval=T, echo=F, results = "hide"}
 # Path of original file
 pathOrders <- "orders/order_data.csv"
 # Path of original file to be pasted into the Data folder
@@ -135,7 +137,7 @@ pathClicks2 <- newPathClicks2
 
 7. Save the result
 
-```{r cleanFiles, eval=F, echo=F, results = "hide"}
+```{r cleanFiles, eval=T, echo=F, results = "hide"}
 # 2) read files, set headers and replace ? with NA
 
 # Function to get headers from header.txt
@@ -193,7 +195,7 @@ write.table(clicks, file = pathClicksClean, sep=",", row.names=FALSE)
 ```
 
 8. Save a subset of the cleaned data, containing only 1000 rows, to support a quick view into the cleaned data
-```{r smallFiles, eval=F, echo=F, results = "hide"}
+```{r smallFiles, eval=T, echo=F, results = "hide"}
 # 3) Save smaller versions for readability and dev purposes
 small_size = min(1000,nrow(orders))
 orders_small = orders[1:small_size,]
@@ -211,7 +213,7 @@ A similar cleaning process to the one explained above has been implemented in Py
 *To execute the provided code you may need to enter your Python path in a R coding block by "use_python()". If this does not work, copy the Python coding into the Python IDE of your choice, ideally under the main repository directory "./".*  
 *In addition to having the packages installed, the software "graphviz" needs to be installed. If any bugs related to graphviz prevent you from running the code, you can use the decision tree figure provided in this report as a reference.* 
 
-```{python pythonCleaning, eval=F, echo=F, results = "hide"}
+```{python pythonCleaning, eval=T, echo=F, results = "hide"}
 import shutil
 import pandas as pd
  
@@ -284,7 +286,7 @@ orders.to_csv(path_or_buf=pathOrdersClean, index=False, encoding='utf-8')
 To test if the cleaning scripts in Python and R result in the same file, we implemented a short coding to create a diff view.
 The result showed that there are no differences in the cleaned versions of the datasets created through both languages.
 
-```{r diffFiles, eval=F, echo=F}
+```{r diffFiles, eval=T, echo=F, results = "hide", message=F, warning=F}
 library(diffobj)
 pathOrders <- "0 Data/order_data_cleaned_R.csv"
 pathClicks  <- "0 Data/clickstream_data_cleaned_R.csv"
@@ -307,7 +309,7 @@ diffPrint(target=ordersP,current=orders)
 
 We tried to merge the click and order data in Python by trying different ID combinations that occur in both datasets. For testing the different combinations, we used an inner join in order to be able to recognize easier, whether a merging try had success. We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
 
-```{python pythonMergingTries, eval=F, echo=F}
+```{python pythonMergingTries, eval=T, echo=F}
 import pandas as pd
 
 pathIds = '1 Data Preprocessing/mergeIDs.csv'
@@ -324,6 +326,7 @@ for index, row in ids.iterrows():
     mergedData = pd.merge(clicks, orders, how='inner', left_on=[row['Clicks']], right_on=[row['Orders']])
     shapes.append(str(list(mergedData.shape)))
 ids['Shape'] = shapes
+ids.to_csv(path_or_buf=pathIds, index=False)
 ```
 
 ```{r MergingTries, echo=F}
@@ -332,23 +335,119 @@ knitTable('1 Data Preprocessing/mergeIDs.csv', "")
 
 In this way we were able to discover that it is possible to join the datasets on the 'Customer ID' for some instances. Thus, we saved a dataset for the merging results on the Customer ID. But the merged data does not make much sense, since a customer ID can have multiple order and click rows. Another problem is that the time periods of the dataset do not overlap in any way. Because of these issues, we decided on building a second, smaller data subset containing only the customer information columns of both original datasets. The final merged customer dataset contains 80 attributes for 97 customers. Since only such a minor ratio of data could be merged, we consider the joined dataset as rather unimportant and did not perform any further analytical steps based on it.
 
-```{python pythonMerging, eval=F, echo=F, results = "hide"}
-#Recommended Location: "./1 Data Preprocessing/Python/"
-
+```{python pythonMerging, eval=T, echo=F, results = "hide"}
 import pandas as pd
 
 # sources
 pathOrders = '0 Data/order_data_cleaned_P.csv'
 pathClicks = '0 Data/clickstream_data_cleaned_P.csv'
 
-pathClickCustomer1 = '4 Data Overview/Tables/ ClickstreamDataCustomer_Factors.csv'
-pathClickCustomer2 = '4 Data Overview/Tables/ ClickstreamDataCustomer_Numerical.csv'
-pathOrderCustomer1 = '4 Data Overview/Tables/ CustomerData_Factors.csv'
-pathOrderCustomer2 = '4 Data Overview/Tables/ CustomerData_Numerical.csv'
-
 # results
 pathMerge = "0 Data/merged_P.csv"
 pathCustomers = "0 Data/merged_Customers_P.csv"
+
+#############################################################################
+
+orderColumns = ["City",
+                        "Country",
+                        "US.State",
+                        "Age",
+                        "Marital.Status",
+                        "Gender",
+                        "Audience",
+                        "Truck.Owner",
+                        "RV.Owner",
+                        "Motorcycle.Owner",
+                        "Working.Woman",
+                        "Presence.Of.Children",
+                        "Speciality.Store.Retail",
+                        "Oil.Retail.Activity",
+                        "Bank.Retail.Activity",
+                        "Finance.Retail.Activity",
+                        "Miscellaneous.Retail.Activity",
+                        "Upscale.Retail",
+                        "Upscale.Speciality.Retail",
+                        "Retail.Activity"
+                        ]
+
+clickColumns = ["WhichDoYouWearMostFrequent",
+                        "YourFavoriteLegcareBrand",
+                        "Registration.Gender",
+                        "NumberOfChildren",
+                        "DoYouPurchaseForOthers",
+                        "HowDoYouDressForWork",
+                        "HowManyPairsDoYouPurchase",
+                        "YourFavoriteLegwearBrand",
+                        "WhoMakesPurchasesForYou",
+                        "NumberOfAdults",
+                        "HowDidYouHearAboutUs",
+                        "SendEmail",
+                        "HowOftenDoYouPurchase",
+                        "HowDidYouFindUs",
+                        "City",
+                        "US.State",
+                        "Year.of.Birth",
+                        "Email",
+                        "Truck.Owner",
+                        "RV.Owner",
+                        "Motorcycle.Owner",
+                        "Value.Of.All.Vehicles",
+                        "Age",
+                        "Other.Indiv...Age",
+                        "Marital.Status",
+                        "Working.Woman",
+                        "Mail.Responder",
+                        "Bank.Card.Holder",
+                        "Gas.Card.Holder",
+                        "Upscale.Card.Holder",
+                        "Unknown.Card.Type",
+                        "TE.Card.Holder",
+                        "Premium.Card.Holder",
+                        "Presence.Of.Children",
+                        "Number.Of.Adults",
+                        "Estimated.Income.Code",
+                        "Home.Market.Value",
+                        "New.Car.Buyer",
+                        "Vehicle.Lifestyle",
+                        "Property.Type",
+                        "Loan.To.Value.Percent",
+                        "Presence.Of.Pool",
+                        "Year.House.Was.Built",
+                        "Own.Or.Rent.Home",
+                        "Length.Of.Residence",
+                        "Mail.Order.Buyer",
+                        "Year.Home.Was.Bought",
+                        "Home.Purchase.Date",
+                        "Number.Of.Vehicles",
+                        "DMA.No.Mail.Solicitation.Flag",
+                        "DMA.No.Phone.Solicitation.Flag",
+                        "CRA.Income.Classification",
+                        "New.Bank.Card",
+                        "Number.Of.Credit.Lines",
+                        "Speciality.Store.Retail",
+                        "Oil.Retail.Activity",
+                        "Bank.Retail.Activity",
+                        "Finance.Retail.Activity",
+                        "Miscellaneous.Retail.Activity",
+                        "Upscale.Retail",
+                        "Upscale.Speciality.Retail",
+                        "Retail.Activity",
+                        "Dwelling.Size",
+                        "Dataquick.Market.Code",
+                        "Lendable.Home.Equity",
+                        "Home.Size.Range",
+                        "Lot.Size.Range",
+                        "Insurance.Expiry.Month",
+                        "Dwelling.Unit.Size",
+                        "Month.Home.Was.Bought",
+                        "Available.Home.Equity",
+                        "Minority.Census.Tract",
+                        "Year.Of.Structure",
+                        "Gender",
+                        "Occupation",
+                        "Other.Indiv...Gender",
+                        "Other.Indiv...Occupation"
+]
 
 #############################################################################
 # normal merge
@@ -367,25 +466,14 @@ mergedData.to_csv(path_or_buf=pathMerge, index=False)
 #############################################################################
 # customer data merge
 
-# read data
-clickCustomer1 = pd.read_csv(pathClickCustomer1, sep=",", dtype=str)
-clickCustomer2 = pd.read_csv(pathClickCustomer2, sep=",", dtype=str)
-orderCustomer1 = pd.read_csv(pathOrderCustomer1, sep=",", dtype=str)
-orderCustomer2 = pd.read_csv(pathOrderCustomer2, sep=",", dtype=str)
-
 # build subset on Customer Columns
-clickCustomer1 = [w.replace('.', ' ') for w in clickCustomer1['Variable']]
+clickCustomer1 = [w.replace('.', ' ') for w in clickColumns]
 clickCustomer1 = [w.replace('   ', '\. ') for w in clickCustomer1]
-clickCustomer2 = [w.replace('.', ' ') for w in clickCustomer2['Variable']]
-clickCustomer2 = [w.replace('   ', '\. ') for w in clickCustomer2]
-clickCustomer1.extend(clickCustomer2)
 clickCustomer1.append('Customer ID')
 clicks = clicks[clickCustomer1]
 clicks = clicks.drop_duplicates(subset=['Customer ID'])
 
-orderCustomer1 = [w.replace('.', ' ') for w in orderCustomer1['Variable']]
-orderCustomer2 = [w.replace('.', ' ') for w in orderCustomer2['Variable']]
-orderCustomer1.extend(orderCustomer2)
+orderCustomer1 = [w.replace('.', ' ') for w in orderColumns]
 orderCustomer1.append('Customer ID')
 orders = (orders[orderCustomer1])
 orders = orders.drop_duplicates(subset=['Customer ID'])
@@ -395,6 +483,8 @@ mergedCustomer = pd.merge(clicks, orders, how='inner', left_on=['Customer ID'], 
 mergedCustomer.drop(list(mergedCustomer.filter(regex='_y$')), axis=1, inplace=True) #delete duplicates
 print(list(mergedCustomer.shape))
 mergedCustomer.to_csv(path_or_buf=pathCustomers, index=False)
+
+
 ```
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -434,6 +524,7 @@ for (column in names(orders)){
 }
 # Sort by NA percentage ascending
 NAorders <- NAorders[with(NAorders, order(NAorders[["Order NA %"]])),]
+write.table(NAorders, file = pathNULLAnalysisOrders, sep=",", row.names=FALSE)
 # kable(head(NAorders,50), row.names = FALSE, format = 'latex')
 #-------------------------------------------------------------------------------------
 # Create a DF to save the column names and appropriate NA percentage values
@@ -689,6 +780,57 @@ numCol <- rbind(numCol, dateList)
 facCol <- summarizeFactorColumns(subset)
 write.table(facCol, file = paste(pathTableFolder,"ClickstreamTime_Factors_Short.csv"), sep=",", row.names=FALSE)
 write.table(numCol, file = paste(pathTableFolder,"ClickstreamTime_Numerical_Short.csv"), sep=",", row.names=FALSE)
+#------------------------------------------------------------------------------------
+#Density of time between first and recent click
+SeqAndTime <- clicks %>% # select sequence and time
+  select("Request.Date_Time", "Request.Sequence")
+
+SeqPos <- 0 # the position in the click sequence
+Index <- 1 # current index
+FirstVisit <- 1 # position of first click
+vector <- character(0) # empty helper vector
+clickNum <- vector()
+# search for start and and of click sequences and get the matching times
+  for (val in SeqAndTime$Request.Sequence) {
+    if(val>SeqPos) {
+      SeqPos <- val
+    }
+    if(val<SeqPos) {
+      clickNum <- c(clickNum, SeqPos)
+      vector <- c(vector, SeqAndTime[FirstVisit, "Request.Date_Time"] %>%
+                    as.character())
+      vector <- c(vector, SeqAndTime[Index-1, "Request.Date_Time"] %>%
+                    as.character())
+      FirstVisit <- Index
+      SeqPos <- 1
+    }
+    if(val == SeqPos) {
+      clickNum <- c(clickNum, SeqPos)
+    }
+    Index <- Index+1
+  }
+
+vector <- chron(times=vector) # convert the times into chron objects
+diffV <- diff(vector) %>%
+  as.data.frame # compute the difference between sequential times
+diffV <- diffV[seq(1, nrow(diffV), 2), 1] %>%
+  as.data.frame # only select every second entry
+diffV$hours <- hours(diffV$.) # add columns for hours, minutes and seconds
+diffV$minutes <- minutes(diffV$.)
+diffV$seconds <- seconds(diffV$.)
+diffV$totalMinutes <- diffV$hours*60 + #calculate the total minutes
+  diffV$minutes +
+  diffV$seconds/60
+calc <- data.frame("Session Duration" = diffV$totalMinutes)
+clickNum <- data.frame("Click Number" = clickNum)
+diffV <- subset(diffV, totalMinutes<40) # only select rows with less than 40 mins
+                                        # for visual reasons
+
+#print calc columns
+calcCol <- summarizeNumericalColumns(calc)
+calcCol2 <- summarizeNumericalColumns(clickNum)
+calcCol <- rbind(calcCol, calcCol2)
+write.table(calcCol, file = paste(pathTableFolder,"ClickstreamData_Calc.csv"), sep=",", row.names=FALSE)
 ```
 
 ### Order Data 
@@ -855,7 +997,7 @@ compare("4 Data Overview/Tables/ ProductData_Factors.csv", "4 Data Overview/Tabl
 
 Some information is too complex to be compressed into a single table without making it too confusing, or it's simply easier to understand if presented as a plot. The plot types used are time series plots, stacked bar plots, distribution curves, lorenz curves and maps.
 
-```{r Plotting, echo=FALSE, eval=FALSE, results="hide", message=F, warning=F}
+```{r Plotting, echo=FALSE, eval=T, results="hide", message=F, warning=F}
 # target path
 pathPlotFolder <- "./4 Data Overview/Plots/"
 
@@ -865,7 +1007,7 @@ usStates <- read.csv(file="2 Data Analysis/states.csv")
 
 ### Order Data 
 
-```{r OrderPlots, echo=FALSE, eval=FALSE, results="hide", message=F, warning=F}
+```{r OrderPlots, echo=FALSE, eval=T, results="hide", message=F, warning=F, fig.show = 'hide'} 
 # Distribution of order amount, unit price, order quantity
 p1 <- ggplot(orders, aes(x=Order.Line.Amount)) + 
       geom_density() +
@@ -1241,7 +1383,7 @@ knitr::include_graphics(rep('./4 Data Overview/Plots/Order Data Plots/Order Pric
 
 ### Clickstream Data
 
-```{r ClicksPlots, echo=FALSE, eval=FALSE, results="hide", message=F, warning=F}
+```{r ClicksPlots, echo=FALSE, eval=T, results="hide", message=F, warning=F, fig.show = 'hide'}
 #Lorenz Curve Brands
 beautify(plotLorenzCurve(clicks, "BrandName") +
         ggtitle("Clicks: Lorenz Curve Brands")) +
@@ -1267,53 +1409,6 @@ beautify(ggplot(clicks, aes(x=REQUEST_HOUR_OF_DAY)) +
   ggtitle("Clicks: Density of Clicks over Hour of Day")
 ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/ClickTime.png",sep=""), width=10)
 #-----------------------------------------------------------------------------------
-#Density of time between first and recent click
-SeqAndTime <- clicks %>% # select sequence and time
-  select("Request.Date_Time", "Request.Sequence")
-
-SeqPos <- 0 # the position in the click sequence
-Index <- 1 # current index
-FirstVisit <- 1 # position of first click
-vector <- character(0) # empty helper vector
-clickNum <- vector()
-# search for start and and of click sequences and get the matching times
-  for (val in SeqAndTime$Request.Sequence) {
-    if(val>SeqPos) {
-      SeqPos <- val
-    }
-    if(val<SeqPos) {
-      clickNum <- c(clickNum, SeqPos)
-      vector <- c(vector, SeqAndTime[FirstVisit, "Request.Date_Time"] %>%
-                    as.character())
-      vector <- c(vector, SeqAndTime[Index-1, "Request.Date_Time"] %>%
-                    as.character())
-      FirstVisit <- Index
-      SeqPos <- 1
-    }
-    if(val == SeqPos) {
-      clickNum <- c(clickNum, SeqPos)
-    }
-    Index <- Index+1
-  }
-
-vector <- chron(times=vector) # convert the times into chron objects
-diffV <- diff(vector) %>%
-  as.data.frame # compute the difference between sequential times
-diffV <- diffV[seq(1, nrow(diffV), 2), 1] %>%
-  as.data.frame # only select every second entry
-diffV$hours <- hours(diffV$.) # add columns for hours, minutes and seconds
-diffV$minutes <- minutes(diffV$.)
-diffV$seconds <- seconds(diffV$.)
-diffV$totalMinutes <- diffV$hours*60 + #calculate the total minutes
-  diffV$minutes +
-  diffV$seconds/60
-calc <- data.frame("Session Duration" = diffV$totalMinutes)
-clickNum <- data.frame("Click Number" = clickNum)
-diffV <- subset(diffV, totalMinutes<40) # only select rows with less than 40 mins
-                                        # for visual reasons
-print(diffV)
-
-
 # plot the data
 beautify(ggplot(diffV, aes(totalMinutes)) +
   geom_density() +
@@ -1323,8 +1418,9 @@ ggsave(filename=paste(pathPlotFolder,"Clickstream Data Plots/SessionDuration.png
 #History of Clicks
 hourGroup <- clicks %>%
   select(Request.Date, REQUEST_HOUR_OF_DAY) %>%
-  group_by(Request.Date, REQUEST_HOUR_OF_DAY) %>%
-  summarize(count = n())
+  group_by(Request.Date, REQUEST_HOUR_OF_DAY)
+hourGroup <- dplyr::summarize(hourGroup, count = n())
+  
 
 hourGroup$datetime <- paste0(hourGroup$REQUEST_HOUR_OF_DAY, ":00:00")
 hourGroup$datetime <- paste(hourGroup$Request.Date, hourGroup$datetime)
@@ -1668,15 +1764,14 @@ First of all, the relevant data had to be extracted or engineered from the click
 * The day of week at the beginning of a session
 * Whether the session contains an order (extracted by the URL "checkout/thankyou")
 
-```{python prepareModelInputData, eval=F, echo=F, results = "hide"}
-#Recommended Location: "./3 Data Modelling/Python/"
-
+```{python prepareModelInputData, eval=T, echo=F, results = "hide"}
 import pandas as pd
 import datetime
 import numpy as np
 
 pathClicks = '0 Data/clickstream_data_cleaned_P.csv'
 pathResult = "3 Data Modelling/prediction_input_data.csv"
+pathStepResult = "3 Data Modelling/prediction_data.csv"
 
 #############################################################################
 
@@ -1708,7 +1803,7 @@ for index, row in clicksOrig.iterrows():
     dt = row['Request Date'] + ' ' + row['Request Date_Time']
     maxTime = datetime.datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
 
-df.to_csv("../prediction_data.csv", index=False)
+df.to_csv(pathStepResult, index=False)
 
 # one hot encode where needed
 df['REQUEST_HOUR_OF_DAY'] = df['REQUEST_HOUR_OF_DAY'].apply(lambda x: "{}{}".format('Hour_', x))
@@ -2195,7 +2290,7 @@ subset <- subset(selectUniqueCustomer, select=clicksCustomerInfo)
 facCol <- summarizeFactorColumns(subset)
 numCol <- summarizeNumericalColumns(subset)
 write.table(facCol, file = paste(pathTableFolder,"ClickstreamCustomer_Factors_Long.csv"), sep=",", row.names=FALSE)
-write.table(numCol, file = paste(pathTableFolder,"ClickstreamCustomer_Numerical_Long.csv"), sep=",", row.names=FALSE)
+write.table(numCol, file = paste(pathTableFolder," ClickstreamCustomer_Numerical_Long.csv"), sep=",", row.names=FALSE)
 
 knitTable("4 Data Overview/Tables/ ClickstreamCustomer_Factors_Long.csv", "Variable")
 knitTable("4 Data Overview/Tables/ ClickstreamCustomer_Numerical_Long.csv", "Variable")
@@ -2256,7 +2351,7 @@ knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Numerical_Long.csv", 
 <!--------------------------------------------------------------------------------------------------------- -->
 
 <!-- plotting functions -->
-```{r sourceCode,echo=FALSE,eval=FALSE}
+```{r sourceCode,echo=FALSE,eval=T}
 library(gridExtra)
 library(dplyr)
 library(janitor)
