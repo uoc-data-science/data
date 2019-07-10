@@ -1,6 +1,6 @@
 ---
 title: "Group 1 Report"
-author: "Julian Cornea, Kim Ferres, Jan Löffelmann"
+author: "Julian Cornea (5979846), Kim Ferres (7353427), Jan Löffelmann (5786673)"
 date: "06-07-2019"
 output:
   bookdown::html_document2:
@@ -67,9 +67,9 @@ use_python('/anaconda3/bin/python', required = TRUE)
 # Introduction
 
 The field of data science deals with the extraction of knowledge from data. From this target a sophisticated set of interdisciplinary tasks arises, which demand different skills in the area of data exploration.  
-The activities described in this report are intended to illustrate the exemplary implementation of such data science tasks by programming based on a simulated business project. For this purpose, data from an online shop was provided. During the course of the project the import, cleaning and manipulation of data was implemented. Also, the topics exploratory analysis, visualization, experiment analysis and machine learning (construction of a model) were covered and their results are described in the following sections of this report. The realization of all these tasks was either done in the programming languages R or Python. The first step data cleaning was even implemented in both languages.
+The activities described in this report are intended to illustrate the exemplary implementation of such data science tasks by programming based on a simulated business project. For this purpose, data from an online shop was provided. During the course of the project the import, cleaning and manipulation of data was implemented. Also, the topics exploratory analysis, visualization, experiment analysis and machine learning (construction of a model) were covered and their results are described in the following sections of this report. The realization of all these tasks was either done in the programming languages R or Python. The first step, data cleaning, was even implemented in both languages.
 
-The project's main task is to analyse the given datasets, especially by creating appropriate [visualizations](#plots) and [summary tables](#sumTabs) for the data, that is suspected to be relevant for the online shop in some way. In addition to this, an [experiment analysis](#recomm) has to be executed, which calculates and presents the performance strength of different recommendation systems. Furthermore, a data [model](#model) should be constructed in order to predict whether an user of the online shop will order something. This prediction should be based on the browsing behavior of a person on the website.
+The project's main task is to analyse the given datasets, especially by creating appropriate [visualizations](#plots) and [summary tables](#sumTabs) for the data, that is suspected to be relevant for the online shop in some way. In addition to this, an [experiment analysis](#recomm) has to be executed, which calculates and presents the performance strength of different recommendation systems. Furthermore, a data [model](#model) should be constructed in order to predict whether a user of the online shop will order something. This prediction should be based on the browsing behaviour of a person on the website.
 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
@@ -307,7 +307,7 @@ diffPrint(target=ordersP,current=orders)
 
 *Note: As we explain in this subchapter, the merged data is too small to be beneficial for any useful purpose. This is why we did not implement the merging in R after coding it in Python.*
 
-We attempted to merge the click and order data in Python by trying different ID combinations that occur in both datasets. For testing the different combinations, we used an inner join in order to be able to recognize easier whether a merging try had success. We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
+We attempted to merge the click and order data in Python by trying different ID combinations that occur in both datasets. For testing the different combinations we used an inner join in order to be able to recognize easier whether a merging try had success. We tried the following combinations for merging the two datasets, which resulted in the shown shapes for the merged dataset:
 
 ```{python pythonMergingTries, eval=T, echo=F}
 import pandas as pd
@@ -653,7 +653,7 @@ for (title in interestingOrders) {
 
 The clickstream data has three main categories: Customer data, product data and time data. The clickstream dataset contains payment methods as well, but the information coming from these attributes is regarded as not important in this observation, since the payment data is only available for customers that actually ordered. For analysis purposes only the most important or interesting attributes are discussed in detail. For the full range of columns see the [Appendix](#fullClickstreamTables).
 
-1) **Customer Data**: The data contains a vast collection of information about customers, reaching from usual information like age, gender, etc. over financial activities to opinions about the shop. As stated above only a selected list is displayed for analysis purposes.
+1) **Customer Data**: The data contains a vast collection of information about customers, reaching from usual information like age, gender, etc. over financial activities to opinions about the shop. As stated above, only a selected list is displayed for analysis purposes.
 ```{r clicksCustomers, echo=FALSE, results = 'asis'}
 clicksCustomerInfo <- c("City",
                         "US.State",
@@ -926,7 +926,7 @@ knitTable("4 Data Overview/Tables/ ClickstreamDataProducts_Factors_Short.csv", "
 
 #### Time Data
 
-At Saturday the shop can register its highest visitor rates, which seems reasonable, since during weekends people usually have the most time for online shopping. On the 27. April, a Thursday in the year 2000, the shop had the most viewers for the given time period. As there was no big holiday coming up, this high activity may be due to weather circumstances, which have normally a high influence in online shopping behavior.  
+At Saturday the shop can register its highest visitor rates, which seems reasonable, since during weekends people usually have the most time for online shopping. On the 27. April, a Thursday in the year 2000, the shop had the most viewers for the given time period. As there was no big holiday coming up, this high activity may be due to weather circumstances, which normally havea high influence in online shopping behavior.  
 ```{r ClicksTimeFac, echo=FALSE}
 knitTable("4 Data Overview/Tables/ ClickstreamTime_Factors_Short.csv", "Variable") %>%
   column_spec(2, bold = T, color = "white", background = "#000000")
@@ -963,7 +963,7 @@ compare("4 Data Overview/Tables/ CustomerData_Numerical.csv", "4 Data Overview/T
 compare("4 Data Overview/Tables/ CustomerData_Factors.csv", "4 Data Overview/Tables/ ClickstreamDataCustomer_Factors_Short.csv", "City")
 ```
 
-**Audience:** The confrontation of the audience for both datasets displays that more women and children products get viewed than bought, whereas the opposite can be said for men products. Since it can be assumed that it is usually women that look for children products, this observation shows that male users are the more goal-oriented buyers. This could be interesting for example for discount offerings, because an indecisive potential customer is more likely to be affected by such offers than a determined one. 
+**Audience:** The confrontation of the audience for both datasets displays that more women and children products get viewed than bought, whereas the opposite can be said for men products. Since it can be assumed that it is usually women that look for children products, this observation shows that male users are the more goal-oriented buyers. For example, this could be interesting for discount offerings, because an indecisive potential customer is more likely to be affected by such offers than a determined one. 
 ```{r CustomerAudienceCompare, echo=FALSE}
 compare("4 Data Overview/Tables/ CustomerData_Factors.csv", "4 Data Overview/Tables/ ClickstreamDataCustomer_Factors_Short.csv", "Audience")
 ```
@@ -2160,7 +2160,7 @@ In this case it looks like the model simply trades a lower ratio of false negati
 
 ![Random forest - Confusion Matrix](./3 Data Modelling/cm_forest.png)
 
-## Conclusion {#modelConclusion}
+## Implications {#modelImplications}
 
 First of all, it should be evaluated which correct and false predictions are important. For example, the company might want to offer discounts to potential customers, who would normally not order something during their session. In that case the ratio of false negatives should be kept down as the company does not want to offer discounts to too many people, who would order a product anyway.  
 After this evaluation a fitting performance measurement metric can be chosen. Depending on the metric the performance ranking of different models can change. In addition to that, the ratio of positive and negative instances used to train the model should be adjusted, as it was described in this chapter.  
@@ -2170,7 +2170,7 @@ In addition, it should be considered whether a continuous training of the model 
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 <!-- ---------------------------------------------------------------------------------------------------------------------------------- -->
 
-# Summary {#summary}
+# Conclusion {#conclusion}
 
 Finally, we would like to summarize our most important findings and point out some recommendations for the shop.
 
