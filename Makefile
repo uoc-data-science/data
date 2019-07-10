@@ -38,3 +38,5 @@ inflate: clean
 clean:
 	bash src/data/script_00_clean.sh
 
+install_deps:
+	Rscript src/misc/install-dependent-packages.r

@@ -1,6 +1,6 @@
 ---
 title: "Descriptive Statistics for Products"
-output: pdf_document
+output: html_document
 ---
 ## Load the data!
 ```{r include=FALSE}
