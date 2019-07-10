@@ -20,7 +20,7 @@ partialOrdersDf <- orderDf[c("Order_Session_ID", "Order_Line_Session_ID",
 # force certain variables to be categorical:
 partialOrdersDf$Order_Session_ID <- factor(partialOrdersDf$Order_Session_ID)
 partialOrdersDf$Product_Object_ID <- factor(partialOrdersDf$Product_Object_ID)
-Order_Line_Session_ID <- factor(Order_Line_Session_ID)
+#Order_Line_Session_ID <- factor(Order_Line_Session_ID)
 summary(partialOrdersDf)
 
 

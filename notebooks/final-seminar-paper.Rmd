@@ -1,0 +1,115 @@
+---
+title: "Data analysis: ebuy's sales data"
+bibliography: "bibliographies/literature.bib"
+output:
+  bookdown::html_document2:
+    toc: yes
+    theme: spacelab
+---
+
+# Data Manipulation
+```{r includse01, message=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+```
+
+# Summary Statistics
+
+# Plots
+
+# Comparison of Groups
+After loading the "experimental_results" dataset we decided to keep the first ID column.
+```{r loadexpdata, message=FALSE}
+experimentDf <- read.csv(file="../experiment/experimental_results.csv", sep=",", na.strings=c("NA"))
+partialExperimentDf <- experimentDf[c("id_",
+                                      "ranking_based",
+                                      "random_recommendations",
+                                      "profit_oriented")]
+
+names(partialExperimentDf)[1] <- "id"
+partialExperimentDf$id <- as.factor(partialExperimentDf$id)
+summary(partialExperimentDf)
+```
+
+We then compared the results of both the ranking-based as well as the profit-oriented recommender systems against the results of the baseline recommender system (that selects products randomly).
+```{r}
+t.test(partialExperimentDf$random_recommendations, partialExperimentDf$ranking_based)
+t.test(partialExperimentDf$random_recommendations, partialExperimentDf$profit_oriented)
+```
+The mean values (i.e. sales) of the profit-oriented recommender system and the baseline recommender system are not equal (p<0.00001), while the same hypothesis could not be rejected for the comparison of the ranking-based and the baseline recommender system (p=0.08). As the profit-oriented recommender systems mean value (21.75) is greater than the baseline mean (17.91), ebuy should preferably use the profit-oriented one.
+
+
+# Models and Prediction
+To train our models and make predictions we have to load additional libraries:
+```{r includse02, message=FALSE}
+library(caret)
+library(tidyverse)
+library(rpart)
+library(rpart.plot)
+```
+
+## Load Data and Recode Variables
+We first load the data and pick the columns that we are interested in:
+```{r}
+orderDf <- read.csv(file="../data/interim/orders/orders_cleaned.csv", sep=",", na.strings=c("?","NA", "NULL"))
+partialOrdersDf <- orderDf[c("Product_Family_ID",
+                             "Order_Line_Day_of_Week",
+                             "Order_Line_Hour_of_Day",
+                             "Order_Line_Amount",
+                             "Product_ID",
+                             "Gender",
+                             "US_State",
+                             "Age")]
+```
+
+Some of the variables have to be forced to be categorical:
+```{r}
+partialOrdersDf$Product_Family_ID <- as.factor(partialOrdersDf$Product_Family_ID)
+partialOrdersDf$Order_Line_Day_of_Week <- as.factor(partialOrdersDf$Order_Line_Day_of_Week)
+partialOrdersDf$Order_Line_Hour_of_Day <- as.factor(partialOrdersDf$Order_Line_Hour_of_Day)
+partialOrdersDf$Gender <- as.factor(partialOrdersDf$Gender)
+partialOrdersDf$US_State <- as.factor(partialOrdersDf$US_State)
+partialOrdersDf$Age <- as.numeric(partialOrdersDf$Age)
+summary(partialOrdersDf)
+```
+
+## Training the Model
+As ebuy's products fall into certain product families, we trained a model that allows to predict for a new customer from which product family he will purchase a product. We first grew a large tree with a complexity parameter of cp=0.0001 (i.e. splits had to decrease the lack of fit by a factor of 0.00001):
+```{r}
+tree <- rpart(Product_Family_ID ~ Order_Line_Day_of_Week + Gender + Age,
+              method="class",
+              data=partialOrdersDf,
+              cp=0.00001)
+```
+
+We then examined the results of a 10-fold cross-validation by plotting the complexity parameter vs. its cross-validated error (as shown in figure \@ref(fig:cpplottree1)).
+```{r cpplottree1, echo=FALSE, fig.cap="Product Family ID: Complexity parameter vs. cross-validated error"}
+plotcp(tree)
+```
+
+To prevent over-fitting, @kabacoff2015 suggests to choose the leftmost cp value below the dotted line (here: cp=0.001): a tree of that size (here: 41 splits) is the smallest tree whose cross-validated error is whithin one standard error of the minimum cross-validated error value. We therfore pruned the tree to its new size and pretty-printed the resulting tree (figure \@ref(fig:prunedtree1)).
+```{r prunedtree1, echo=FALSE, fig.cap="Product Family ID: Pruned Classification Tree"}
+prune(tree, cp=0.001) %>%
+  prp(.)
+```
+
+Next we computed a linear regression model that helped us understand, how the different properties of customers affected the amount of money they would spend in total.
+```{r}
+# enable cross validation and set the number of folds:
+ctrl <- trainControl(method = "cv",
+                     number = 10)
+
+# preform a linear regression:
+linreg1 <- train(Order_Line_Amount ~ Age + Gender,
+                 data = partialOrdersDf,
+                 trControl = ctrl,
+                 na.action  = na.pass,
+                 method = "lm")
+linreg1
+linreg1$finalModel
+```
+
+# Summary
+
+# Literature
