@@ -57,7 +57,7 @@ compare <- function(path1, path2, column){
     kable_styling(bootstrap_options = c("striped", "hover", "bordered"))
 }
 
-use_python('/anaconda3/bin/python', required = TRUE)
+#use_python('/anaconda3/bin/python', required = TRUE)
 ```
 
 ```{r ref.label="sourceCode",echo=FALSE}
