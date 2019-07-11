@@ -9,7 +9,7 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="Philipp Peter, Laurenz Harnischmacher, Nico Lindert" />
+<meta name="author" content="Group number 5: 7308029 Philipp Peter, 7357790 Laurenz Harnischmacher, 7309584 Nico Lindert" />
 
 
 <title>Programming Data Science Report</title>
@@ -1542,47 +1542,37 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Programming Data Science Report</h1>
-<h4 class="author">Philipp Peter, Laurenz Harnischmacher, Nico Lindert</h4>
+<h4 class="author">Group number 5: 7308029 Philipp Peter, 7357790 Laurenz Harnischmacher, 7309584 Nico Lindert</h4>
 <h4 class="date">24 Mai 2019</h4>
 
 </div>
 
 
-<pre class="r"><code>#set knitr root
+<pre><code>## -- Attaching packages --------------------------------------------------------------------------- tidyverse 1.2.1 --</code></pre>
+<pre><code>## v ggplot2 3.1.1     v purrr   0.3.2
+## v tibble  2.1.1     v dplyr   0.8.1
+## v tidyr   0.8.3     v stringr 1.4.0
+## v readr   1.3.1     v forcats 0.4.0</code></pre>
+<pre><code>## -- Conflicts ------------------------------------------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code># define data paths
 require(&quot;knitr&quot;)
 
-# Set root directory
-#knitr::opts_knit$set(root.dir = &quot;C:/Github/data&quot;)
-#lh_root
-knitr::opts_knit$set(root.dir = &quot;C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data&quot;)</code></pre>
-<pre class="r"><code># move dataset to raw_data
+
 rootDir &lt;- knitr::opts_knit$get(&quot;root.dir&quot;)
-origin_clickstream &lt;- paste(rootDir, &quot;clickstream&quot;, sep=&quot;/&quot;)
-origin_experiment &lt;- paste(rootDir,&quot;experiment&quot;, sep=&quot;/&quot;)
-origin_orders &lt;- paste(rootDir,&quot;orders&quot;, sep=&quot;/&quot;)
+headersPath &lt;- paste(rootDir, &quot;01_data_understanding/order_columns.txt&quot;, sep=&quot;/&quot;)
+headersPath2 &lt;- paste(rootDir, &quot;01_data_understanding/clickstream_columns.txt&quot;, sep=&quot;/&quot;)
+dataPath &lt;- paste(rootDir, &quot;00_raw_data/order_data.csv&quot;, sep=&quot;/&quot;)
+dataPath2 &lt;- paste(rootDir, &quot;00_raw_data/clickstream_data.csv&quot;, sep=&quot;/&quot;)
+dataPath3 &lt;- paste(rootDir, &quot;00_raw_data/clickstream_data_part_2.csv&quot;, sep=&quot;/&quot;)
 
-des_root &lt;- paste(rootDir, &quot;00_raw_data&quot;, sep=&quot;/&quot;)
-des_under &lt;- paste(rootDir, &quot;01_data_understanding&quot;, sep=&quot;/&quot;)
-
-# move datasets
-# clickstream1
-unzip(paste(origin_clickstream,&quot;clickstream_data.zip&quot;,sep=&quot;/&quot;),files= &quot;clickstream_data.csv&quot;,list = FALSE, exdir = des_root)
-# clickstream2
-file.copy(paste(origin_clickstream,&quot;clickstream_data_part_2.csv&quot;,sep=&quot;/&quot;),des_root)</code></pre>
-<pre><code>## [1] FALSE</code></pre>
-<pre class="r"><code># experiment 
-file.copy(paste(origin_experiment,&quot;experimental_results.csv&quot;, sep = &quot;/&quot;),des_root)</code></pre>
-<pre><code>## [1] FALSE</code></pre>
-<pre class="r"><code>#order
-file.copy(paste(origin_orders,&quot;order_data.csv&quot;,sep = &quot;/&quot;),des_root)</code></pre>
-<pre><code>## [1] FALSE</code></pre>
-<pre class="r"><code>#move .txts
-#clickstream_columns.txt
-file.copy(paste(origin_clickstream,&quot;clickstream_columns.txt&quot;, sep = &quot;/&quot;),des_under)</code></pre>
-<pre><code>## [1] FALSE</code></pre>
-<pre class="r"><code>#order_columns.txt
-file.copy(paste(origin_orders,&quot;order_columns.txt&quot;,sep = &quot;/&quot;),des_under)</code></pre>
-<pre><code>## [1] FALSE</code></pre>
+knitr::opts_chunk$set(echo = TRUE)</code></pre>
 <div id="introduction" class="section level1">
 <h1><span class="header-section-number">1</span> Introduction</h1>
 <p>This course simulated a data science project. Within this course, a webshop’s dataset from 2000 will be imported, cleaned, analyzed and evaluated. <br>
@@ -1602,6 +1592,160 @@ The process is separated into the following steps:<br></p>
 <div id="data-import" class="section level2">
 <h2><span class="header-section-number">1.2</span> Data Import</h2>
 <p>At first, the csv-files containting data will be imported.</p>
+<pre class="r"><code># prepare column name list
+headersFile = file(headersPath, &quot;r&quot;)
+headersFile2 = file(headersPath2, &quot;r&quot;)
+#headerNames &lt;- list()
+#http://r.789695.n4.nabble.com/How-to-read-plain-text-documents-into-a-vector-td901794.html
+obj_list &lt;- readLines(headersFile)
+obj_list2 &lt;- readLines(headersFile2)
+
+#To convert to a vector, do the following:
+result &lt;- stri_extract_first(obj_list, regex=&quot;[A-z ,]+&quot;)
+result2 &lt;- stri_extract_first(obj_list2, regex=&quot;[A-z ,]+&quot;)
+dtype &lt;- stri_extract_last(obj_list, regex=&quot;[A-z ,]+&quot;)
+result &lt;- gsub(&quot; &quot;, &quot;_&quot;, result)
+result2 &lt;- gsub(&quot; &quot;, &quot;_&quot;, result2)
+
+order_df &lt;- read_csv(dataPath, col_names = result, na=c(&quot;&quot;, &quot;?&quot;, &quot;NULL&quot;, &quot;NA&quot;, &quot;Nan&quot;), guess_max = 3400)</code></pre>
+<pre><code>## Warning: Duplicated column names deduplicated: &#39;Other_Indiv\\&#39; =&gt;
+## &#39;Other_Indiv\\_1&#39; [103], &#39;Other_Indiv\\&#39; =&gt; &#39;Other_Indiv\\_2&#39; [104], &#39;Cat&#39;
+## =&gt; &#39;Cat_1&#39; [153], &#39;Socktype&#39; =&gt; &#39;Socktype_1&#39; [161], &#39;Cat&#39; =&gt; &#39;Cat_2&#39; [176],
+## &#39;Category&#39; =&gt; &#39;Category_1&#39; [183], &#39;Cat&#39; =&gt; &#39;Cat_3&#39; [186], &#39;Product_Level_&#39;
+## =&gt; &#39;Product_Level__1&#39; [201], &#39;Product_Level_&#39; =&gt; &#39;Product_Level__2&#39; [202],
+## &#39;Assortment_Level_&#39; =&gt; &#39;Assortment_Level__1&#39; [215], &#39;Promotion_Level_&#39; =&gt;
+## &#39;Promotion_Level__1&#39; [231]</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_character(),
+##   Order_Line_Session_ID = col_double(),
+##   Order_Line_Date = col_date(format = &quot;&quot;),
+##   Order_Line_Unit_List_Price = col_double(),
+##   Order_Line_Assortment_ID = col_double(),
+##   Order_Line_Subassortment_ID = col_double(),
+##   Order_Line_ID = col_double(),
+##   Order_Line_Quantity = col_double(),
+##   Order_Line_Unit_Sale_Price = col_double(),
+##   Order_Line_Tax_Amount = col_double(),
+##   Order_Line_Amount = col_double(),
+##   Order_Line_Hour_of_Day = col_double(),
+##   DoYouPurchaseForOthers = col_logical(),
+##   SendEmail = col_logical(),
+##   Account_Creation_Date = col_date(format = &quot;&quot;),
+##   Year_of_Birth = col_double(),
+##   Login_Failure_Count = col_double(),
+##   Customer_ID = col_double(),
+##   Acxiom_ID = col_double(),
+##   Truck_Owner = col_logical(),
+##   RV_Owner = col_logical()
+##   # ... with 95 more columns
+## )</code></pre>
+<pre><code>## See spec(...) for full column specifications.</code></pre>
+<pre class="r"><code># NL: Schafft Laptop nicht 
+click_df &lt;- read_csv(dataPath2, col_names = result2, na=c(&quot;&quot;, &quot;?&quot;, &quot;NULL&quot;, &quot;NA&quot;, &quot;Nan&quot;), guess_max = 3400)</code></pre>
+<pre><code>## Warning: Duplicated column names deduplicated: &#39;Other_Indiv\\&#39; =&gt;
+## &#39;Other_Indiv\\_1&#39; [98], &#39;Other_Indiv\\&#39; =&gt; &#39;Other_Indiv\\_2&#39; [99], &#39;Cat&#39;
+## =&gt; &#39;Cat_1&#39; [136], &#39;Socktype&#39; =&gt; &#39;Socktype_1&#39; [144], &#39;Cat&#39; =&gt; &#39;Cat_2&#39; [159],
+## &#39;Category&#39; =&gt; &#39;Category_1&#39; [166], &#39;Cat&#39; =&gt; &#39;Cat_3&#39; [169], &#39;Product_Level_&#39;
+## =&gt; &#39;Product_Level__1&#39; [186], &#39;Product_Level_&#39; =&gt; &#39;Product_Level__2&#39; [187],
+## &#39;Assortment_Level_&#39; =&gt; &#39;Assortment_Level__1&#39; [198],
+## &#39;Assortment_Level_&#39; =&gt; &#39;Assortment_Level__2&#39; [199],
+## &#39;Assortment_Level_&#39; =&gt; &#39;Assortment_Level__3&#39; [200], &#39;Assortment_Level_&#39;
+## =&gt; &#39;Assortment_Level__4&#39; [201], &#39;Assortment_Level_&#39; =&gt;
+## &#39;Assortment_Level__5&#39; [202], &#39;Content_Level_&#39; =&gt; &#39;Content_Level__1&#39; [212],
+## &#39;Content_Level_&#39; =&gt; &#39;Content_Level__2&#39; [213]</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_logical(),
+##   Request_Processing_Time = col_double(),
+##   Request_Query_String = col_character(),
+##   Request_Referrer = col_character(),
+##   Request_Date = col_date(format = &quot;&quot;),
+##   Request_Date_Time = col_character(),
+##   Request_Assortment_ID = col_double(),
+##   Request_Subassortment_ID = col_double(),
+##   Request_Sequence = col_double(),
+##   Request_Template = col_character(),
+##   REQUEST_DAY_OF_WEEK = col_character(),
+##   REQUEST_HOUR_OF_DAY = col_double(),
+##   Cookie_First_Visit_Date = col_date(format = &quot;&quot;),
+##   Cookie_First_Visit_Date_Time = col_character(),
+##   Session_First_Request_Date = col_date(format = &quot;&quot;),
+##   Session_First_Request_Date_Time = col_character(),
+##   Session_Cookie_ID = col_double(),
+##   Session_ID = col_double(),
+##   Session_User_Agent = col_character(),
+##   Session_Visit_Count = col_double(),
+##   Session_First_Processing_Time = col_double()
+##   # ... with 98 more columns
+## )
+## See spec(...) for full column specifications.</code></pre>
+<pre><code>## Warning: 30 parsing failures.
+##   row              col           expected actual                                                                                        file
+##  9301 ExplodedProdKits 1/0/T/F/TRUE/FALSE     IS &#39;C:\Users\Laure\Documents\git_Repositories\phyk_data/00_raw_data/clickstream_data.csv&#39;
+## 24940 ExplodedProdKits 1/0/T/F/TRUE/FALSE     IS &#39;C:\Users\Laure\Documents\git_Repositories\phyk_data/00_raw_data/clickstream_data.csv&#39;
+## 25404 ExplodedProdKits 1/0/T/F/TRUE/FALSE     IS &#39;C:\Users\Laure\Documents\git_Repositories\phyk_data/00_raw_data/clickstream_data.csv&#39;
+## 35574 ExplodedProdKits 1/0/T/F/TRUE/FALSE     IS &#39;C:\Users\Laure\Documents\git_Repositories\phyk_data/00_raw_data/clickstream_data.csv&#39;
+## 35577 ExplodedProdKits 1/0/T/F/TRUE/FALSE     IS &#39;C:\Users\Laure\Documents\git_Repositories\phyk_data/00_raw_data/clickstream_data.csv&#39;
+## ..... ................ .................. ...... ...........................................................................................
+## See problems(...) for more details.</code></pre>
+<pre class="r"><code>click_df2 &lt;- read_csv(dataPath3, col_names = result2, na=c(&quot;&quot;, &quot;?&quot;, &quot;NULL&quot;, &quot;NA&quot;, &quot;Nan&quot;), guess_max = 3400)</code></pre>
+<pre><code>## Warning: Duplicated column names deduplicated: &#39;Other_Indiv\\&#39; =&gt;
+## &#39;Other_Indiv\\_1&#39; [98], &#39;Other_Indiv\\&#39; =&gt; &#39;Other_Indiv\\_2&#39; [99], &#39;Cat&#39;
+## =&gt; &#39;Cat_1&#39; [136], &#39;Socktype&#39; =&gt; &#39;Socktype_1&#39; [144], &#39;Cat&#39; =&gt; &#39;Cat_2&#39; [159],
+## &#39;Category&#39; =&gt; &#39;Category_1&#39; [166], &#39;Cat&#39; =&gt; &#39;Cat_3&#39; [169], &#39;Product_Level_&#39;
+## =&gt; &#39;Product_Level__1&#39; [186], &#39;Product_Level_&#39; =&gt; &#39;Product_Level__2&#39; [187],
+## &#39;Assortment_Level_&#39; =&gt; &#39;Assortment_Level__1&#39; [198],
+## &#39;Assortment_Level_&#39; =&gt; &#39;Assortment_Level__2&#39; [199],
+## &#39;Assortment_Level_&#39; =&gt; &#39;Assortment_Level__3&#39; [200], &#39;Assortment_Level_&#39;
+## =&gt; &#39;Assortment_Level__4&#39; [201], &#39;Assortment_Level_&#39; =&gt;
+## &#39;Assortment_Level__5&#39; [202], &#39;Content_Level_&#39; =&gt; &#39;Content_Level__1&#39; [212],
+## &#39;Content_Level_&#39; =&gt; &#39;Content_Level__2&#39; [213]</code></pre>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_logical(),
+##   Request_Processing_Time = col_double(),
+##   Request_Query_String = col_character(),
+##   Request_Referrer = col_character(),
+##   Request_Date = col_date(format = &quot;&quot;),
+##   Request_Date_Time = col_character(),
+##   Request_Assortment_ID = col_double(),
+##   Request_Subassortment_ID = col_double(),
+##   Request_Sequence = col_double(),
+##   Request_Template = col_character(),
+##   REQUEST_DAY_OF_WEEK = col_character(),
+##   REQUEST_HOUR_OF_DAY = col_double(),
+##   Cookie_First_Visit_Date = col_date(format = &quot;&quot;),
+##   Cookie_First_Visit_Date_Time = col_character(),
+##   Session_First_Request_Date = col_date(format = &quot;&quot;),
+##   Session_First_Request_Date_Time = col_character(),
+##   Session_Cookie_ID = col_double(),
+##   Session_ID = col_double(),
+##   Session_User_Agent = col_character(),
+##   Session_Visit_Count = col_double(),
+##   Session_First_Processing_Time = col_double()
+##   # ... with 98 more columns
+## )
+## See spec(...) for full column specifications.</code></pre>
+<pre><code>## Warning: 614543 parsing failures.
+##   row                 col           expected           actual                                                                                               file
+## 14629 ExplodedProdKits    1/0/T/F/TRUE/FALSE IS               &#39;C:\Users\Laure\Documents\git_Repositories\phyk_data/00_raw_data/clickstream_data_part_2.csv&#39;
+## 19909 Registration_Gender 1/0/T/F/TRUE/FALSE Male             &#39;C:\Users\Laure\Documents\git_Repositories\phyk_data/00_raw_data/clickstream_data_part_2.csv&#39;
+## 19909 NumberOfChildren    1/0/T/F/TRUE/FALSE 4 or more        &#39;C:\Users\Laure\Documents\git_Repositories\phyk_data/00_raw_data/clickstream_data_part_2.csv&#39;
+## 19909 NumberOfAdults      1/0/T/F/TRUE/FALSE 2                &#39;C:\Users\Laure\Documents\git_Repositories\phyk_data/00_raw_data/clickstream_data_part_2.csv&#39;
+## 19909 HowDidYouFindUs     1/0/T/F/TRUE/FALSE Friend/Co-worker &#39;C:\Users\Laure\Documents\git_Repositories\phyk_data/00_raw_data/clickstream_data_part_2.csv&#39;
+## ..... ................... .................. ................ ..................................................................................................
+## See problems(...) for more details.</code></pre>
+<pre class="r"><code>click_df &lt;- rbind(click_df,click_df2)
+# Parse Order Time
+order_df$Order_Time &lt;- parse_time(order_df$&quot;Order_Line_Date_Time&quot;,&quot;%H\\:%M\\:%S&quot;)
+
+# Parse Click Time
+
+
+click_df$Request_Date_Time &lt;- paste(click_df$Request_Date,click_df2$Request_Date_Time)
+
+click_df$Request_Date_Time &lt;- parse_datetime(click_df$Request_Date_Time,format=&quot;%Y-%m-%d %H\\:%M\\:%S&quot;)</code></pre>
 </div>
 </div>
 <div id="analysis" class="section level1">
@@ -1614,6 +1758,35 @@ The process is separated into the following steps:<br></p>
 <li>reduce the original set <code>order_df</code> by deleting all twin columns</li>
 </ol>
 <p>Besides, all semicolons within the cells were simply erased.</p>
+<pre class="r"><code># Clean order_df
+# Selected Column Indices
+sel &lt;- c(115,116,120,189,233,121,39,101,107,130,135,58,25,30,32,35)
+
+relevant_df &lt;- select(order_df,sel)
+
+# Vergleiche Spalten, ob Dopplungen vorkommen
+dataframe &lt;- order_df
+
+drop &lt;- vector()
+k &lt;- 1
+for (i in 1:ncol(dataframe)) {
+  col_i = colnames(dataframe)[i]
+  for (j in i+1:ncol(dataframe)){
+    col_j = colnames(dataframe)[j]
+    if(identical(dataframe[[col_i]],dataframe[[col_j]])) {
+      # print(paste(col_i,col_j,sep=&quot; = &quot;))
+      drop[k] &lt;- i
+      k &lt;- k+1
+    }
+  }
+}
+# print(drop)
+# Loesche doppelte Spalten (immer die 1.)
+order_df &lt;- subset(dataframe, select = -drop)
+
+# Get rid of semicolons
+order_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, order_df$Estimated_Income_Code)
+relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, relevant_df$Estimated_Income_Code)</code></pre>
 </div>
 <div id="visualisation" class="section level2">
 <h2><span class="header-section-number">2.2</span> Visualisation</h2>
@@ -1622,43 +1795,90 @@ The process is separated into the following steps:<br></p>
 </div>
 <div id="summary-tables" class="section level2">
 <h2><span class="header-section-number">2.3</span> Summary tables</h2>
-<div id="tables" class="section level3">
-<h3><span class="header-section-number">2.3.1</span> Tables</h3>
-<pre class="r"><code>Session_data &lt;- click_df %&gt;%
-  select(Session_ID,Request_Sequence,Request_Processing_Time,Request_Query_String,Request_Referrer,Request_Date,Request_Date_Time,
-         Request_Assortment_ID,Request_Subassortment_ID,Request_Template,REQUEST_DAY_OF_WEEK,
-         Product_ID)%&gt;%
-  group_by(Session_ID)%&gt;%
-  summarise(Request_count = max(Request_Sequence),
-            Session_duration_mins = difftime(max(Request_Date_Time),min(Request_Date_Time),units = c(&quot;mins&quot;)),
-            Visited_assortments = length(unique(Request_Assortment_ID)),
-            Referrer=last(Request_Referrer),
-            Session_day=first(REQUEST_DAY_OF_WEEK),
-            Visited_products =length(unique(Product_ID))
-            )
-Session_data$Session_duration_mins &lt;- as.numeric(Session_data$Session_duration_mins)
-
-df &lt;- data.frame(W=Session_data$Request_count,X=Session_data$Session_duration_mins, Y=Session_data$Visited_assortments, Z=Session_data$Visited_products) # fake data
-summary_stats &lt;- df %&gt;% # start with data frame, and then ...
-  summarize_at(
-    .vars = c(&quot;W&quot;,&quot;X&quot;, &quot;Y&quot;, &quot;Z&quot;), # select variables that should be in the table
-    .funs = funs(min, max, mean, median, sd) # which summary statistics do you want?
-  ) %&gt;% 
-  gather(key, value) %&gt;% # transpose everything, and then ...
-  separate(col=key, sep=&quot;_&quot;, c(&quot;summary_stats&quot;, &quot;stat&quot;)) %&gt;% # make two columns out of var name
-  spread(key=stat, value=value) # reapeated obs into multiple columns</code></pre>
-<pre><code>## Warning: funs() is soft deprecated as of dplyr 0.8.0
-## please use list() instead
-## 
-##   # Before:
-##   funs(name = f(.))
-## 
-##   # After: 
-##   list(name = ~ f(.))
-## This warning is displayed once per session.</code></pre>
-<pre class="r"><code>summary_stats$summary_stats &lt;- c(&quot;Request_count&quot;,&quot;Session_duration_mins&quot;,&quot;Visited_assortments&quot;,&quot;Visited_products&quot;)
-
-kable(summary_stats)  </code></pre>
+<div id="clickstream-table" class="section level3">
+<h3><span class="header-section-number">2.3.1</span> Clickstream table</h3>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="left">Top1</th>
+<th align="left">Top2</th>
+<th align="left">Top3</th>
+<th align="left">Top4</th>
+<th align="left">Top5</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Request_Referrer</td>
+<td align="left">www.gazelle.com</td>
+<td align="left">www.fashionmall.com</td>
+<td align="left">www.asianavenue.com</td>
+<td align="left">www.goto.com</td>
+<td align="left">www.AsianAvenue.com</td>
+</tr>
+<tr class="even">
+<td>Number_of_Referrers</td>
+<td align="left">93730</td>
+<td align="left">6533</td>
+<td align="left">2218</td>
+<td align="left">938</td>
+<td align="left">688</td>
+</tr>
+<tr class="odd">
+<td>Product</td>
+<td align="left">Cellulite Trimming Gel</td>
+<td align="left">Body Lotion - Oceanic Minerals</td>
+<td align="left">Kit-Firming Cream/Slimming Cream/Shorts</td>
+<td align="left">Body Silk</td>
+<td align="left">Herbal Foot Balm</td>
+</tr>
+<tr class="even">
+<td>Click_on_Product</td>
+<td align="left">321</td>
+<td align="left">270</td>
+<td align="left">254</td>
+<td align="left">238</td>
+<td align="left">228</td>
+</tr>
+<tr class="odd">
+<td>REQUEST_HOUR_OF_DAY</td>
+<td align="left">2</td>
+<td align="left">10</td>
+<td align="left">9</td>
+<td align="left">11</td>
+<td align="left">7</td>
+</tr>
+<tr class="even">
+<td>Clicks_per_hours</td>
+<td align="left">13614</td>
+<td align="left">9777</td>
+<td align="left">9222</td>
+<td align="left">9151</td>
+<td align="left">8902</td>
+</tr>
+<tr class="odd">
+<td>REQUEST_DAY_OF_WEEK</td>
+<td align="left">Saturday</td>
+<td align="left">Thursday</td>
+<td align="left">Sunday</td>
+<td align="left">Tuesday</td>
+<td align="left">Wednesday</td>
+</tr>
+<tr class="even">
+<td>Clicks_per_day</td>
+<td align="left">27388</td>
+<td align="left">25311</td>
+<td align="left">24605</td>
+<td align="left">22283</td>
+<td align="left">21896</td>
+</tr>
+</tbody>
+</table>
+<p>In the <code>click_df</code> we united the first clickstream dataset and the secound clickstream dataset. Together the <code>click_df</code> contains 164364 click observations. We identifyed the top five from the <code>click_df</code> which are show above.</p>
+</div>
+<div id="session-table" class="section level3">
+<h3><span class="header-section-number">2.3.2</span> Session table</h3>
 <table>
 <thead>
 <tr class="header">
@@ -1705,8 +1925,9 @@ kable(summary_stats)  </code></pre>
 </tr>
 </tbody>
 </table>
-<p>From the <code>click_df</code> dataset we extractet the <code>Session_data</code>dataset.
-This dataset contains 50558 session observations.</p>
+<p>From the <code>click_df</code> dataset we extractet the <code>ave_Session_df</code>dataset.
+This dataset contains 50558 session observations.
+The tabel above summarizes the average session.</p>
 </div>
 </div>
 <div id="comparison-of-groups" class="section level2">
