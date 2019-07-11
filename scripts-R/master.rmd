@@ -25,8 +25,11 @@ knitr::opts_knit$set(root.dir = "C:/Github/data")
 rootDir <- knitr::opts_knit$get("root.dir")
 headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
 headersPath2 <- paste(rootDir, "01_data_understanding/clickstream_columns.txt", sep="/")
-dataPath <- paste(rootDir, "00_raw_data/order_data.csv", sep="/")
-dataPath2 <- paste(rootDir, "00_raw_data/clickstream_data.csv", sep="/")
+# # initially
+# dataPath <- paste(rootDir, "00_raw_data/order_data.csv", sep="/")
+# dataPath2 <- paste(rootDir, "00_raw_data/clickstream_data.csv", sep="/")
+dataPath <- paste(rootDir, "02_data_preparation/order_data_clean.csv", sep="/")
+dataPath2 <- paste(rootDir, "02_data_preparation/click_data_clean.csv", sep="/")
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -71,9 +74,12 @@ dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
 result <- gsub(" ", "_", result)
 result2 <- gsub(" ", "_", result2)
 
-order_df <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
-#Schafft Laptop nicht
-#click_df <- read_csv(dataPath2, col_names = result2, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+# initially
+# order_df <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"))
+# click_df <- read_csv(dataPath2, col_names = result2, na=c("", "?", "NULL", "NA", "Nan"))
+
+order_df <- read_csv(dataPath, na=c("", "?", "NULL", "NA", "Nan"))
+click_df <- read_csv(dataPath2, na=c("", "?", "NULL", "NA", "Nan"))
 
 # Parse Order Time
 order_df$Order_Time <- parse_time(order_df$"Order_Line_Date_Time","%H\\:%M\\:%S")
@@ -93,12 +99,41 @@ Besides, all semicolons within the cells were simply erased.
 
 ```{r dataClean, echo=FALSE}
 # Selected Column Indices
-sel <- c(115,116,120,189,233,121,39,101,107,130,135,58,25,30,32,35)
+sel <- c("Order_Session_ID","Order_Date","Order_Time","Order_ID","Order_Status","Order_Amount","HowDidYouHearAboutUs","City","US_State","Year_of_Birth","Customer_ID","Estimated_Income_Code","Gender","Order_Credit_Card_Brand","BrandName","Product_Object_ID","Assortment_ID")
+sel2 <- c("Session_ID","Request_Sequence","Request_Processing_Time","Request_Query_String","Request_Referrer","Request_Date","Request_Date_Time","Request_Assortment_ID","Request_Subassortment_ID","Request_Template","REQUEST_DAY_OF_WEEK","Product_ID")
 
-relevant_df <- select(order_df,sel)
+or <- select(order_df,sel)
+cl <- select(click_df, sel2)
 
-# Vergleiche Spalten, ob Dopplungen vorkommen
-dataframe <- order_df
+# Get rid of semicolons
+or$Estimated_Income_Code <- gsub(";", "", or$Estimated_Income_Code)
+
+#write.csv(or, "order_data_clean.csv")
+#write.csv(cl, "click_data_clean.csv")
+```
+
+```{r grammarofg}
+#x = as.POSIXct(paste(or$Order_Date, or$Order_Time), format="%Y-%m-%d %H:%M:%S")
+
+ggplot(or) +
+  geom_point(mapping = aes(x = Order_Time, y = Order_Amount, color = Gender))
+
+or$Estimated_Income_Code <- factor(or$Estimated_Income_Code, levels = c(
+  "Under $15000", "$15000-$19999", "$20000-$29999", "$30000-$39999", "$40000-$49999",
+  "$50000-$74999", "$75000-$99999", "$100000-$124999", "$125000 OR MORE"
+))
+
+boxplot(Order_Amount~Gender, data = order_df, horizontal = TRUE)
+boxplot(Order_Amount~Estimated_Income_Code, data = order_df)
+
+```
+
+
+
+
+```{r FUNKTIONIERTNICHT}
+# Vergleiche Spalten bei clicks, ob Dopplungen vorkommen
+dataframe <- cl
 
 drop <- vector()
 k <- 1
@@ -107,7 +142,7 @@ for (i in 1:ncol(dataframe)) {
   for (j in i+1:ncol(dataframe)){
     col_j = colnames(dataframe)[j]
     if(identical(dataframe[[col_i]],dataframe[[col_j]])) {
-      # print(paste(col_i,col_j,sep=" = "))
+      #print(paste(col_i,col_j,sep=" = "))
       drop[k] <- i
       k <- k+1
     }
@@ -115,11 +150,27 @@ for (i in 1:ncol(dataframe)) {
 }
 # print(drop)
 # Loesche doppelte Spalten (immer die 1.)
-order_df <- subset(dataframe, select = -drop)
+cl <- subset(dataframe, select = -drop)
 
-# Get rid of semicolons
-order_df$Estimated_Income_Code <- gsub(";", "", order_df$Estimated_Income_Code)
-relevant_df$Estimated_Income_Code <- gsub(";", "", relevant_df$Estimated_Income_Code)
+# Vergleiche Spalten bei order, ob Dopplungen vorkommen
+dataframe <- or
+
+drop <- vector()
+k <- 1
+for (i in 1:ncol(dataframe)) {
+  col_i = colnames(dataframe)[i]
+  for (j in i+1:ncol(dataframe)){
+    col_j = colnames(dataframe)[j]
+    if(identical(dataframe[[col_i]],dataframe[[col_j]])) {
+      #print(paste(col_i,col_j,sep=" = "))
+      drop[k] <- i
+      k <- k+1
+    }
+  }
+}
+# print(drop)
+# Loesche doppelte Spalten (immer die 1.)
+or <- subset(dataframe, select = -drop)
 ```
 
 
