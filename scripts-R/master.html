@@ -1548,12 +1548,12 @@ div.tocify {
 </div>
 
 
-<pre><code>## -- Attaching packages --------------------------------------------------------------------------- tidyverse 1.2.1 --</code></pre>
+<pre><code>## -- Attaching packages ------------------------------------------------------------------------------------------------------------ tidyverse 1.2.1 --</code></pre>
 <pre><code>## v ggplot2 3.1.1     v purrr   0.3.2
 ## v tibble  2.1.1     v dplyr   0.8.1
 ## v tidyr   0.8.3     v stringr 1.4.0
 ## v readr   1.3.1     v forcats 0.4.0</code></pre>
-<pre><code>## -- Conflicts ------------------------------------------------------------------------------ tidyverse_conflicts() --
+<pre><code>## -- Conflicts --------------------------------------------------------------------------------------------------------------- tidyverse_conflicts() --
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()</code></pre>
 <pre><code>## [1] FALSE</code></pre>
@@ -1795,8 +1795,8 @@ relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, releva
 </div>
 <div id="summary-tables" class="section level2">
 <h2><span class="header-section-number">2.3</span> Summary tables</h2>
-<div id="clickstream-table" class="section level3">
-<h3><span class="header-section-number">2.3.1</span> Clickstream table</h3>
+<div id="clickstream-tables" class="section level3">
+<h3><span class="header-section-number">2.3.1</span> Clickstream tables</h3>
 <table>
 <thead>
 <tr class="header">
@@ -1810,7 +1810,7 @@ relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, releva
 </thead>
 <tbody>
 <tr class="odd">
-<td>Request_Referrer</td>
+<td>Referrer</td>
 <td align="left">www.gazelle.com</td>
 <td align="left">www.fashionmall.com</td>
 <td align="left">www.asianavenue.com</td>
@@ -1818,7 +1818,7 @@ relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, releva
 <td align="left">www.AsianAvenue.com</td>
 </tr>
 <tr class="even">
-<td>Number_of_Referrers</td>
+<td>Number_of_Referres</td>
 <td align="left">93730</td>
 <td align="left">6533</td>
 <td align="left">2218</td>
@@ -1834,7 +1834,7 @@ relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, releva
 <td align="left">Herbal Foot Balm</td>
 </tr>
 <tr class="even">
-<td>Click_on_Product</td>
+<td>Clicks_on_Product</td>
 <td align="left">321</td>
 <td align="left">270</td>
 <td align="left">254</td>
@@ -1842,7 +1842,7 @@ relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, releva
 <td align="left">228</td>
 </tr>
 <tr class="odd">
-<td>REQUEST_HOUR_OF_DAY</td>
+<td>Top_Click_Hours</td>
 <td align="left">2</td>
 <td align="left">10</td>
 <td align="left">9</td>
@@ -1850,7 +1850,7 @@ relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, releva
 <td align="left">7</td>
 </tr>
 <tr class="even">
-<td>Clicks_per_hours</td>
+<td>Clicks_per_Hour</td>
 <td align="left">13614</td>
 <td align="left">9777</td>
 <td align="left">9222</td>
@@ -1858,7 +1858,7 @@ relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, releva
 <td align="left">8902</td>
 </tr>
 <tr class="odd">
-<td>REQUEST_DAY_OF_WEEK</td>
+<td>Top_Click_Days</td>
 <td align="left">Saturday</td>
 <td align="left">Thursday</td>
 <td align="left">Sunday</td>
@@ -1866,7 +1866,7 @@ relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, releva
 <td align="left">Wednesday</td>
 </tr>
 <tr class="even">
-<td>Clicks_per_day</td>
+<td>Clicks_per_Day</td>
 <td align="left">27388</td>
 <td align="left">25311</td>
 <td align="left">24605</td>
@@ -1876,9 +1876,6 @@ relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, releva
 </tbody>
 </table>
 <p>In the <code>click_df</code> we united the first clickstream dataset and the secound clickstream dataset. Together the <code>click_df</code> contains 164364 click observations. We identifyed the top five from the <code>click_df</code> which are show above.</p>
-</div>
-<div id="session-table" class="section level3">
-<h3><span class="header-section-number">2.3.2</span> Session table</h3>
 <table>
 <thead>
 <tr class="header">
@@ -1928,6 +1925,269 @@ relevant_df$Estimated_Income_Code &lt;- gsub(&quot;;&quot;, &quot;&quot;, releva
 <p>From the <code>click_df</code> dataset we extractet the <code>ave_Session_df</code>dataset.
 This dataset contains 50558 session observations.
 The tabel above summarizes the average session.</p>
+</div>
+<div id="order-tables" class="section level3">
+<h3><span class="header-section-number">2.3.2</span> Order tables</h3>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="left">Top1</th>
+<th align="left">Top2</th>
+<th align="left">Top3</th>
+<th align="left">Top4</th>
+<th align="left">Top5</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Product_ID</td>
+<td align="left">12883</td>
+<td align="left">10877</td>
+<td align="left">12327</td>
+<td align="left">12567</td>
+<td align="left">12675</td>
+</tr>
+<tr class="even">
+<td>Orders_per_Product_ID</td>
+<td align="left">142</td>
+<td align="left">120</td>
+<td align="left">119</td>
+<td align="left">105</td>
+<td align="left">94</td>
+</tr>
+<tr class="odd">
+<td>Product_Name</td>
+<td align="left">Cellulite Trimming Gel</td>
+<td align="left">Leg Therapy Cream</td>
+<td align="left">Toe Separators</td>
+<td align="left">Power Toenail Clipper</td>
+<td align="left">Sole Survivor Foot Kit</td>
+</tr>
+<tr class="even">
+<td>Orders_per_Product_Name</td>
+<td align="left">9</td>
+<td align="left">9</td>
+<td align="left">7</td>
+<td align="left">7</td>
+<td align="left">7</td>
+</tr>
+<tr class="odd">
+<td>Customer_ID</td>
+<td align="left">30208</td>
+<td align="left">2240</td>
+<td align="left">22742</td>
+<td align="left">538</td>
+<td align="left">25004</td>
+</tr>
+<tr class="even">
+<td>Orders_per_Customer</td>
+<td align="left">30</td>
+<td align="left">28</td>
+<td align="left">22</td>
+<td align="left">19</td>
+<td align="left">18</td>
+</tr>
+<tr class="odd">
+<td>Customer__ID</td>
+<td align="left">29244</td>
+<td align="left">3778</td>
+<td align="left">28144</td>
+<td align="left">2240</td>
+<td align="left">30208</td>
+</tr>
+<tr class="even">
+<td>Purchased_Products_per_Customer</td>
+<td align="left">53</td>
+<td align="left">40</td>
+<td align="left">33</td>
+<td align="left">32</td>
+<td align="left">30</td>
+</tr>
+<tr class="odd">
+<td>Brand</td>
+<td align="left">AME</td>
+<td align="left">Silk Reflections</td>
+<td align="left">ELT</td>
+<td align="left">HOSO</td>
+<td align="left">DAN</td>
+</tr>
+<tr class="even">
+<td>Orders_per_Brand</td>
+<td align="left">822</td>
+<td align="left">485</td>
+<td align="left">399</td>
+<td align="left">361</td>
+<td align="left">270</td>
+</tr>
+<tr class="odd">
+<td>Top_Sale_Hours</td>
+<td align="left">16</td>
+<td align="left">17</td>
+<td align="left">19</td>
+<td align="left">14</td>
+<td align="left">10</td>
+</tr>
+<tr class="even">
+<td>Orders_per_Hours</td>
+<td align="left">231</td>
+<td align="left">225</td>
+<td align="left">225</td>
+<td align="left">223</td>
+<td align="left">214</td>
+</tr>
+<tr class="odd">
+<td>Top_Sale_Days</td>
+<td align="left">Wednesday</td>
+<td align="left">Tuesday</td>
+<td align="left">Thursday</td>
+<td align="left">Friday</td>
+<td align="left">Saturday</td>
+</tr>
+<tr class="even">
+<td>Orders_per_Day</td>
+<td align="left">934</td>
+<td align="left">614</td>
+<td align="left">602</td>
+<td align="left">571</td>
+<td align="left">292</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th align="left">summary_Return</th>
+<th align="right">max</th>
+<th align="right">mean</th>
+<th align="right">median</th>
+<th align="right">min</th>
+<th align="right">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Return_Quantity</td>
+<td align="right">3.00</td>
+<td align="right">1.5714286</td>
+<td align="right">1</td>
+<td align="right">1.00</td>
+<td align="right">0.7867958</td>
+</tr>
+<tr class="even">
+<td align="left">Returned_Products</td>
+<td align="right">2.00</td>
+<td align="right">1.1428571</td>
+<td align="right">1</td>
+<td align="right">1.00</td>
+<td align="right">0.3779645</td>
+</tr>
+<tr class="odd">
+<td align="left">Used_Promotions</td>
+<td align="right">1.00</td>
+<td align="right">0.7142857</td>
+<td align="right">1</td>
+<td align="right">0.00</td>
+<td align="right">0.4879500</td>
+</tr>
+<tr class="even">
+<td align="left">Discount_Amount</td>
+<td align="right">10.00</td>
+<td align="right">7.1428571</td>
+<td align="right">10</td>
+<td align="right">0.00</td>
+<td align="right">4.8795004</td>
+</tr>
+<tr class="odd">
+<td align="left">Discount_from_Sale_Price</td>
+<td align="right">2.12</td>
+<td align="right">0.3028571</td>
+<td align="right">0</td>
+<td align="right">0.00</td>
+<td align="right">0.8012847</td>
+</tr>
+<tr class="even">
+<td align="left">Return_Amount</td>
+<td align="right">44.50</td>
+<td align="right">23.0514286</td>
+<td align="right">30</td>
+<td align="right">3.95</td>
+<td align="right">16.6189404</td>
+</tr>
+</tbody>
+</table>
+<p>The table “Summary_Return” is based on 7 return observations. We extracted these return from the order dataset.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">summary_Order</th>
+<th align="right">max</th>
+<th align="right">mean</th>
+<th align="right">median</th>
+<th align="right">min</th>
+<th align="right">sd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Order_Quantity</td>
+<td align="right">53.00</td>
+<td align="right">2.3678460</td>
+<td align="right">2.00</td>
+<td align="right">1.0</td>
+<td align="right">2.7269390</td>
+</tr>
+<tr class="even">
+<td align="left">Purchased_Products</td>
+<td align="right">9.00</td>
+<td align="right">1.3949011</td>
+<td align="right">1.00</td>
+<td align="right">1.0</td>
+<td align="right">0.8280827</td>
+</tr>
+<tr class="odd">
+<td align="left">Used_Promotions</td>
+<td align="right">1.00</td>
+<td align="right">0.8397503</td>
+<td align="right">1.00</td>
+<td align="right">0.0</td>
+<td align="right">0.3669330</td>
+</tr>
+<tr class="even">
+<td align="left">Discount_Amount</td>
+<td align="right">50.00</td>
+<td align="right">8.6569823</td>
+<td align="right">10.00</td>
+<td align="right">0.0</td>
+<td align="right">7.3041332</td>
+</tr>
+<tr class="odd">
+<td align="left">Discount_from_Sale_Price</td>
+<td align="right">37.34</td>
+<td align="right">0.2050780</td>
+<td align="right">0.00</td>
+<td align="right">0.0</td>
+<td align="right">1.7156709</td>
+</tr>
+<tr class="even">
+<td align="left">Order_Amount</td>
+<td align="right">562.35</td>
+<td align="right">14.0066441</td>
+<td align="right">5.95</td>
+<td align="right">-0.7</td>
+<td align="right">26.3904424</td>
+</tr>
+<tr class="odd">
+<td align="left">Creditcard_Payment_Amount</td>
+<td align="right">562.35</td>
+<td align="right">21.4663424</td>
+<td align="right">14.95</td>
+<td align="right">0.0</td>
+<td align="right">27.0717254</td>
+</tr>
+</tbody>
+</table>
+<p>The table “Summary_Order” is based on 1922 order observations. We extracted these orders from the order dataset.The negative minimum in the row “Order Amount” looks suspicious. Research in the data revealed that the orders: order-Id 12314 and order-Id 10930 used a special combination of products and the promotion code “FRIEND” to generate a negative order amount. However, the credit card payment amount indicates that the coups didn’t succeed. Also the datasets cannot tell if the negative Order Amount were create willingly or through accident.</p>
 </div>
 </div>
 <div id="comparison-of-groups" class="section level2">

@@ -132,6 +132,8 @@ click_df$Request_Date_Time <- paste(click_df$Request_Date,click_df2$Request_Date
 
 click_df$Request_Date_Time <- parse_datetime(click_df$Request_Date_Time,format="%Y-%m-%d %H\\:%M\\:%S")
 
+
+
 ```
 
 
@@ -207,9 +209,9 @@ Thereby, date and time are less useful, as the time-format is transformed into d
 
 ## Summary tables
 
-### Clickstream table
+### Clickstream tables
 
-```{r Clickstream table , echo=FALSE}
+```{r Clickstream tables , echo=FALSE}
 buffer<- click_df %>%
   select(Session_ID,Request_Query_String,Request_Referrer,Request_Assortment_ID,Request_Subassortment_ID,Request_Template,REQUEST_DAY_OF_WEEK,
          Product_ID)%>%
@@ -228,7 +230,6 @@ buffer <- buffer %>%
   group_by(Request_Referrer) %>%
   summarise(Number_of_Referrers = n())
 
-
 buffer <- filter(buffer,Request_Referrer != "NA")
 
 buffer <-buffer[order(-buffer$Number_of_Referrers),]
@@ -242,7 +243,6 @@ buffer<- click_df %>%
 
 buffer <- filter(buffer,!is.na(Product))
 buffer <-buffer[order(-buffer$Click_on_Product),]
-
 
 Session_top5[1:5,3:4] <- buffer[1:5,1:2]
 
@@ -258,7 +258,6 @@ buffer <-buffer[order(-buffer$Clicks_per_hours),]
 Session_top5[1:5,5:6] <- buffer[1:5,1:2]
 
 
-
 buffer <- click_df %>%
   select(Session_ID,REQUEST_DAY_OF_WEEK) %>%
   group_by(REQUEST_DAY_OF_WEEK) %>%
@@ -268,16 +267,19 @@ buffer <-buffer[order(-buffer$Clicks_per_day),]
 
 Session_top5[1:5,7:8] <- buffer[1:5,1:2]
 
+names(Session_top5)<- c("Referrer","Number_of_Referres","Product","Clicks_on_Product",
+                      "Top_Click_Hours","Clicks_per_Hour","Top_Click_Days","Clicks_per_Day")
 
 Session_top5 <-as.data.frame(t(Session_top5))
 names(Session_top5)<- c("Top1","Top2","Top3","Top4","Top5")
+
 
 kable(Session_top5)
 ```
 
 In the `click_df` we united the first clickstream dataset and the secound clickstream dataset. Together the `click_df` contains `r nrow(click_df)` click observations. We identifyed the top five from the `click_df` which are show above.
 
-### Session table
+
 
 ```{r Session table, echo=FALSE, warning=FALSE}
 
@@ -317,6 +319,158 @@ kable(summary_stats)
 From the `click_df` dataset we extractet the `ave_Session_df`dataset.
 This dataset contains `r nrow(ave_Session_df)`  session observations.
 The tabel above summarizes  the average session. 
+
+### Order tables
+
+```{r Order tables, echo=FALSE}
+
+buffer_order <- order_df %>%
+  select(Order_ID,Order_Line_ID,Order_Line_Quantity,Product_ID,Order_Date_Time,Order_Promotion_Code,
+         Order_Discount_Amount,Order_Line_Unit_List_Price,Order_Line_Unit_Sale_Price,Order_Amount,
+         Order_Customer_ID,Product,Order_Credit_Card_Payment_Amount,BrandName,Order_Hour_of_Day,Order_Day_of_Week) %>%
+  group_by(Order_ID)
+
+buffer <- buffer_order %>%
+  select(Order_ID,Product_ID,Product,Order_Line_Quantity) %>%
+  group_by(Product_ID) %>%
+  summarise(Order_ID = n(),
+            Product = last(Product),
+            Product_Quantity=sum(Order_Line_Quantity))
+buffer <- filter(buffer,!is.na(Product_ID))
+buffer <- buffer[order(-buffer$Product_Quantity),]
+
+Order_top5 <- buffer[1:5,1]
+Order_top5[1:5,2:2] <- buffer[1:5,4] 
+
+buffer <- filter(buffer,!is.na(Product))
+Order_top5[1:5,3:4] <- buffer[1:5,3:4] 
+
+buffer <- buffer_order %>%
+  select(Order_Customer_ID,Order_ID,Order_Line_Quantity)%>%
+  group_by(Order_Customer_ID)%>%
+  summarise(total_orders = n(),Products_Ordered=sum(Order_Line_Quantity))
+buffer <- buffer[order(-buffer$total_orders),]
+Order_top5[1:5,5:6] <- buffer[1:5,1:2] 
+
+buffer <- buffer[order(-buffer$Products_Ordered),]
+Order_top5[1:5,7:7] <- buffer[1:5,1] 
+Order_top5[1:5,8:8] <- buffer[1:5,3] 
+
+buffer <- buffer_order %>%
+  select(Product_ID,Order_ID,BrandName,Order_Line_Quantity) %>%
+  group_by(BrandName) %>%
+  summarise(Order_ID = n(),
+            Product_Quantity=sum(Order_Line_Quantity))
+buffer <- filter(buffer,!is.na(BrandName))
+buffer <- buffer[order(-buffer$Product_Quantity),]
+Order_top5[1:5,9:9] <- buffer[1:5,1] 
+Order_top5[1:5,10:10] <- buffer[1:5,3] 
+
+buffer <- buffer_order %>%
+  select(Order_ID,Order_Line_Quantity,Order_Hour_of_Day)%>%
+  group_by(Order_Hour_of_Day)%>%
+  summarise(Orders = n())
+buffer <- buffer[order(-buffer$Orders),]
+Order_top5[1:5,11:12] <- buffer[1:5,1:2]
+
+buffer <- buffer_order %>%
+  select(Order_ID,Order_Line_Quantity,Order_Day_of_Week)%>%
+  group_by(Order_Day_of_Week)%>%
+  summarise(Orders = n())
+buffer <- buffer[order(-buffer$Orders),]
+Order_top5[1:5,13:14] <- buffer[1:5,1:2]
+
+names(Order_top5)<- c("Product_ID","Orders_per_Product_ID","Product_Name","Orders_per_Product_Name",
+                      "Customer_ID","Orders_per_Customer","Customer__ID","Purchased_Products_per_Customer",
+                      "Brand","Orders_per_Brand","Top_Sale_Hours","Orders_per_Hours",
+                      "Top_Sale_Days","Orders_per_Day")
+
+Order_top5 <-as.data.frame(t(Order_top5))
+names(Order_top5)<- c("Top1","Top2","Top3","Top4","Top5")
+
+
+kable(Order_top5)
+
+```
+
+
+```{r ReturnSummary, echo=FALSE, warning=FALSE}
+
+# create return average table
+buffer <- filter(order_df,Order_Line_Quantity<0)
+ave_Return <- buffer %>%
+  select(Order_ID,Order_Line_ID,Order_Line_Quantity,Product_ID,Order_Date_Time,Order_Promotion_Code,Order_Discount_Amount,Order_Line_Unit_List_Price,Order_Line_Unit_Sale_Price,Order_Amount) %>%
+  group_by(Order_ID) %>%
+  summarise(Order_Line_count = n(),
+            Order_Quantity = sum(Order_Line_Quantity)*-1,
+            Purchased_Products = length(unique(Product_ID)),
+            Used_Promotions = ifelse(is.na(unique(Order_Promotion_Code)),0,1),
+            Used_Promotion = unique(Order_Promotion_Code),
+            Discount_Amount = max(Order_Discount_Amount),
+            Discount_from_Sale_Price = sum(sum(Order_Line_Unit_List_Price*Order_Line_Quantity)-sum(Order_Line_Unit_Sale_Price*Order_Line_Quantity))*-1,
+            Order_Amount = max(Order_Amount))
+df <- data.frame(U=ave_Return$Order_Quantity ,V=ave_Return$Purchased_Products,W=ave_Return$Used_Promotions,
+                 X=ave_Return$Discount_Amount, Y=ave_Return$Discount_from_Sale_Price, Z=ave_Return$Order_Amount) # fake data
+summary_Return <- df %>% # start with data frame, and then ...
+  summarize_at(
+    .vars = c("U","V","W","X", "Y", "Z"), # select variables that should be in the table
+    .funs = funs(min, max, mean, median, sd) # which summary statistics do you want?
+  ) %>% 
+  gather(key, value) %>% # transpose everything, and then ...
+  separate(col=key, sep="_", c("summary_Return", "stat")) %>% # make two columns out of var name
+  spread(key=stat, value=value) # reapeated obs into multiple columns
+
+summary_Return$summary_Return <- c("Return_Quantity","Returned_Products","Used_Promotions",
+                                   "Discount_Amount","Discount_from_Sale_Price","Return_Amount")
+
+kable(summary_Return) 
+
+
+```
+
+The table "Summary_Return" is based on `r nrow(ave_Return)` return observations. We extracted these return from the order dataset.
+
+
+```{r OrderSummary, echo=FALSE, warning=FALSE}
+
+# create order average table
+buffer <- filter(order_df,Order_Line_Quantity>0)
+ave_Order <- buffer %>%
+  select(Order_ID,Order_Line_ID,Order_Line_Quantity,Product_ID,Order_Date_Time,Order_Promotion_Code,Order_Discount_Amount,Order_Line_Unit_List_Price,Order_Line_Unit_Sale_Price,Order_Amount,Order_Credit_Card_Payment_Amount) %>%
+  group_by(Order_ID) %>%
+  summarise(Order_Line_count = n(),
+            Order_Quantity = sum(Order_Line_Quantity),
+            Purchased_Products = length(unique(Product_ID)),
+            Used_Promotions = ifelse(is.na(unique(Order_Promotion_Code)),0,1),
+            Used_Promotion = unique(Order_Promotion_Code),
+            Discount_Amount = max(Order_Discount_Amount),
+            Discount_from_Sale_Price = sum(sum(Order_Line_Unit_List_Price*Order_Line_Quantity)-sum(Order_Line_Unit_Sale_Price*Order_Line_Quantity)),
+            Order_Amount = max(Order_Amount),
+            Creditcard_Payment_Amount = max(Order_Credit_Card_Payment_Amount))
+df <- data.frame(U=ave_Order$Order_Quantity ,V=ave_Order$Purchased_Products,W=ave_Order$Used_Promotions,
+                 X=ave_Order$Discount_Amount, Y=ave_Order$Discount_from_Sale_Price, Z=ave_Order$Order_Amount,
+                 ZA=ave_Order$Creditcard_Payment_Amount) 
+df$X <- replace(df$X,is.na(df$X),0)
+df$ZA <- replace(df$ZA,is.na(df$ZA),0)
+summary_Order <- df %>% # start with data frame, and then ...
+  summarize_at(
+    .vars = c("U","V","W","X", "Y", "Z","ZA"), # select variables that should be in the table
+    .funs = funs(min, max, mean, median, sd) # which summary statistics do you want?
+  ) %>% 
+  gather(key, value) %>% # transpose everything, and then ...
+  separate(col=key, sep="_", c("summary_Order", "stat")) %>% # make two columns out of var name
+  spread(key=stat, value=value) # reapeated obs into multiple columns
+
+summary_Order$summary_Order <- c("Order_Quantity","Purchased_Products","Used_Promotions",
+                                   "Discount_Amount","Discount_from_Sale_Price","Order_Amount",
+                                 "Creditcard_Payment_Amount")
+kable(summary_Order) 
+
+
+```
+
+The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. We extracted these orders from the order dataset.The negative minimum in the row “Order Amount” looks suspicious. Research in the data revealed that the orders: order-Id 12314 and order-Id 10930 used a special combination of products and the promotion code “FRIEND” to generate a negative order amount.  However, the credit card payment amount indicates that the coups didn’t succeed.  Also the datasets cannot tell if the negative Order Amount were create willingly or through accident. 
+
 
 
 ## Comparison of groups
