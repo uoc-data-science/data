@@ -20,10 +20,40 @@ library(knitr)
 
 ```{r}
 #set knitr root
+rootDir <- knitr::opts_knit$get("root.dir")
+origin_clickstream <- paste(rootDir, "clickstream", sep="/")
+origin_experiment <- paste(rootDir,"experiment", sep="/")
+origin_orders <- paste(rootDir,"orders", sep="/")
+
+des_root <- paste(rootDir, "00_raw_data", sep="/")
+des_under <- paste(rootDir, "01_data_understanding", sep="/")
+
+# move datasets
+# clickstream1
+unzip(paste(origin_clickstream,"clickstream_data.zip",sep="/"),files= "clickstream_data.csv",list = FALSE, exdir = des_root)
+# clickstream2
+file.copy(paste(origin_clickstream,"clickstream_data_part_2.csv",sep="/"),des_root)
+# experiment 
+file.copy(paste(origin_experiment,"experimental_results.csv", sep = "/"),des_root)
+#order
+file.copy(paste(origin_orders,"order_data.csv",sep = "/"),des_root)
+
+#move .txts
+#clickstream_columns.txt
+file.copy(paste(origin_clickstream,"clickstream_columns.txt", sep = "/"),des_under)
+
+#order_columns.txt
+file.copy(paste(origin_orders,"order_columns.txt",sep = "/"),des_under)
+
+
+```
+
 require("knitr")
 
 # Set root directory
 #knitr::opts_knit$set(root.dir = "C:/Github/data")
+knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
+
 #lh_root
 knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
 
@@ -122,6 +152,23 @@ order_df <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "
 click_df <- read_csv(dataPath2, col_names = result2, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
 click_df2 <- read_csv(dataPath3, col_names = result2, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
 click_df <- rbind(click_df,click_df2)
+
+# prepare column name list
+headersFile = file(headersPath, "r")
+headerNames <- list()
+#http://r.789695.n4.nabble.com/How-to-read-plain-text-documents-into-a-vector-td901794.html
+obj_list <- readLines(headersFile)
+
+#To convert to a vector, do the following:
+result <- stri_extract_first(obj_list, regex="[A-z ,]+")
+dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
+result <- gsub(" ", "_", result)
+
+dataframe <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+dataframe2 <- read_csv(dataPath2, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+
+
+click_df <- rbind(dataframe,dataframe2)
 # Parse Order Time
 order_df$Order_Time <- parse_time(order_df$"Order_Line_Date_Time","%H\\:%M\\:%S")
 
@@ -263,8 +310,45 @@ This dataset contains `r nrow(Session_data)`  session observations.
 
 ## Predictions
 
-```{r prediction, echo=FALSE}
+```{r}
+library(rpart)
+library(caTools)
+library(rpart.plot)
+require(tree)
+library(party)
+pred <- click_df
+pred <- pred[rowSums(!is.na(pred)) > 0,colSums(!is.na(pred)) > 0]
+```
 
+
+
+
+## Market Basket Analysis
+```{r prediction, echo=FALSE}
+pred <- order_df
+pred <- pred %>%
+  subset(select=c(Order_ID, Product_Family_ID, Product_Level__2))
+```
+```{r}
+library(plyr)
+library(arules)
+library(arulesViz)
+transactionData <- ddply(pred,c("Order_ID"),
+                       function(df1)paste(df1$Product_Family_ID,
+                       collapse = ","))
+write.csv(transactionData,"market_basket_transactions.csv", quote = FALSE, row.names = FALSE)
+tr <- read.transactions('market_basket_transactions.csv', format = 'basket', sep=',')
+summary(tr)
+if (!require("RColorBrewer")) {
+  # install color package of R
+install.packages("RColorBrewer")
+#include library RColorBrewer
+library(RColorBrewer)
+}
+itemFrequencyPlot(tr,topN=20,type="relative",col=brewer.pal(8,'Pastel2'), main="Absolute Item Frequency Plot")
+association.rules <- apriori(tr, parameter = list(supp=0.001, conf=0.95,maxlen=10))
+inspect(association.rules)
+plot(association.rules, method = "graph",  engine = "htmlwidget")
 ```
 
 # Conclusion
