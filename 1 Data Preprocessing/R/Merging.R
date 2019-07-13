@@ -28,8 +28,7 @@ orderColumns = c("City",
                 "Miscellaneous.Retail.Activity",
                 "Upscale.Retail",
                 "Upscale.Speciality.Retail",
-                "Retail.Activity",
-                "Customer.ID"
+                "Retail.Activity"
 )
 
 clickColumns = c("WhichDoYouWearMostFrequent",
@@ -108,9 +107,11 @@ clickColumns = c("WhichDoYouWearMostFrequent",
                 "Gender",
                 "Occupation",
                 "Other.Indiv...Gender",
-                "Other.Indiv...Occupation",
-                "Customer.ID"
+                "Other.Indiv...Occupation"
 )
+#append Customer ID
+orderColumns <- c(orderColumns, "Customer.ID")
+clickColumns <- c(clickColumns, "Customer.ID")
 
 #read data
 orders <- read.csv(file=pathOrders)
