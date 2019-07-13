@@ -1962,7 +1962,7 @@ However, an important thing to note is that about 99% of sessions do not contain
 
 To handle model variance and bias we use the GridSearch approach. This allows us to get the optimal bias-variance trade off for each model, without having to inspect the source of variance or bias and fine tune model parameters manually. This way we do not need bias or variance related plots, such as learning curves. 
 
-While our approach optimizes the bias-variance trade off for each model, it does not account for bias and variance differences between several models. The two types of models we use for our problem are decision trees and random forests. By design, random forests have less bias and more variance than decision trees. This means, that depending on the performance of both models, we can see if our main problem is too much bias or variance in the data. For example, if random forests were to perform better than decision trees, it would mean that our main problem is too much bias in the data.
+While our approach optimizes the bias-variance trade off for each model, it does not account for bias and variance differences between several models. The two types of models we use for our problem are decision trees and random forests. By design, random forests have more bias and less variance than decision trees. This means, that depending on the performance of both models, we can see if our main problem is too much bias or variance in the data. For example, if decision trees were to perform better than random forests, it would mean that our main problem is too much bias in the data.
 
 It should also be mentioned that depending on the business goal, the ratio of positive and negative instances in the training set should be adjusted. We use a 1:2 ratio of positives and negatives. Increasing the amount of negatives would cause a model to have an increased rate of true negatives and less false positives. However, it would also increase the rate of false negatives. Increasing the amount of positive instanced in the training set would have the reverse effect.
 
@@ -2153,7 +2153,7 @@ As mentioned above, the main reason for choosing a decision tree is the ease of 
 
 ## Random Forest {#modelForest}
 
-The second model of choice is a random forest. A random forest is an ensemble model made up of several decision trees. Due to the structure of a random forest it has less bias than a single decision tree, but it suffers from higher variance. It also offers less insight into the logic of the model, since it is made up of several trees. But depending on the forest complexity, it is still possible to present an overview of that logic. For example, if the forest is made up of only 5 trees, each tree could be visualized. However, the more trees a forest is made out of, the less transparency it offers.
+The second model of choice is a random forest. A random forest is an ensemble model made up of several decision trees. Due to the structure of a random forest it has less variance than a single decision tree, but it suffers from higher bias. It also offers less insight into the logic of the model, since it is made up of several trees. But depending on the forest complexity, it is still possible to present an overview of that logic. For example, if the forest is made up of only 5 trees, each tree could be visualized. However, the more trees a forest is made out of, the less transparency it offers.
 
 ```{python createforest, eval=F, echo=F, results = "hide"}
 import numpy as np
