@@ -13,6 +13,7 @@ library(tidyverse)
 library(ggplot2)
 library(dplyr)
 library(stringi)
+library(stringr)
 library(hms)
 library(knitr)
 library(naniar)
@@ -332,6 +333,13 @@ ave_Session_df <- click_df %>%
             )
 ave_Session_df$Session_duration_mins <- as.numeric(ave_Session_df$Session_duration_mins)
 
+# inserted Referrer for ML
+ave_Session_df$Referrer <- sapply(ave_Session_df$Referrer,str_extract,pattern="[[:alpha:]]+\\\\\\.([[:alnum:]]+)\\\\\\.[[:alnum:]]+")
+
+ave_Session_df$Referrer<- replace_na(ave_Session_df$Referrer, "none")
+
+ave_Session_df$Referrer <- as.factor(ave_Session_df$Referrer)
+
 df <- data.frame(W=ave_Session_df$Request_count,X=ave_Session_df$Session_duration_mins, Y=ave_Session_df$Visited_assortments, Z=ave_Session_df$Visited_products) # fake data
 summary_stats <- df %>% # start with data frame, and then ...
   summarize_at(
@@ -517,7 +525,7 @@ The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. We
 
 ## Predictions
 
-```{r prediction}
+```{r predictionDataset}
 library(rpart)
 library(caTools)
 library(rpart.plot)
@@ -525,21 +533,36 @@ require(tree)
 library(party)
 library(class)
 library(e1071)
+library(caret)
 
 # Columns for session click prediction
 # RequestReferrer / RequestTemplate , RequestDayOfWeek, RequestHourOfDay, Session User AGent, , SessionFirstRequestHourOfDay, SessionFirstDayOfWeek
 temp <- filter(ave_Session_df, Request_count > 1)
-temp <- subset(temp, select=c(Session_duration_mins, LeadsToBuy)) #Session_day, Session_hoirs, 
+temp <- subset(temp, select=c(Session_duration_mins,Session_day, Session_hour, Referrer, LeadsToBuy))
 
-#temp$Session_day <- factor(temp$Session_day, levels = c("Monday", "Tuesday", "Wednesday", 
-#                          "Thursday", "Friday", "Saturday", "Sunday"),
-#            ordered = TRUE)
-#temp$Session_day <- as.integer(temp$Session_day)
+temp$Session_day <- factor(temp$Session_day, levels = c("Monday", "Tuesday", "Wednesday", 
+                          "Thursday", "Friday", "Saturday", "Sunday"),
+            ordered = TRUE)
+temp$Session_day <- as.integer(temp$Session_day)
+temp$Referrer <- as.integer(as.factor(temp$Referrer))
+
+```
+
+```{r predictionPreprocess}
+
+
+tempTrue <- filter(temp, temp$LeadsToBuy)
+tempFalse <- filter(temp, !temp$LeadsToBuy)
 
 train_ind <- sample(seq_len(nrow(temp)), size = nrow(temp)*0.7)
 
 train <- temp[train_ind, ]
 test <- temp[-train_ind, ]
+
+set.seed(1343)
+preProc <- preProcess(train, method=c("center","scale"))
+train.scaled <- predict(preProc, train)
+test.scaled <- predict(preProc, test)
 
 willbuy.logit <- glm(LeadsToBuy ~.,family=binomial(link='logit'),data=train)
 willbuy.tree <- rpart(LeadsToBuy ~ ., data = train, method = 'class')
@@ -565,6 +588,7 @@ prf <- performance(pr, measure = "tpr", x.measure = "fpr")
 plot(prf)
 auc <- performance(pr, measure = "auc")
 auc
+
 ```
 
 
