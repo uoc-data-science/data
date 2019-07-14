@@ -561,18 +561,24 @@ test <- rbind(test,buffer4[100:200,])
 
 
 library(rpart)
+library(rpart.utils)
+library(rpart.plot)
 
 fit <- rpart(moretimebuyer~
                Order_Credit_Card_Payment_Amount+Order_Hour_of_Day+Order_Day_of_Week+
                Order_Credit_Card_Brand+
                Gender
-             ,data = train,method = "class")
+             ,data = train,method = "class",
+             control = rpart.control(xval = 10))
+
+rpart.rules(fit)
 
 
 plot(fit, uniform = TRUE,margin = 0.1,main = "O Tree")
-text(fit, use.n = TRUE,all = TRUE,cex=.8)
+text(fit, use.n = TRUE,all = TRUE,cex=.6)
 prediction <- predict(fit,test,type = "class")
 table(prediction,test$moretimebuyer) 
+
 
 plotcp(fit)
 kable(fit$cptable)
@@ -584,9 +590,11 @@ kable(fit$cptable)
 
 fit.pruned <- prune(fit,cp = fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"] )
 
+rpart.rules(fit.pruned)
+
 
 plot(fit.pruned, uniform = TRUE,margin = 0.1, main= "P Tree")
-text(fit.pruned, use.n = TRUE,all = TRUE,cex=.8)
+text(fit.pruned, use.n = TRUE,all = TRUE,cex=.6)
 prediction_p <- predict(fit.pruned,test,type = "class")
 table(prediction_p,test$moretimebuyer) 
 
