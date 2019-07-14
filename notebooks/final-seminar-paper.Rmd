@@ -115,6 +115,60 @@ ggplot(data_requests_products) +
   theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
 ```
 
+## What are the most popular brands for men and women?
+### Women
+
+```{r include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(stringr)
+orders = read.csv("../data/interim/orders/orders_cleaned.csv")
+orders = orders %>% select(Customer_ID, Order_Line_Session_ID, Order_ID, Customer_ID, Age, Gender, Product_Level_2_Path, Order_Status, Order_Line_Quantity)
+orders$Brand = unlist(lapply(orders$Product_Level_2_Path, FUN = function(path){return(str_match(path, "\\/.*\\/.*\\/(.*)")[,2])}))
+```
+
+To get an overview over what brands your customers like the most we vizualized the popularity of the brands based on how often they get purchased.
+```{r include= FALSE}
+mostPopularFemaleBrands = orders %>% 
+  filter(Gender == "Female") %>%
+  filter(!is.na(Brand)) %>%
+  group_by(Brand) %>%
+  summarise(Order_Amount = sum(Order_Line_Quantity)) %>%
+  arrange(desc(Order_Amount)) %>%
+  head(10)
+```
+
+```{r echo=FALSE}
+mostPopularFemaleBrands
+```
+
+```{r echo=FALSE}
+ggplot(mostPopularFemaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) + 
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Most Popular Female Brands", x = "Brand", y = "Number of Purchases")
+```
+
+### Men
+```{r include=FALSE}
+mostPopularMaleBrands = orders %>%
+  filter(Gender == "Male") %>%
+  filter(!is.na(Brand)) %>%
+  group_by(Brand) %>%
+  summarise(Order_Amount = sum(Order_Line_Quantity)) %>%
+  arrange(desc(Order_Amount)) %>%
+  head(10)
+```
+
+
+```{r echo=FALSE}
+ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) + 
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Most Popular Male Brands", x = "Brand", y = "Number of Purchases")
+```
+
 
 # Comparison of Groups
 After loading the "experimental_results" dataset we decided to keep the first ID column.
