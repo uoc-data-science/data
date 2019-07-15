@@ -254,13 +254,93 @@ names(partialExperimentDf)[1] <- "id"
 partialExperimentDf$id <- as.factor(partialExperimentDf$id)
 summary(partialExperimentDf)
 ```
+## Broad overview of distributions
+```{r include=FALSE}
+data <- read.csv("../experiment/experimental_results.csv")
+recommender_to_sales <- setNames(data.frame(matrix(ncol = 3, nrow = 0)), c("Id", "Recommender", "Sales"))
+index <- 1
+for(row in 1:nrow(data)){
+  if(!is.na(data[row, "ranking_based"])){
+    recommender_to_sales[nrow(recommender_to_sales) +1,] = list(index, "ranking_based", as.numeric(data[row, "ranking_based"]))
+    index <- index+1
+  }
+  if(!is.na(data[row, "random_recommendations"])){
+    recommender_to_sales[nrow(recommender_to_sales) +1,] = list(index, "random_recommendations", as.numeric(data[row, "random_recommendations"]))
+    index <- index+1
+  }
+  if(!is.na(data[row, "profit_oriented"])){
+    recommender_to_sales[nrow(recommender_to_sales) +1,] = list(index, "profit_oriented", as.numeric(data[row, "profit_oriented"]))
+    index <- index+1
+  }
+}
+recommender_to_sales$Id <- NULL
 
-We then compared the results of both the ranking-based as well as the profit-oriented recommender systems against the results of the baseline recommender system (that selects products randomly). The mean values (i.e. sales) of the profit-oriented recommender system and the baseline recommender system are not equal (p<0.00001), while the same hypothesis could not be rejected for the comparison of the ranking-based and the baseline recommender system (p=0.08). As the profit-oriented recommender systems mean value (21.75) is greater than the baseline mean (17.91), ebuy should preferably use the profit-oriented one.
-```{r , echo=FALSE}
-t.test(partialExperimentDf$random_recommendations, partialExperimentDf$ranking_based)
-t.test(partialExperimentDf$random_recommendations, partialExperimentDf$profit_oriented)
 ```
 
+```{r echo=FALSE}
+ggplot(recommender_to_sales %>% filter(Recommender=="ranking_based"), aes(x=Sales)) +
+  stat_density(geom="line") +
+  geom_vline(aes(xintercept=mean(Sales)),color="black", linetype="dashed", size=1) +
+  labs(x="Sales",y= "Density", title="Ranking-Based Recommender: Sales Density and Mean")
+```
+
+```{r echo=FALSE}
+ggplot(recommender_to_sales %>% filter(Recommender=="profit_oriented"), aes(x=Sales)) +
+  stat_density(geom="line") +
+  geom_vline(aes(xintercept=mean(Sales)),color="black", linetype="dashed", size=1) +
+  labs(x="Sales",y= "Density", title="Profit-Oriented Recommender: Sales Density and Mean")
+```
+
+```{r echo=FALSE}
+ggplot(recommender_to_sales %>% filter(Recommender=="random_recommendations"), aes(x=Sales)) +
+  stat_density(geom="line") +
+  geom_vline(aes(xintercept=mean(Sales)),color="black", linetype="dashed", size=1) +
+  labs(x="Sales",y= "Density", title="Random Recommender: Sales Density and Mean")
+```
+
+```{r echo=FALSE}
+result <- group_by(recommender_to_sales, Recommender) %>%
+  summarise(
+    Count = n(),
+    Mean = mean(Sales, na.rm = TRUE),
+    Sd = sd(Sales, na.rm = TRUE),
+    Se = Sd/sqrt(Count),
+    CiMult = qt(0.975, Count-1),
+    Ci = Se * CiMult
+  )
+
+# visualize CI
+ggplot(result, aes(x=Recommender, y=Mean, group=1)) +
+  geom_point(alpha=0.52) +
+  geom_errorbar(width=.1, aes(ymin=Mean-Ci, ymax=Mean+Ci), colour="darkred") + labs(x="Recommender System",y= "Sales", title="Recommender Confidence Intervals")
+```
+
+It seems like the profit-oriented recommender performs the best (mu=21.75) while the random recommender (mu=18.5) and the ranking based (mu=19.0) recommender seem to perform quite similar. Furthermore the confidence interval of the profit-oriented recommender is very narrow while the confidence interval of the ranking-based and random recommender system are wider and also overlap. Therefore we should definitely do a statisitcal test to prove if the means are significantly different or not. 
+We will first compare the profit-oriented and ranking-based recommender each with the random recommender to see if the recommenders perform significantly better than a random recommender. Before doing so we first check if the distributions of the recommenders are normally distributed so we can perform a t-test. In order to do so we used the Shapioro-Wilk normality test.
+
+## Shapiro-Wilk Normality Test
+
+```{r echo = FALSE}
+with(recommender_to_sales, shapiro.test(Sales[Recommender == "profit_oriented"]))
+with(recommender_to_sales, shapiro.test(Sales[Recommender == "ranking_based"]))
+with(recommender_to_sales, shapiro.test(Sales[Recommender == "random_recommendations"]))
+```
+All the p-values are smaller than the significance level of 0.05 which means that the distributions are not normally distributed. Therefore we used the Unpaired Two-Samples Wilcoxon test to compare the means of the different recommenders.
+
+## Wilcoxon Test
+
+```{r echo = FALSE}
+# perform wulxoc test
+ranking_based_sales <- recommender_to_sales %>% filter(Recommender == "ranking_based")
+profit_oriented_sales <- recommender_to_sales %>% filter(Recommender == "profit_oriented")
+random_recommendations_sales <- recommender_to_sales %>% filter(Recommender == "random_recommendations")
+
+wilcox.test(profit_oriented_sales$Sales, random_recommendations_sales$Sales, alternative = "two.sided")
+wilcox.test(ranking_based_sales$Sales, random_recommendations_sales$Sales, alternative = "two.sided")
+wilcox.test(profit_oriented_sales$Sales, ranking_based_sales$Sales, alternative = "two.sided")
+```
+
+We then compared the results of both the ranking-based as well as the profit-oriented recommender systems against the results of the baseline recommender system (that selects products randomly). We first compared the profit-oriented recommender to the random recommender (baseline recommender). The results of the tests show that the means of the both recommenders are not the same (p<0.00001). Surprisingly, the same hypothesis could not be rejected for the comparison of the ranking-based and the baseline recommender system (p=0.2008). As the profit-oriented recommender systems mean value (21.75) is greater than the baseline mean (17.91), ebuy should preferably use the profit-oriented one.
 
 # Models and Prediction
 ```{r includes02, echo=FALSE, message=FALSE}
