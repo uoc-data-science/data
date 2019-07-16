@@ -4,6 +4,7 @@ bibliography: "bibliographies/literature.bib"
 output:
   bookdown::html_document2:
     toc: yes
+    toc_depth: 2
     theme: spacelab
 ---
 ```{r setRngSeed, echo=FALSE}
@@ -21,6 +22,7 @@ library(tidyverse)
 library(knitr)
 library(kableExtra)
 library(usmap)
+library(ineq)
 ```
 
 ## Loading the Data and Recoding Variables
@@ -35,7 +37,9 @@ partialOrdersDf <- orderDf[c("Product_Family_ID",
                              "Gender",
                              "US_State",
                              "Age",
-                             "Order_Day_of_Week")]
+                             "Order_Day_of_Week",
+                             "BrandName",
+                             "Order_Amount")]
 
 partialOrdersDf$Product_Family_ID <- as.factor(partialOrdersDf$Product_Family_ID)
 partialOrdersDf$Order_Line_Day_of_Week <- as.factor(partialOrdersDf$Order_Line_Day_of_Week)
@@ -44,57 +48,20 @@ partialOrdersDf$Gender <- as.factor(partialOrdersDf$Gender)
 partialOrdersDf$US_State <- as.factor(partialOrdersDf$US_State)
 partialOrdersDf$Age <- as.numeric(partialOrdersDf$Age)
 
-#partialOrdersDf$Order_Session_ID <- factor(partialOrdersDf$Order_Session_ID)
-#partialOrdersDf$Product_Object_ID <- factor(partialOrdersDf$Product_Object_ID)
-#partialOrdersDf$Product_ID <- factor(partialOrdersDf$Product_ID)
-#partialClickstreamDf$Session_ID <- factor(partialClickstreamDf$Session_ID)
-
 summary(partialOrdersDf)
-```
-
-## Cleaning the Data
-
-
-# Summary Statistics
-For ebuy it should be highly interesting to find out, which of their products and product families are the ones that sell best.
-```{r mostOrderedProductsTable, echo=FALSE}
-# TODO: these 2 tables do float, but are awkwardly close to the page borders --> center them!
-partialOrdersDf %>%
-  drop_na(Product_ID) %>%
-  count(Product_ID) %>%
-  arrange(desc(n)) %>%
-  slice(1:6) %>%
-  kable(.) %>%
-  kable_styling(full_width=FALSE, position="float_left")
-```
-```{r mostOrderedProductFamiliesTable, echo=FALSE}
-partialOrdersDf %>%
-  drop_na(Product_Family_ID) %>%
-  count(Product_Family_ID) %>%
-  arrange(desc(n)) %>%
-  slice(1:6) %>%
-  kable(.) %>%
-  kable_styling(full_width=FALSE, position="right")
-```
-
-Orders at ebuy's online shop might be distributed differently among the different days of the week. To examine, whether this is the case, we plotted a frequency distribution of all orders over the days of week. We first reordered the days in the canonical way (i.e. Monday, Tuesday, Wednesday, ...) and then counted and plotted the order frequencies against them (figure \@ref(fig:orderDayBarPlot1)). Clearly, the most orders are placed during the weekdays (peaking on Wednesdays), the least orders on sunday.
-```{r orderDayBarPlot1, echo=FALSE, fig.cap="Distribution of orders among different days of the week"}
-partialOrdersDf %>%
-  mutate(Order_Day_of_Week = factor(Order_Day_of_Week, levels=c("Monday", "Tuesday", "Wednesday",
-                                                                "Thursday", "Friday", "Saturday",
-                                                                "Sunday"))) %>%
-  count(Order_Day_of_Week) %>%
-  slice(1:7) %>%
-ggplot(data = .) +
-  geom_bar(mapping = aes(x = Order_Day_of_Week, y = n), stat = "identity")
 ```
 
 ```{r}
 clickstream_data <- read.csv(file="../data/interim/clickstream/clickstream_cleaned.csv", sep=",", na.strings=c("NA"))
 ```
 
-## Clickstream
 
+## Cleaning the Data
+TODO!
+
+
+# Summary Statistics
+## Clicks
 ```{r summarytable1, echo=FALSE}
 
 table_data <- clickstream_data %>%
@@ -105,9 +72,9 @@ table_data <- clickstream_data %>%
             max_RPT = max(Request_Processing_Time), max_RS = max(Request_Sequence), max_HOD = max(REQUEST_HOUR_OF_DAY))
 
 table_data <- table_data[1,] %>%
-  gather("column", "mean", 1:3) %>% 
-  gather("sd_data", "sd", 1:3) %>% 
-  gather("min_data", "min", 1:3) %>% 
+  gather("column", "mean", 1:3) %>%
+  gather("sd_data", "sd", 1:3) %>%
+  gather("min_data", "min", 1:3) %>%
   gather("max_data", "max", 1:3) %>%
   mutate(column = sapply(strsplit(column, "_"), "[", 2),
          sd_data = sapply(strsplit(sd_data, "_"), "[", 2),
@@ -117,14 +84,49 @@ table_data <- table_data[1,] %>%
   select(column, mean, sd, min, max)
 
 kable(table_data)
-  
+```
+## Customers
+TODO
+
+## Products
+For ebuy it should be interesting to find out, which of their products and product families are the ones that sell best. The best selling product is a pair of socks from brand HOSO, their best selling product family has the ID 12295. Unfortunately the data does not provide any meaningful further details, what this product family is made of.
+```{r mostOrderedProductsAndProductFamilies, echo=FALSE}
+findDistinctBrandname <- function(dataFrame, productId) {
+  bn <- dataFrame %>%
+    filter(Product_ID == productId) %>%
+    select(BrandName) %>%
+    distinct(BrandName) %>%
+    slice(1:1)
+  return(bn$BrandName)
+}
+
+topSellingProducts <- partialOrdersDf %>%
+  select(Product_ID, BrandName) %>%
+  drop_na(Product_ID) %>%
+  count(Product_ID) %>%
+  arrange(desc(n)) %>%
+  rowwise() %>%
+  mutate(
+    brandName = findDistinctBrandname(partialOrdersDf, Product_ID)
+  )
+
+topSellingProducts %>%
+  slice(1:5) %>%
+  kable(.) %>%
+  kable_styling(full_width=FALSE)
+
+partialOrdersDf %>%
+  drop_na(Product_Family_ID) %>%
+  count(Product_Family_ID) %>%
+  arrange(desc(n)) %>%
+  slice(1:5) %>%
+  kable(.) %>%
+  kable_styling(full_width=FALSE)
 ```
 
 
 # Plots
-
-## Clickstream
-
+## Clicks
 ```{r heatmap, echo=FALSE}
 
 
@@ -186,8 +188,8 @@ ggplot(data_requests_products) +
   theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
 ```
 
-## What are the most popular brands for men and women?
-### Women
+## Customers
+### What are the most popular brands for men and women?
 
 ```{r include=FALSE}
 library(ggplot2)
@@ -199,6 +201,7 @@ orders = orders %>% select(Customer_ID, Order_Line_Session_ID, Order_ID, Custome
 orders$Brand = unlist(lapply(orders$Product_Level_2_Path, FUN = function(path){return(str_match(path, "\\/.*\\/.*\\/(.*)")[,2])}))
 ```
 
+For Women:
 To get an overview over what brands your customers like the most we vizualized the popularity of the brands based on how often they get purchased.
 ```{r include= FALSE}
 mostPopularFemaleBrands = orders %>% 
@@ -221,7 +224,7 @@ ggplot(mostPopularFemaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), 
   labs(title = "Most Popular Female Brands", x = "Brand", y = "Number of Purchases")
 ```
 
-### Men
+For Men:
 ```{r include=FALSE}
 mostPopularMaleBrands = orders %>%
   filter(Gender == "Male") %>%
@@ -232,12 +235,50 @@ mostPopularMaleBrands = orders %>%
   head(10)
 ```
 
-
 ```{r echo=FALSE}
 ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) + 
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(title = "Most Popular Male Brands", x = "Brand", y = "Number of Purchases")
+```
+
+## Orders
+### Different order volumes on different days of the week?
+Orders at ebuy's online shop might be distributed differently among the different days of the week. To examine, whether this is the case, we plotted a frequency distribution of all orders over the days of week. We first reordered the days in the canonical way (i.e. Monday, Tuesday, Wednesday, ...) and then counted and plotted the order frequencies against them (figure \@ref(fig:orderDayBarPlot1)). Clearly, the most orders are placed during the weekdays (peaking on Wednesdays), the least orders on sunday.
+```{r orderDayBarPlot1, echo=FALSE, fig.cap="Distribution of orders among different days of the week"}
+partialOrdersDf %>%
+  mutate(
+    Order_Day_of_Week = factor(Order_Day_of_Week, levels=c(
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"))
+    ) %>%
+  count(Order_Day_of_Week) %>%
+  slice(1:7) %>%
+  ggplot(data = .) +
+    geom_bar(mapping = aes(x = Order_Day_of_Week, y = n), stat = "identity")
+```
+
+### What is the distribution of order amounts?
+For an online shop like ebuy it might be of interest to identify those customers that place the vast majority of all orders. In order to visualize the distribution of order amounts we computed their Lorenz curve and plotted the cummulative percentages (figure \@ref(fig:orderTotalLc)).
+```{r orderTotalLc, echo=FALSE, fig.cap="Lorenz Curve: Distribution of order amounts"}
+lc <- Lc(partialOrdersDf$Order_Amount,
+         n = rep(1, length(partialOrdersDf$Order_Amount)),
+         plot = F)
+
+p <- lc[1]
+L <- lc[2]
+lc <- data.frame(p,L)
+
+ggplot(data = lc) +
+  geom_line(aes(x = p, y = L)) +
+  scale_y_continuous(name="% of order amounts", limits=c(0,1)) +
+  scale_x_continuous(name="% of orders", limits=c(0,1)) +
+  geom_abline()
 ```
 
 
