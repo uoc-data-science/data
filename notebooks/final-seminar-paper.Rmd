@@ -23,13 +23,92 @@ library(knitr)
 library(kableExtra)
 library(usmap)
 library(ineq)
+library(janitor)
+library(stringr)
 ```
 
-## Loading the Data and Recoding Variables
+## Loading the Data
+Ebuy's data came separated into different files: files that contained the acutal observations and files that described the columns. We first joined the column names with their respective data sets.
+```{r loadingTheData, echo=FALSE, message=FALSE}
+# This code chunk used to reside in 'script_02_join_data_with_column_names.r'! Its now part of the "big markdown file".
+readdatawithcolumns <- function(headersFile, dataFile) {
+    message("Reading headers...")
+    tmpHeaderNames <- read.csv(file=headersFile, sep=":", header=FALSE)
+    headerNames <- tmpHeaderNames$V1
+
+    message("Replacing spaces...")
+    headerNames <- gsub(" ", "_", headerNames)
+
+    message("Adding headers to data file...")
+    df <- read.csv(file=dataFile, sep=",", header=FALSE)
+    colnames(df) <- headerNames
+    return(df)
+}
+
+# read the ORDER data:
+orderDf <- readdatawithcolumns(headersFile="../data/raw/orders/order_columns.txt",
+                               dataFile="../data/raw/orders/order_data.csv")
+#write.csv(orderDf, file="data/interim/orders/orders_with_headers.csv", row.names=FALSE)
+message("Done!")
+
+# read the CLICKSTREAM:
+clickstreamDf1 <- readdatawithcolumns(headersFile="../data/raw/clickstream/clickstream_columns.txt",
+                                      dataFile="../data/interim/clickstream/clickstream_data.csv")
+clickstreamDf2 <- readdatawithcolumns(headersFile="../data/raw/clickstream/clickstream_columns.txt",
+                                      dataFile="../data/raw/clickstream/clickstream_data_part_2.csv")
+clickstreamDf <- rbind(clickstreamDf1, clickstreamDf2)
+#write.csv(clickstreamDf, file="data/interim/clickstream/clickstream_with_headers.csv", row.names=FALSE)
+message("Done!")
+```
+
+## Cleaning the Data
+After examining the data sets we than proceeded to clean them.
+```{r cleaningTheData, echo=FALSE, message=FALSE}
+# This code chunk used to reside in 'script_03_clean_data.r'! Its now part of the "big markdown file".
+cleanFile <- function(filePath, threshold) {
+  message(sprintf("Loading file from %s.", filePath))
+  df <- read.csv(file=filePath, header=TRUE)
+  # TODO: why does ', na.strings=c("?","NA", "NULL")' not work here?
+
+  message("Cleaning data.")
+  message("1. Removing empty rows and columns.")
+  dfCleaned <- remove_empty(dat = df, which = c("rows", "cols"))
+  columnsDeleted <- ncol(df) - ncol(dfCleaned)
+  message(sprintf("1. Removed %d columns", columnsDeleted))
+
+  message("2. Removing constant columns.")
+  dfCleaned <- remove_constant(dat = dfCleaned, na.rm = TRUE)
+  columnsDeleted <- ncol(df) - ncol(dfCleaned) - columnsDeleted
+  message(sprintf("2. Removed %d columns", columnsDeleted))
+
+  message(sprintf("3. Removing columns with unknown values (threshold = %f).", threshold))
+  deletableColumns <- list()
+  for(c in 1:ncol(dfCleaned)){
+    currentColumn <- dfCleaned[,c]
+    unknownPercentage <- sum(currentColumn == "NULL" | currentColumn == "?")/length(currentColumn)
+    if(unknownPercentage > threshold){
+      deletableColumns <- c(deletableColumns, colnames(dfCleaned)[c])
+    }
+  }
+
+  columnsDeleted <- length(deletableColumns)
+  message(sprintf("3. Removed %d columns", columnsDeleted))
+
+  dfCleaned <- dfCleaned[, !(names(dfCleaned) %in% deletableColumns)]
+
+  message(sprintf("File cleaned. Total deleted columns: %d", ncol(df)-ncol(dfCleaned)))
+  return(dfCleaned)
+}
+
+clickstream_data <- cleanFile("../data/interim/clickstream/clickstream_with_headers.csv", 0.9)
+orderDfCleaned <- cleanFile("../data/interim/orders/orders_with_headers.csv", 0.9)
+```
+
+
+## Recoding Variables
 We first loaded the data, picked the columns that we were interested in, and forced some of the variables to be categorical.
 ```{r pickColumnsForceCat01, echo=FALSE}
-orderDf <- read.csv(file="../data/interim/orders/orders_cleaned.csv", sep=",", na.strings=c("?","NA", "NULL"))
-partialOrdersDf <- orderDf[c("Product_Family_ID",
+partialOrdersDf <- orderDfCleaned[c("Product_Family_ID",
                              "Order_Line_Day_of_Week",
                              "Order_Line_Hour_of_Day",
                              "Order_Line_Amount",
@@ -50,15 +129,6 @@ partialOrdersDf$Age <- as.numeric(partialOrdersDf$Age)
 
 summary(partialOrdersDf)
 ```
-
-```{r}
-clickstream_data <- read.csv(file="../data/interim/clickstream/clickstream_cleaned.csv", sep=",", na.strings=c("NA"))
-```
-
-
-## Cleaning the Data
-TODO!
-
 
 # Summary Statistics
 ## Clicks
@@ -192,12 +262,9 @@ ggplot(data_requests_products) +
 ### What are the most popular brands for men and women?
 
 ```{r include=FALSE}
-library(ggplot2)
-library(dplyr)
-library(tidyverse)
-library(stringr)
-orders = read.csv("../data/interim/orders/orders_cleaned.csv")
-orders = orders %>% select(Customer_ID, Order_Line_Session_ID, Order_ID, Customer_ID, Age, Gender, Product_Level_2_Path, Order_Status, Order_Line_Quantity)
+orders = orderDfCleaned %>%
+  select(Customer_ID, Order_Line_Session_ID, Order_ID, Customer_ID,
+         Age, Gender, Product_Level_2_Path, Order_Status, Order_Line_Quantity)
 orders$Brand = unlist(lapply(orders$Product_Level_2_Path, FUN = function(path){return(str_match(path, "\\/.*\\/.*\\/(.*)")[,2])}))
 ```
 
@@ -244,7 +311,7 @@ ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y 
 
 ## Orders
 ### Different order volumes on different days of the week?
-Orders at ebuy's online shop might be distributed differently among the different days of the week. To examine, whether this is the case, we plotted a frequency distribution of all orders over the days of week. We first reordered the days in the canonical way (i.e. Monday, Tuesday, Wednesday, ...) and then counted and plotted the order frequencies against them (figure \@ref(fig:orderDayBarPlot1)). Clearly, the most orders are placed during the weekdays (peaking on Wednesdays), the least orders on sunday.
+Orders at ebuy's online shop might be distributed differently among the different days of the week. To examine, whether this is the case, we plotted a frequency distribution of all orders over the days of week. We first reordered the days in the canonical way (i.e. Monday, Tuesday, Wednesday, ...) and then counted and plotted the order frequencies against them (figure \@ref(fig:orderDayBarPlot1)). Clearly, the most orders are placed during the weekdays (peaking on Wednesdays), the least orders on sunday. In order to ramp up their sales on those days where sales are particulary low (Saturday, Sunday, Monday), ebuy could for instance try to hand out (digital) coupons that are only valid on the weekend, therby hopefully increasing their sales figures.
 ```{r orderDayBarPlot1, echo=FALSE, fig.cap="Distribution of orders among different days of the week"}
 partialOrdersDf %>%
   mutate(
@@ -282,40 +349,39 @@ ggplot(data = lc) +
 ```
 
 
-# Comparison of Groups
-After loading and examining the dataset containing ebuy's experiment results we picked all columns of interest (e.g. deciding to keep the first ID column only).
+# Ebuy's Experiment
+## Data and Summary Statistics
+Ebuy's experiment provided us with data regarding different recommender systems. After loading and examining the dataset we picked all columns of interest (e.g. deciding to keep the first ID column only) and recoded the chosen ID column as a factor. We than calculated basic summary statistics, where the mean values where of most interest.
 ```{r loadexpdata, echo=FALSE}
 experimentDf <- read.csv(file="../experiment/experimental_results.csv", sep=",", na.strings=c("NA"))
-partialExperimentDf <- experimentDf[c("id_",
-                                      "ranking_based",
-                                      "random_recommendations",
-                                      "profit_oriented")]
-
-names(partialExperimentDf)[1] <- "id"
-partialExperimentDf$id <- as.factor(partialExperimentDf$id)
-summary(partialExperimentDf)
+experimentDf <- experimentDf[c("id_", "ranking_based", "random_recommendations", "profit_oriented")]
+names(experimentDf)[1] <- "id"
+experimentDf$id <- as.factor(experimentDf$id)
+summary(experimentDf)
 ```
-## Broad overview of distributions
+
+## Broad Overview of Distributions
 ```{r include=FALSE}
-data <- read.csv("../experiment/experimental_results.csv")
 recommender_to_sales <- setNames(data.frame(matrix(ncol = 3, nrow = 0)), c("Id", "Recommender", "Sales"))
 index <- 1
-for(row in 1:nrow(data)){
-  if(!is.na(data[row, "ranking_based"])){
-    recommender_to_sales[nrow(recommender_to_sales) +1,] = list(index, "ranking_based", as.numeric(data[row, "ranking_based"]))
+for(row in 1:nrow(experimentDf)){
+  if(!is.na(experimentDf[row, "ranking_based"])){
+    recommender_to_sales[nrow(recommender_to_sales) +1,] = list(index, "ranking_based",
+                                                                as.numeric(experimentDf[row, "ranking_based"]))
     index <- index+1
   }
-  if(!is.na(data[row, "random_recommendations"])){
-    recommender_to_sales[nrow(recommender_to_sales) +1,] = list(index, "random_recommendations", as.numeric(data[row, "random_recommendations"]))
+  if(!is.na(experimentDf[row, "random_recommendations"])){
+    recommender_to_sales[nrow(recommender_to_sales) +1,] = list(index, "random_recommendations",
+                                                                as.numeric(experimentDf[row, "random_recommendations"]))
     index <- index+1
   }
-  if(!is.na(data[row, "profit_oriented"])){
-    recommender_to_sales[nrow(recommender_to_sales) +1,] = list(index, "profit_oriented", as.numeric(data[row, "profit_oriented"]))
+  if(!is.na(experimentDf[row, "profit_oriented"])){
+    recommender_to_sales[nrow(recommender_to_sales) +1,] = list(index, "profit_oriented",
+                                                                as.numeric(experimentDf[row, "profit_oriented"]))
     index <- index+1
   }
 }
 recommender_to_sales$Id <- NULL
-
 ```
 
 ```{r echo=FALSE}
@@ -391,15 +457,13 @@ library(rpart.plot)
 ```
 
 ## Training the Model{#subsection-ttm}
-As ebuy's products fall into certain product families, we trained a model that allows to predict for a new customer from which product family he will purchase a product. We first grew a large tree with a complexity parameter of cp=0.00001 (i.e. splits had to decrease the lack of fit by a factor of 0.00001).
-```{r modelTraining1, echo=FALSE}
+As ebuy's products fall into certain product families, we trained a model that allows to predict for a new customer from which product family he will purchase a product. We first grew a large tree with a complexity parameter of cp=0.00001 (i.e. splits had to decrease the lack of fit by a factor of 0.00001). We then examined the results of a 10-fold cross-validation by plotting the complexity parameter vs. its cross-validated error (as shown in figure \@ref(fig:cpplottree1)).
+```{r cpplottree1, echo=FALSE, fig.cap="Product Family ID: Complexity parameter vs. cross-validated error"}
 tree <- rpart(Product_Family_ID ~ Order_Line_Day_of_Week + Gender + Age,
               method="class",
               data=partialOrdersDf,
               cp=0.00001)
-```
-We then examined the results of a 10-fold cross-validation by plotting the complexity parameter vs. its cross-validated error (as shown in figure \@ref(fig:cpplottree1)).
-```{r cpplottree1, echo=FALSE, fig.cap="Product Family ID: Complexity parameter vs. cross-validated error"}
+
 plotcp(tree)
 ```
 
@@ -411,11 +475,9 @@ prune(tree, cp=0.0007) %>%
 
 Next we computed a 10-fold cross-validated linear regression model that helped us understand, how the different properties of customers affected the amount of money they would spend in total.
 ```{r linReg1, echo=FALSE}
-# enable cross validation and set the number of folds:
 ctrl <- trainControl(method = "cv",
                      number = 10)
 
-# preform a linear regression:
 linreg1 <- train(Order_Line_Amount ~ Age + Gender,
                  data = partialOrdersDf,
                  trControl = ctrl,
@@ -426,7 +488,7 @@ linreg1$finalModel
 ```
 
 ## Predictions
-Having trained the models in \@ref(subsection-ttm) ebuy could predict the purchasing behaviour of future customers. Given a previously unseen customer, ebuy could for instance now predict the product family which she is going to purchase from.
+Having trained the models in \@ref(subsection-ttm) ebuy could predict the purchasing behaviour of future customers. Given such a previously unseen customer, ebuy could for instance now predict the product family which she is going to purchase from.
 ```{r prediction1, eval=FALSE}
 predict(tree, unseenCustomer, type="class")
 ```
