@@ -330,7 +330,7 @@ ave_Session_df <- click_df %>%
             LeadsToBuy = sum(LeadsToBuy) > 0,
             Session_day_2 = first(Session_First_Request_Day_of_Week),
             Session_hour = first(Session_First_Request_Hour_of_Day),
-            Visited_Products_List = list(unique(Product_ID))
+            Visited_Products_List = paste(Product_ID, collapse = ",")
             )
   
 ave_Session_df$Session_duration_mins <- as.numeric(ave_Session_df$Session_duration_mins)
@@ -548,28 +548,79 @@ temp$Referrer <- as.integer(as.factor(temp$Referrer))
 ```
 
 ```{r predictionPreprocess}
+library(doParallel)
+# Partition the data in a 80%/20% split
+set.seed(1805)
+trainIndex <- createDataPartition(temp$LeadsToBuy, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+train <- temp[trainIndex,]
+test <- temp[-trainIndex,]
 
-
-tempTrue <- filter(temp, temp$LeadsToBuy)
-tempFalse <- filter(temp, !temp$LeadsToBuy)
-
-train_ind <- sample(seq_len(nrow(temp)), size = nrow(temp)*0.7)
-
-train <- temp[train_ind, ]
-test <- temp[-train_ind, ]
-
+# Scale the data
 set.seed(1343)
 preProc <- preProcess(train, method=c("center","scale"))
 train.scaled <- predict(preProc, train)
 test.scaled <- predict(preProc, test)
 
-willbuy.logit <- glm(LeadsToBuy ~.,family=binomial(link='logit'),data=train)
-willbuy.tree <- rpart(LeadsToBuy ~ ., data = train, method = 'class')
-willbuy.nb <- naiveBayes(LeadsToBuy ~ ., data=train)
+# Sample the data, renames target to Class
+train.scaled$LeadsToBuy <- as.factor(train.scaled$LeadsToBuy)
+set.seed(1811)
+down_train <- downSample(x = train.scaled[, -ncol(train.scaled)],
+                         y = train.scaled$LeadsToBuy)
 
-fitted.results.tree <- predict(willbuy.tree, newdata = test, type = 'prob')
-fitted.results.nb <- predict(willbuy.nb, test, type='raw')
-fitted.results.logit <- predict(willbuy.logit,newdata=test,type='response')
+up_train <- upSample(x = train.scaled[, -ncol(train.scaled)],
+                     y = train.scaled$LeadsToBuy)                         
+
+# Set up repetition for evaluation
+fitControl <- trainControl(## 10-fold CV
+                           method = "repeatedcv",
+                           number = 10,
+                           ## repeated ten times
+                           repeats = 10)
+# Register 4 Processors for parallel optimization
+cl <- makePSOCKcluster(3)
+registerDoParallel(cl)
+# Learn a naive bayes, a logistic regression and a decision tree
+set.seed(1820)
+fit.down.nb <- train(Class ~ ., data = down_train, 
+                 method = "naive_bayes", 
+                 trControl = fitControl)
+fit.up.nb <- train(Class ~ ., data = up_train, 
+                 method = "naive_bayes", 
+                 trControl = fitControl)
+set.seed(1820)
+fit.down.log <- train(Class ~ ., data = down_train, 
+                 method = "regLogistic", 
+                 trControl = fitControl)
+fit.up.log <- train(Class ~ ., data = up_train, 
+                 method = "regLogistic", 
+                 trControl = fitControl)
+set.seed(1820)
+fit.down.tree <- train(Class ~ ., data = down_train, 
+                 method = "ranger", 
+                 trControl = fitControl)
+fit.up.tree <- train(Class ~ ., data = up_train, 
+                 method = "ranger", 
+                 trControl = fitControl)
+
+# Stop parallel execution
+stopCluster(cl)
+
+fitted.down.log <- predict(fit.down.log, newdata = test.scaled, type = "prob")
+fitted.up.log <- predict(fit.up.log, newdata = test.scaled, type = "prob")
+fitted.down.nb <- predict(fit.down.nb, newdata = test.scaled, type = "prob")
+fitted.up.nb <- predict(fit.up.nb, newdata = test.scaled, type = "prob")
+fitted.down.tree <- predict(fit.down.tree, newdata = test.scaled, type = "prob")
+fitted.up.tree <- predict(fit.up.tree, newdata = test.scaled, type = "prob")
+```
+
+## Evaluation of models
+
+```{r}
+fitted.down.log$LeadsToBuy <- as.factor(fitted.down.log["TRUE"] >= .5)
+confusionMatrix(data = fitted.down.log$LeadsToBuy, reference = as.factor(test.scaled$LeadsToBuy))
+twoClassSummary(fitted.down.log, lev = levels(as.factor(c("TRUE","FALSE"))))
 
 willbuy.nb
 
@@ -592,6 +643,8 @@ auc
 
 
 ## Market Basket Analysis
+Analyze session data for click behavior. Products visited together.
+
 ```{r prediction, echo=FALSE}
 pred <- ave_Session_df
 pred <- pred %>%
@@ -601,9 +654,7 @@ pred <- pred %>%
 library(plyr)
 library(arules)
 library(arulesViz)
-transactionData <- ddply(pred,c("Order_ID"),
-                       function(df1)paste(df1$Product_Family_ID,
-                       collapse = ","))
+transactionData <- ddply(pred,c("Session_ID"))
 write.csv(transactionData,"market_basket_transactions.csv", quote = FALSE, row.names = FALSE)
 tr <- read.transactions('market_basket_transactions.csv', format = 'basket', sep=',')
 summary(tr)
@@ -614,7 +665,7 @@ install.packages("RColorBrewer")
 library(RColorBrewer)
 }
 itemFrequencyPlot(tr,topN=20,type="relative",col=brewer.pal(8,'Pastel2'), main="Absolute Item Frequency Plot")
-association.rules <- apriori(tr, parameter = list(supp=0.001, conf=0.95,maxlen=10))
+association.rules <- apriori(tr, parameter = list(supp=0.0005, conf=0.75,maxlen=5))
 inspect(association.rules)
 plot(association.rules, method = "graph",  engine = "htmlwidget")
 ```
