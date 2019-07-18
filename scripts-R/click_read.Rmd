@@ -113,18 +113,18 @@ head(dataframe)
 write.csv(dataframe, file = "../00_raw_data/click_r.csv", row.names =FALSE, na = "")
 
 # py csv
-#py_df = read.csv(file = "../00_raw_data/click_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
+py_df = read.csv(file = "../00_raw_data/click_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
 
 # r csv
-#r_df = read.csv(file = "../00_raw_data/click_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
+r_df = read.csv(file = "../00_raw_data/click_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
 
 #head(r_df)
 #head(py_df)
 # show difference between python and r dataset
-#diff_r <-r_df[!(r_df%in%py_df)]
-#head(diff_r)
-#diff_p <-py_df[!(py_df%in%r_df)]
-#head(diff_p)
+diff_r <-r_df[!(r_df%in%py_df)]
+head(diff_r)
+diff_p <-py_df[!(py_df%in%r_df)]
+head(diff_p)
 
 ```
 
