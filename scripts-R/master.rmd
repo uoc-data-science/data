@@ -71,8 +71,8 @@ require("knitr")
 rootDir <- knitr::opts_knit$get("root.dir")
 headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
 headersPath2 <- paste(rootDir, "01_data_understanding/clickstream_columns.txt", sep="/")
-rdaPathOrder <- paste(rootDir, "00_raw_data/order.rda")
-rdaPathClick <- paste(rootDir, "00_raw_data/click.rda")
+rdaPathOrder <- paste(rootDir, "00_raw_data/order.rda", sep="/")
+rdaPathClick <- paste(rootDir, "00_raw_data/click.rda", sep="/")
 
 # dataPath <- paste(rootDir, "02_data_preparation/order_data_clean.csv", sep="/")
 # dataPath2 <- paste(rootDir, "02_data_preparation/click_data_clean.csv", sep="/")
@@ -109,11 +109,15 @@ In times of big data and the importance of evaluating company's data to stay com
 At first, the csv-files containting data will be imported.
 
 ```{r dataImportShortcut}
+didNotImport <- FALSE
 tryCatch(load(rdaPathClick),
          error=function(e){
-           didNotImport = TRUE
+           didNotImport <<- TRUE
          })
-tryCatch(load(rdaPathOrder))
+tryCatch(load(rdaPathOrder),
+         error=function(e){
+           didNotImport <<- TRUE
+         })
 
 ```
 
@@ -266,7 +270,6 @@ order_df <- order_df %>%
   dropDuplicateCols()
 
 order_df$Estimated_Income_Code <- deleteSemicolons(order_df$Estimated_Income_Code)
-relevant_df$Estimated_Income_Code <- deleteSemicolons(relevant_df$Estimated_Income_Code)
 }
 ```
 
@@ -286,8 +289,8 @@ click_df$LeadsToBuy <- click_df$Request_Template == "checkout/thankyou\\.jhtml"
 ```{r exportDataframes}
 if(didNotImport)
 {
-save(click_df, rdaPathClick)
-save(order_df, rdaPathOrder)
+save(click_df, file=rdaPathClick)
+save(order_df, file=rdaPathOrder)
 }
 ```
 
@@ -592,6 +595,8 @@ The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. We
 ## Predictions
 
 ```{r predictionDataset}
+
+knitr::knit_exit()
 library(rpart)
 library(caTools)
 library(rpart.plot)
@@ -619,6 +624,7 @@ temp$Referrer <- as.integer(as.factor(temp$Referrer))
 library(doParallel)
 # Partition the data in a 80%/20% split
 set.seed(1805)
+temp$LeadsToBuy <- factor(temp$LeadsToBuy, labels=c("No", "Yes"))
 trainIndex <- createDataPartition(temp$LeadsToBuy, p = .8, 
                                   list = FALSE, 
                                   times = 1)
@@ -645,7 +651,9 @@ fitControl <- trainControl(## 10-fold CV
                            method = "repeatedcv",
                            number = 10,
                            ## repeated ten times
-                           repeats = 10)
+                           repeats = 5,
+                           classProbs = T,
+                           savePredictions = T)
 # Register 4 Processors for parallel optimization
 cl <- makePSOCKcluster(3)
 registerDoParallel(cl)
@@ -681,6 +689,14 @@ fitted.down.nb <- predict(fit.down.nb, newdata = test.scaled, type = "prob")
 fitted.up.nb <- predict(fit.up.nb, newdata = test.scaled, type = "prob")
 fitted.down.tree <- predict(fit.down.tree, newdata = test.scaled, type = "prob")
 fitted.up.tree <- predict(fit.up.tree, newdata = test.scaled, type = "prob")
+
+library(ggplot2)
+library(plotROC)
+ggplot() %>%
+  + geom_roc(fit.up.log$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "red", hjust = -0.4, vjust = 1.5) %>%
+  + geom_roc(fit.up.nb$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "blue", hjust = -0.4, vjust = 1.5) %>%
+  + geom_roc(fit.up.tree$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "green", hjust = -0.4, vjust = 1.5) %>%
+  + coord_equal()
 ```
 
 ## Evaluation of models
@@ -688,20 +704,18 @@ fitted.up.tree <- predict(fit.up.tree, newdata = test.scaled, type = "prob")
 ```{r}
 fitted.down.log$LeadsToBuy <- as.factor(fitted.down.log["TRUE"] >= .5)
 confusionMatrix(data = fitted.down.log$LeadsToBuy, reference = as.factor(test.scaled$LeadsToBuy))
-twoClassSummary(fitted.down.log, lev = levels(as.factor(c("TRUE","FALSE"))))
+# twoClassSummary(fitted.down.log, lev = levels(as.factor(c("TRUE","FALSE"))))
 
-willbuy.nb
+# summary(willbuy.logit)
+# anova(willbuy.logit, test="Chisq")
 
-summary(willbuy.logit)
-anova(willbuy.logit, test="Chisq")
+# fitted.results <- ifelse(fitted.results > 0.5,1,0)
 
-fitted.results <- ifelse(fitted.results > 0.5,1,0)
-
-misClasificError <- mean(fitted.results != test$LeadsToBuy)
-print(paste('Accuracy',1-misClasificError))
+# misClasificError <- mean(fitted.results != test$LeadsToBuy)
+# print(paste('Accuracy',1-misClasificError))
 
 library(ROCR)
-pr <- prediction(fitted.results.logit, test$LeadsToBuy)
+pr <- prediction(fitted.down.log, test.scaled$LeadsToBuy)
 prf <- performance(pr, measure = "tpr", x.measure = "fpr")
 plot(prf)
 auc <- performance(pr, measure = "auc")
