@@ -26,9 +26,9 @@ require("knitr")
 #knitr::opts_knit$set(root.dir = "C:/Github/data")
 #Philipp root
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
-knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
 #lh_root
-#knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
+knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
 
 ```
 
@@ -132,6 +132,45 @@ click_df$Request_Date_Time <- paste(click_df$Request_Date,click_df2$Request_Date
 click_df$Request_Date_Time <- parse_datetime(click_df$Request_Date_Time,format="%Y-%m-%d %H\\:%M\\:%S")
 ```
 
+```{r compare_dataimport_RPy, eval=FALSE, include=FALSE}
+
+#clickstream dataset compare
+write.csv(click_df, file = "../00_raw_data/click_r.csv", row.names =FALSE, na = "")
+
+# py csv
+py_df = read.csv(file = "../00_raw_data/clickstream_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
+
+# r csv
+r_df = read.csv(file = "../00_raw_data/click_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
+
+#head(r_df)
+#head(py_df)
+# show difference between python and r dataset
+diff_r <-r_df[!(r_df%in%py_df)]
+head(diff_r)
+diff_p <-py_df[!(py_df%in%r_df)]
+head(diff_p)
+
+
+#order dataset compare 
+write.csv(order_df, file = "../00_raw_data/order_r.csv", row.names =FALSE, na = "")
+
+# py csv
+py_df = read.csv(file = "../00_raw_data/order_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
+
+# r csv
+r_df = read.csv(file = "../00_raw_data/order_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
+
+#head(r_df)
+#head(py_df)
+# show difference between python and r dataset
+diff_r <-r_df[!(r_df%in%py_df)]
+head(diff_r)
+diff_p <-py_df[!(py_df%in%r_df)]
+head(diff_p)
+
+
+```
 
 # Analysis
 
@@ -237,6 +276,41 @@ On a first look, the data provides the following information.
 ```
 Thereby, date and time are less useful, as the time-format is transformed into double values that provide no information on a first look.
 
+```{r lorenzkurve_brandvsclicks}
+library(ineq)
+brand_vs_clicks <- dataframe %>%
+  select(BrandName,Session_Visit_Count,Session_ID) %>%
+  group_by(BrandName) %>%
+  summarise(clicks=sum(Session_Visit_Count))
+totalclicks <- sum(brand_vs_clicks$clicks)
+brand_vs_clicks <- brand_vs_clicks %>%
+  select(BrandName,clicks) %>%
+  group_by(BrandName) %>%
+  summarise(clicks = clicks, click_pro = clicks/totalclicks)
+G <- rep(10,10)
+G_kum <- c(0,cumsum(G/100))
+G1 <- brand_vs_clicks$click_pro
+G1_kum <- c(0,cumsum(brand_vs_clicks$click_pro/100))
+D1 <- Lc(G1, n = rep(1,length(G1)), plot = FALSE)
+p <- D1[1]
+L <- D1[2]
+D1_df <- data.frame(p,L)
+xx <- c(G_kum,rev(G_kum))
+yy <- c(G1_kum,rev(G_kum))
+koordinaten <- as.data.frame(xx)
+koordinaten$yy <- yy[1:22]
+gini <- round(ineq(G1) * 100, digits = 1)
+p1 <- ggplot(data=D1_df) +
+  geom_point(aes(x=p, y=L)) +
+  geom_line(aes(x=p, y=L), stat = "identity", color="#990000") +
+  geom_polygon(data = koordinaten, aes(x = xx, y = yy), fill = rgb(255,100,0,55,maxColorValue=255)) +
+  annotate("text", x = 0.9, y = 0.1, label = paste("Gini =", gini), size=3, colour="gray30") +
+  geom_abline()
+p1
+ggplot(brand_vs_clicks)+
+  geom_point(mapping = aes(x=BrandName,y=click_pro))
+
+```
 
 
 
