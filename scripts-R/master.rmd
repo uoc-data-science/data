@@ -17,6 +17,9 @@ library(stringr)
 library(hms)
 library(knitr)
 library(naniar)
+library(scales)
+library(lubridate)
+library(maps)
 ```
 
 
@@ -43,9 +46,12 @@ origin_orders <- paste(rootDir,"orders", sep="/")
 
 des_root <- paste(rootDir, "00_raw_data", sep="/")
 des_under <- paste(rootDir, "01_data_understanding", sep="/")
+```
 
+```{r loadrda, include=F}
 # -------- IF THIS IS POSSIBLE, ALL IMPORT AND CLEANSING STEPS CAN BE SKIPPED --------#
 didNotImport <- FALSE
+
 tryCatch(load(rdaPathClick),
          error=function(e){
            didNotImport <<- TRUE
@@ -54,12 +60,13 @@ tryCatch(load(rdaPathOrder),
          error=function(e){
            didNotImport <<- TRUE
          })
+```
 
+```{r filecopies, echo=F}
 if(didNotImport){ # only necessary, if rdas not available
   # move datasets
   # clickstream1
   unzip(paste(origin_clickstream,"clickstream_data.zip",sep="/"),files="clickstream_data.csv",list = FALSE, exdir = des_root)
-  unzip(paste(origin_clickstream,"clickstream_data.zip",sep="/"),files= "clickstream_data.csv",list = FALSE, exdir = des_root)
   # clickstream2
   file.copy(paste(origin_clickstream,"clickstream_data_part_2.csv",sep="/"),des_root)
   # experiment 
@@ -105,7 +112,7 @@ if (didNotImport){
 This course simulated a data science project. Within this course, a webshop's dataset from 2000 will be imported, cleaned, analysed and evaluated. <br>
 Along this report, several customer e-mails will be included and guide through the document. Generally, the process is separated into the following steps:<br>
 
-* [Data manipulation]
+* [Data import & manipulation]
 * [Visualisation] using a grammar of graphics
 * [Summary tables]
 * [Comparison of groups] (treatment effect)
@@ -116,16 +123,16 @@ Along this report, several customer e-mails will be included and guide through t
 
 In times of big data and the importance of evaluating company's data to stay competible on a highly digitised market, data science provides powerful tools to handle these challenges.<br>
 Therefore, a fictive company called "ebuy" wanted us to analyse the data that their webshop produced. Two datasets about order details and clicksstreams were available and the first step was to produce "interesting numbers and images that are easy to understand". In a later request, a second clickstream file was uploaded and should be considered as well. <br>
-The following chapters [Data Import], [Data Manipulation] and [Visualisation] will deal with answering these requests.
+The following chapters [Data Import & Manipulation] and [Visualisation] will deal with answering these requests.
 
 
-## Data Import
+## Data Import & Manipulation {#getdata}
 
-Before any visualisation or even analysis can take place, the data has to be imported, cleaned and prepared. This included
+Before any visualisation or even analysis can take place, the data has to be imported, cleaned and prepared. The import included
 
-1. Extracting the zip-packages
-1. Reading csv-files and transforming them to modifiable data frames
-1. Merging the two clickstream files to one data frame
+1. Extracting the zip-packages.
+1. Reading csv-files and transforming them to modifiable data frames.
+1. Merging the two clickstream files to one data frame.
 
 ```{r dataImport, include=FALSE}
 if(didNotImport)
@@ -168,9 +175,7 @@ if(didNotImport)
 }
 ```
 
-## Data Manipulation {#dataMan}
-
-A few things within the datasets had to be fixed.
+Getting to _data manipulation_, a few things within the datasets had to be fixed.
 
 ```{r cleaningFunctions, echo=FALSE}
 cleanNas <- function(x){
@@ -303,36 +308,98 @@ if(didNotImport)
 1. All semicolons within cells were simply erased.
 1. Besides, backslashes within cells were erased as well.
 
+In order to be able to work and process faster, the cleaned and manipulated datasets were saved to files in R data format (RDAs). If cleaning is done once, all steps above can be skipped and it can directly be headed forward to the data insights and analysis.
+
 ```{r exportDataframes, echo=FALSE}
 # ---------- This step enables faster knitting and progress after cleaning is done once. --------- #
 if(didNotImport)
 {
-  save(click_df, rdaPathClick)
-  save(order_df, rdaPathOrder)
+  save(click_df, file = rdaPathClick)
+  save(order_df, file = rdaPathOrder)
 }
 ```
 
 
 ## Visualisation
 
-On a first look, the data provides the following information.<br>
-Along the whole timeframe of 
+On a first look, the data provides the following information:
+
+```{r summary_or, echo=FALSE}
+# --- Features --- #
+or$Order_Week <- as.Date(cut(or$Order_Date,
+  breaks = "week",
+  start.on.monday = TRUE))
+or$Daypart <- cut(hour(hms(or$Order_Time)), c(0,6,12,18,Inf), c("Overnight (0-6AM)", "Morning (6-12AM)", "Afternoon (12AM-6PM)", "Prime (6PM-0AM)"))
+
+# --- Graphs --- #
+g <- ggplot(or, aes(Order_Date)) + geom_bar(aes(fill = Daypart)) + labs(x = "Order Date", y = "Number of Orders")
+plot(g)
+
+# --- Counters --- #
+count_1 <- count(or, Order_Date == "2000-03-01")[2,2]
+count_2 <- count(or, Order_Week == "2000-02-28")[2,2]
+temp <- count_2 / count(or)
+count_2_p <- percent(temp[1,1])
+```
+
+What can be observed is that most of the orders were placed at March 1, namely `r count_1`. `r count_2` or `r count_2_p` of all orders have been placed in the week of February 28.<br>
+Further, interestingly the amount of orders of March 1 placed overnight or in the morning is quite high. It could be assumed that there was a special time limited offer in the early hours of March 1.<br><br>
+Overall, only `r count(or, or$Gender)[3,2]` customers specified their gender as "male" and `r count(or, or$Gender)[2,2]` as "female". However, men seem to spend more money on average as the boxplot indicates.
 
 ```{r grammarofg, echo=FALSE}
 #x = as.POSIXct(paste(or$Order_Date, or$Order_Time), format="%Y-%m-%d %H:%M:%S")
 
-ggplot(or) +
-  geom_point(mapping = aes(x = Order_Time, y = Order_Amount, color = Gender))
+# ggplot(or) +
+#   geom_point(mapping = aes(x = Order_Time, y = Order_Amount, color = Gender))
 
 or$Estimated_Income_Code <- factor(or$Estimated_Income_Code, levels = c(
   "Under $15000", "$15000-$19999", "$20000-$29999", "$30000-$39999", "$40000-$49999",
   "$50000-$74999", "$75000-$99999", "$100000-$124999", "$125000 OR MORE"
 ))
 
-boxplot(Order_Amount~Gender, data = order_df, horizontal = TRUE)
-boxplot(Order_Amount~Estimated_Income_Code, data = order_df)
+boxplot(Order_Amount~Gender, data = order_df, horizontal = TRUE, xlab = "Order Amount", ylab = "Gender")
+#boxplot(Order_Amount~Estimated_Income_Code, data = order_df, par(mar = c(12, 5, 4, 2)+ 0.1), las = 2)
 
 ```
+
+Of course, this graph can be misleading, assuming that the male customer spending more than $500 skews the distribution but the information is nice anyways.<br>
+Another valuable information is the location of the customer.
+
+## Der folgende Absatz l??uft noch nicht ##
+
+```{r heatmap, echo=FALSE}
+# ----- Laurenz' Approach ------ #
+# Customer_Product_heatmap <- order_df %>%
+#   select(US_State, Customer_ID, Order_Line_ID, Order_Line_Amount) %>%
+#   group_by(Customer_ID, US_State) %>%
+#   summarise(numberoforders = n(),totalspend = sum(Order_Line_Amount)) 
+# 
+# ggplot(data= Customer_Product_heatmap)+
+#   geom_tile(mapping = aes(x = US_State, y = Customer_ID, fill = totalspend))
+
+# import csv that matches abbreviations and state names
+statesPath <- paste(rootDir, "00_raw_data/states.csv", sep="/")
+statesCSV <- read_csv(statesPath, col_names = TRUE)
+statesCSV$region <- tolower(statesCSV$region)
+
+states <- map_data("state") # import latitude longitude data
+states <- merge(states, statesCSV, by = "region", all = TRUE) # add abbreviations to states data
+
+# Merge to one map dataset
+order_map <- merge(order_df, states, by = "US_State", all.x = TRUE)
+
+# ggplot(order_map, aes(x = long, y = lat, group = group))+
+#   geom_polygon(aes(fill = ))+
+#   geom_path()+ 
+#   scale_fill_gradientn(colours=rev(heat.colors(10)),na.value="grey90")+
+#   coord_map()
+
+```
+
+Most of the customers are located in XYZ.<br><br>
+Yet, all insights refer to the order dataset. The clickstream dataset provides a lot more data but not necessarily more interesting insights. As the name implicates, it carries information about where the customer clicked on the website. What can 
+
+
 
 ```{r firstLook , echo=FALSE}
 
