@@ -158,36 +158,5 @@ ggplot(dataframe) +
 ```
 
 ```{r}
-library(ineq)
-brand_vs_clicks <- dataframe %>%
-  select(BrandName,Session_Visit_Count,Session_ID) %>%
-  group_by(BrandName) %>%
-  summarise(clicks=sum(Session_Visit_Count))
-totalclicks <- sum(brand_vs_clicks$clicks)
-brand_vs_clicks <- brand_vs_clicks %>%
-  select(BrandName,clicks) %>%
-  group_by(BrandName) %>%
-  summarise(clicks = clicks, click_pro = clicks/totalclicks)
-G <- rep(10,10)
-G_kum <- c(0,cumsum(G/100))
-G1 <- brand_vs_clicks$click_pro
-G1_kum <- c(0,cumsum(brand_vs_clicks$click_pro/100))
-D1 <- Lc(G1, n = rep(1,length(G1)), plot = FALSE)
-p <- D1[1]
-L <- D1[2]
-D1_df <- data.frame(p,L)
-xx <- c(G_kum,rev(G_kum))
-yy <- c(G1_kum,rev(G_kum))
-koordinaten <- as.data.frame(xx)
-koordinaten$yy <- yy[1:22]
-gini <- round(ineq(G1) * 100, digits = 1)
-p1 <- ggplot(data=D1_df) +
-  geom_point(aes(x=p, y=L)) +
-  geom_line(aes(x=p, y=L), stat = "identity", color="#990000") +
-  geom_polygon(data = koordinaten, aes(x = xx, y = yy), fill = rgb(255,100,0,55,maxColorValue=255)) +
-  annotate("text", x = 0.9, y = 0.1, label = paste("Gini =", gini), size=3, colour="gray30") +
-  geom_abline()
-p1
-ggplot(brand_vs_clicks)+
-  geom_point(mapping = aes(x=BrandName,y=click_pro))
+```
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

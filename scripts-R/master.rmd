@@ -146,8 +146,14 @@ click_df$Request_Date_Time <- parse_datetime(click_df$Request_Date_Time,format="
 
 ```{r compare_dataimport_RPy, eval=FALSE, include=FALSE}
 
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
+
+
+
 #clickstream dataset compare
-write.csv(click_df, file = "../00_raw_data/click_r.csv", row.names =FALSE, na = "")
+loc_click_r <- paste(rootDir, "00_raw_data/click_r.csv", sep="/")
+write.csv(click_df, file = loc_click_r, row.names =FALSE, na = "")
 
 # py csv
 py_df = read.csv(file = "../00_raw_data/clickstream_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
@@ -165,7 +171,8 @@ head(diff_p)
 
 
 #order dataset compare 
-write.csv(order_df, file = "../00_raw_data/order_r.csv", row.names =FALSE, na = "")
+loc_order_r <- paste(rootDir, "00_raw_data/order_r.csv", sep="/")
+write.csv(order_df, file = loc_order_r, row.names =FALSE, na = "")
 
 # py csv
 py_df = read.csv(file = "../00_raw_data/order_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
@@ -183,6 +190,7 @@ head(diff_p)
 
 
 ```
+
 
 # Analysis
 
@@ -280,7 +288,6 @@ boxplot(Order_Amount~Estimated_Income_Code, data = order_df)
 
 
 
-
 ```{r dataCleaningOrder}
 order_df <- order_df %>% 
   cleanNas() %>%
@@ -288,11 +295,10 @@ order_df <- order_df %>%
   dropDuplicateCols()
 
 order_df$Estimated_Income_Code <- deleteSemicolons(order_df$Estimated_Income_Code)
-relevant_df$Estimated_Income_Code <- deleteSemicolons(relevant_df$Estimated_Income_Code)
 ```
 
 
-```{r dataCleanclick , echo=FALSE}
+```{r dataCleanclick}
 # Clean click_df
 click_df <- click_df %>% 
   dropEmptyRowsAndCols() %>%
@@ -317,9 +323,10 @@ On a first look, the data provides the following information.
 ```
 Thereby, date and time are less useful, as the time-format is transformed into double values that provide no information on a first look.
 
+
 ```{r lorenzkurve_brandvsclicks}
 library(ineq)
-brand_vs_clicks <- dataframe %>%
+brand_vs_clicks <- click_df %>%
   select(BrandName,Session_Visit_Count,Session_ID) %>%
   group_by(BrandName) %>%
   summarise(clicks=sum(Session_Visit_Count))
@@ -348,11 +355,11 @@ p1 <- ggplot(data=D1_df) +
   annotate("text", x = 0.9, y = 0.1, label = paste("Gini =", gini), size=3, colour="gray30") +
   geom_abline()
 p1
-ggplot(brand_vs_clicks)+
-  geom_point(mapping = aes(x=BrandName,y=click_pro))
+
+#ggplot(brand_vs_clicks)+
+#  geom_point(mapping = aes(x=BrandName,y=click_pro))
 
 ```
-
 
 
 ## Summary tables
@@ -629,12 +636,123 @@ The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. We
 
 
 
+The table below showes the average ordering customer.
+```{r ave_customer}
+buffer <- order_df %>%
+  select(Customer_ID,
+         Age,Year_of_Birth,Gender,Estimated_Income_Code,Marital_Status,Presence_Of_Children,City,US_State,Country) %>%
+  group_by(Customer_ID) %>%
+  summarise_all(funs(last(.)))
+
+buffer$Age <- 2019 -buffer$Year_of_Birth
+
+
+#age
+
+buffer1 <- buffer %>%
+  select(Age)%>%
+  group_by(Age)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(Age))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer <- buffer1[1:1,1:1]
+
+# gender
+buffer1 <- buffer %>%
+  select(Gender)%>%
+  group_by(Gender)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(Gender))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,2:2] <- buffer1[1:1,1:1]
+
+# relation status
+
+buffer1 <- buffer %>%
+  select(Marital_Status)%>%
+  group_by(Marital_Status)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(Marital_Status))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,3:3] <- buffer1[1:1,1:1]
+
+# children 
+
+buffer1 <- buffer %>%
+  select(Presence_Of_Children)%>%
+  group_by(Presence_Of_Children)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(Presence_Of_Children))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,4:4] <- buffer1[1:1,1:1]
+
+# Estimated Income
+
+buffer1 <- buffer %>%
+  select(Estimated_Income_Code)%>%
+  group_by(Estimated_Income_Code)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(Estimated_Income_Code))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,5:5] <- buffer1[1:1,1:1]
+
+
+# City
+
+buffer1 <- buffer %>%
+  select(City)%>%
+  group_by(City)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(City))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,6:6] <- buffer1[1:1,1:1]
+
+
+# State
+
+buffer1 <- buffer %>%
+  select(US_State)%>%
+  group_by(US_State)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(US_State))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,7:7] <- buffer1[2:2,1:1]
+
+ave_customer <- t(ave_customer)
+
+
+kable(ave_customer)
+```
+
+
+
+
 ## Comparison of groups
 
 ```{r compare}
 
 ```
-
 
 ## Predictions
 
@@ -655,8 +773,8 @@ temp <- filter(ave_Session_df, Request_count > 1)
 temp <- subset(temp, select=c(Session_duration_mins,Session_day, Session_hour, Referrer, LeadsToBuy))
 
 temp$Session_day <- factor(temp$Session_day, levels = c("Monday", "Tuesday", "Wednesday", 
-                          "Thursday", "Friday", "Saturday", "Sunday"),
-            ordered = TRUE)
+                                                        "Thursday", "Friday", "Saturday", "Sunday"),
+                           ordered = TRUE)
 temp$Session_day <- as.integer(temp$Session_day)
 temp$Referrer <- as.integer(as.factor(temp$Referrer))
 
@@ -689,35 +807,35 @@ up_train <- upSample(x = train.scaled[, -ncol(train.scaled)],
 
 # Set up repetition for evaluation
 fitControl <- trainControl(## 10-fold CV
-                           method = "repeatedcv",
-                           number = 10,
-                           ## repeated ten times
-                           repeats = 10)
+  method = "repeatedcv",
+  number = 10,
+  ## repeated ten times
+  repeats = 10)
 # Register 4 Processors for parallel optimization
 cl <- makePSOCKcluster(3)
 registerDoParallel(cl)
 # Learn a naive bayes, a logistic regression and a decision tree
 set.seed(1820)
 fit.down.nb <- train(Class ~ ., data = down_train, 
-                 method = "naive_bayes", 
-                 trControl = fitControl)
+                     method = "naive_bayes", 
+                     trControl = fitControl)
 fit.up.nb <- train(Class ~ ., data = up_train, 
-                 method = "naive_bayes", 
-                 trControl = fitControl)
+                   method = "naive_bayes", 
+                   trControl = fitControl)
 set.seed(1820)
 fit.down.log <- train(Class ~ ., data = down_train, 
-                 method = "regLogistic", 
-                 trControl = fitControl)
+                      method = "regLogistic", 
+                      trControl = fitControl)
 fit.up.log <- train(Class ~ ., data = up_train, 
-                 method = "regLogistic", 
-                 trControl = fitControl)
+                    method = "regLogistic", 
+                    trControl = fitControl)
 set.seed(1820)
 fit.down.tree <- train(Class ~ ., data = down_train, 
-                 method = "ranger", 
-                 trControl = fitControl)
+                       method = "ranger", 
+                       trControl = fitControl)
 fit.up.tree <- train(Class ~ ., data = up_train, 
-                 method = "ranger", 
-                 trControl = fitControl)
+                     method = "ranger", 
+                     trControl = fitControl)
 
 # Stop parallel execution
 stopCluster(cl)
@@ -775,15 +893,16 @@ tr <- read.transactions('market_basket_transactions.csv', format = 'basket', sep
 summary(tr)
 if (!require("RColorBrewer")) {
   # install color package of R
-install.packages("RColorBrewer")
-#include library RColorBrewer
-library(RColorBrewer)
+  install.packages("RColorBrewer")
+  #include library RColorBrewer
+  library(RColorBrewer)
 }
 itemFrequencyPlot(tr,topN=20,type="relative",col=brewer.pal(8,'Pastel2'), main="Absolute Item Frequency Plot")
 association.rules <- apriori(tr, parameter = list(supp=0.0005, conf=0.75,maxlen=5))
 inspect(association.rules)
 plot(association.rules, method = "graph",  engine = "htmlwidget")
 ```
+
 
 ### Predict Moretimebuyer
 
