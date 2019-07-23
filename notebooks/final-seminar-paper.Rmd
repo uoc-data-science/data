@@ -25,6 +25,7 @@ library(usmap)
 library(ineq)
 library(janitor)
 library(stringr)
+library(ineq)
 ```
 
 ## Loading the Data
@@ -156,7 +157,41 @@ table_data <- table_data[1,] %>%
 kable(table_data)
 ```
 ## Customers
-TODO
+
+It is always important to know who your customers are when conducting a business. Therefore we looked at some of the most apparent properties of your customers. First we looked on how old ebuy's customers are. Your youngest customer is 18 years old while your oldest customer indeed is 98 years old. Although it is nice to see that there are some very old people who know how to operate a computer properly for ebuy it is more intersting to see that your average customer is in his/her mid 30's. Maybe ebuy should research what trends are emerging in this age segment so you can fit your offerings to your audience.
+
+```{r ageDistro, echo = FALSE}
+filtered = orderDfCleaned %>% 
+  na_if("?")  %>% 
+  distinct(Customer_ID, .keep_all = TRUE)
+
+summary(as.numeric(as.character(filtered$Age)))
+
+```
+
+When looking at the gender distribution in your customer base it is interesting to observe that most of your customers are women. Maybe ebuy should consider putting some marketing in place to attract more men to the platform or fully commit to only sell products for women.
+
+```{r genderDistro, echo = FALSE}
+filtered = orderDfCleaned %>%  na_if("NULL")  %>% distinct(Customer_ID, .keep_all = TRUE)
+summary(as.factor(as.character(filtered$Gender)))
+
+```
+
+Furthermore we was interested into how people get to know about ebuy and it turns out that most of ebuy's customers got aware of ebuy through they friends and family in the first place. It seems like ebuy is really dependent on mouth to mouth propaganda. E-mail advertisements are also working quite fine in generating new leads, whereas only a fraction of customers got interested into ebuy via print ads. Maybe ebuy should look closer into social media marketing and other types of modern marketing mechanisms if you want to get more independent from mouth to mouth propaganda which is hard to control although it is working fine for now.
+
+```{r howDidYouHearAboutUs, echo = FALSE}
+filtered = orderDfCleaned %>%  na_if("?")  %>% distinct(Customer_ID, .keep_all = TRUE)
+summary(as.factor(as.character(filtered$HowDidYouHearAboutUs)))
+
+```
+
+We also tried to get insight about how many of your customers are parents. If the share is high maybe it makes sense to also offer products for babies and young children since parents buy the clothing for their kinds until a specific age of the children. Maybe parents will just put a new pyjama for their kid in the basket while shopping a new dress for themselve. It turns out that indeed approximatively 40% of your  customers are parents.
+
+```{r presenceOfChildren, echo = FALSE}
+filtered = orderDfCleaned %>% na_if("?")  %>% distinct(Customer_ID, .keep_all = TRUE)
+summary(as.factor(as.logical(filtered$Presence_Of_Children)))
+
+```
 
 ## Products
 For ebuy it should be interesting to find out, which of their products and product families are the ones that sell best. The best selling product is a pair of socks from brand HOSO, their best selling product family has the ID 12295. Unfortunately the data does not provide any meaningful further details, what this product family is made of.
@@ -259,6 +294,51 @@ ggplot(data_requests_products) +
 ```
 
 ## Customers
+
+### How is the sales volume distributed among customers?
+
+We wanted to know if there is maybe a little group of customers which is responsible for large parts of the overall spendings on ebuy. If this is the case it is probably important to focus on such a group as they are generating most of your revenue. Therefore we looked at how the spendings on ebuy are distributed among the customers. The lorenz curve in figure \@ref(fig:calculateMoneySpendPerCustomer) vizualizes this distribution. 
+As you can see the curve shows that the distribution of sales is not equally distributed among the customers. The curve's gini coefficient has a value of 0.46 indicating an very unequal distribution. Interestingly the upper ten percent of customers are responsible for approximately 42% of total sales. This tells us that indeed there is a  customer group which spends much more on ebuy than the remaining majority. We suggest that ebuy should look take attention on this group and foster their willingness to spend money on ebuy, maybe with exclusive offerings for royality customers.
+
+```{r calculateMoneySpendPerCustomer, echo=FALSE, fig.cap="Lorenz Curve - Customer Spendings"}
+money_spent_per_customer <- orderDfCleaned %>%
+  group_by(Customer_ID) %>%
+  summarise(Total_Spending = sum(Order_Line_Amount))
+
+lorenz_money_spent_per_customer <- Lc(money_spent_per_customer$Total_Spending)
+lorenz_money_spent_per_customer_df <- data.frame(p=lorenz_money_spent_per_customer$p, L=lorenz_money_spent_per_customer$L)
+
+ggplot(data=lorenz_money_spent_per_customer_df) +
+  geom_line(aes(x=p, y=L)) +
+  scale_x_continuous(name="Cumulative share of Customers", limits=c(0,1)) + 
+  scale_y_continuous(name="Cumulative share of Spendings", limits=c(0,1)) +
+  geom_abline(color = "grey")
+```
+
+### How are customer spendings distributed among the different brands?
+
+We also looked into whether people are spending their money equally for all brands or if spendings are focussed on a particular group of brands. The lorenz curve in figure \@ref(fig:lorenzBrandToSales) has a gini coefficient of 0.36 indicating a quite inequal distribution of sales to the respective brands. The upper 10 percent of brands are responsible for approximately 28% of generated sales while the lower 50 percent of the brands are only responsible for 21% of sales. Maybe ebuy should consider to boost some of the very successful brands because people tend to buy more of it. Ebuy could show new customers products of one of the successful brands when they first visit the ebuy page because they will more likely buy it which will in turn increase sales. In the following we will look into which are the most successful brands for men and women. 
+
+```{r lorenzBrandToSales, echo = FALSE, fig.cap="Lorenz Curve - Brand Spendings" }
+orders_with_brand <- orderDfCleaned
+orders_with_brand$Brand = unlist(lapply(orderDfCleaned$Product_Level_2_Path, FUN = function(path){return(str_match(path, "\\/.*\\/.*\\/(.*)")[,2])}))
+
+money_spent_per_brand <- orders_with_brand %>%
+  group_by(Brand) %>%
+  summarise(Total_Spending = mean(Order_Line_Amount))
+
+
+lorenz_money_spent_per_brand <- Lc(money_spent_per_brand$Total_Spending)
+
+lorenz_money_spent_per_brand_df <- data.frame(p=lorenz_money_spent_per_brand$p, L=lorenz_money_spent_per_brand$L)
+
+ggplot(data=lorenz_money_spent_per_brand_df) +
+  geom_line(aes(x=p, y=L)) +
+  scale_x_continuous(name="Cumulative share of Brands", limits=c(0,1)) + 
+  scale_y_continuous(name="Cumulative share of Spendings", limits=c(0,1)) +
+  geom_abline(color = "grey")
+```
+
 ### What are the most popular brands for men and women?
 
 ```{r include=FALSE}
@@ -268,9 +348,9 @@ orders = orderDfCleaned %>%
 orders$Brand = unlist(lapply(orders$Product_Level_2_Path, FUN = function(path){return(str_match(path, "\\/.*\\/.*\\/(.*)")[,2])}))
 ```
 
-For Women:
-To get an overview over what brands your customers like the most we vizualized the popularity of the brands based on how often they get purchased.
-```{r include= FALSE}
+To get an overview over what brands your customers like the most we vizualized the popularity of the brands based on how many articles was bought from the brand. Hanes and American Essentials are the most popular brands among ebuy's female customers (compare figure \@ref(fig:brandsFemale)). Interestingly those are also the two most successful brands for men as you can see in figure \@ref(fig:brandsMale)) although men bought products from American Essential twice as often as from Hanes.
+
+```{r prepareBrandData, include= FALSE}
 mostPopularFemaleBrands = orders %>% 
   filter(Gender == "Female") %>%
   filter(!is.na(Brand)) %>%
@@ -280,18 +360,13 @@ mostPopularFemaleBrands = orders %>%
   head(10)
 ```
 
-```{r echo=FALSE}
-mostPopularFemaleBrands
-```
-
-```{r echo=FALSE}
+```{r brandsFemale, echo=FALSE, fig.cap= "Most Popular Brands for Females (based on cumulated order amount)"}
 ggplot(mostPopularFemaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) + 
   geom_bar(stat = "identity") +
   coord_flip() +
-  labs(title = "Most Popular Female Brands", x = "Brand", y = "Number of Purchases")
+  labs(x = "Brand", y = "Order Amount")
 ```
 
-For Men:
 ```{r include=FALSE}
 mostPopularMaleBrands = orders %>%
   filter(Gender == "Male") %>%
@@ -302,11 +377,11 @@ mostPopularMaleBrands = orders %>%
   head(10)
 ```
 
-```{r echo=FALSE}
+```{r brandsMale, echo=FALSE, fig.cap="Most Popular Brands for Males (based on cumulated order amount)"}
 ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) + 
   geom_bar(stat = "identity") +
   coord_flip() +
-  labs(title = "Most Popular Male Brands", x = "Brand", y = "Number of Purchases")
+  labs(x = "Brand", y = "Number of Purchases")
 ```
 
 ## Orders
@@ -361,7 +436,10 @@ summary(experimentDf)
 ```
 
 ## Broad Overview of Distributions
-```{r include=FALSE}
+
+When taking a broad look on the means and densities of the different recommender systems, you can clearly see that the profit-oriented recommender system has the highest mean sales with an average of 21.75€ per customer (see figure \@ref(fig:profitDensityAndMean)) in contrast to an average of  19€ per customer for the ranking-based recommender (\@ref(fig:rankingDensityAndMean)) and 18.50€ for the random recommender (see figure \@ref(fig:randomDensityAndMean)). It is also worth to mention that the density for the profit-based recommender system is pretty narrow (compare figure  \@ref(fig:profitDensityAndMean)), indicating a lower standard deviation and probably a tighter confidence interval than the other two wider distributions for the ranking-based (see figure \@ref(fig:rankingDensityAndMean)) and the random recommender systems (see figure \@ref(fig:randomDensityAndMean)).
+
+```{r recommenderSetup, include=FALSE}
 recommender_to_sales <- setNames(data.frame(matrix(ncol = 3, nrow = 0)), c("Id", "Recommender", "Sales"))
 index <- 1
 for(row in 1:nrow(experimentDf)){
@@ -384,28 +462,30 @@ for(row in 1:nrow(experimentDf)){
 recommender_to_sales$Id <- NULL
 ```
 
-```{r echo=FALSE}
+```{r rankingDensityAndMean, echo=FALSE, fig.cap="Ranking-Based Recommender - Sales Density and Mean"}
 ggplot(recommender_to_sales %>% filter(Recommender=="ranking_based"), aes(x=Sales)) +
   stat_density(geom="line") +
   geom_vline(aes(xintercept=mean(Sales)),color="black", linetype="dashed", size=1) +
-  labs(x="Sales",y= "Density", title="Ranking-Based Recommender: Sales Density and Mean")
+  labs(x="Sales",y= "Density")
 ```
 
-```{r echo=FALSE}
+```{r profitDensityAndMean, echo=FALSE, fig.cap="Profit-Oriented Recommender - Sales Density and Mean"}
 ggplot(recommender_to_sales %>% filter(Recommender=="profit_oriented"), aes(x=Sales)) +
   stat_density(geom="line") +
   geom_vline(aes(xintercept=mean(Sales)),color="black", linetype="dashed", size=1) +
-  labs(x="Sales",y= "Density", title="Profit-Oriented Recommender: Sales Density and Mean")
+  labs(x="Sales",y= "Density")
 ```
 
-```{r echo=FALSE}
+```{r randomDensityAndMean, echo=FALSE, fig.cap="Random Recommender - Sales Density and Mean"}
 ggplot(recommender_to_sales %>% filter(Recommender=="random_recommendations"), aes(x=Sales)) +
   stat_density(geom="line") +
   geom_vline(aes(xintercept=mean(Sales)),color="black", linetype="dashed", size=1) +
-  labs(x="Sales",y= "Density", title="Random Recommender: Sales Density and Mean")
+  labs(x="Sales",y= "Density")
 ```
 
-```{r echo=FALSE}
+When taking a closer look at the confidence intervals of the different recommender systems (see figure \@ref(fig:confidenceIntervalsRecommenders)) you can clearly  see that the profit-based recommender systems shows the best performance and also has a very tight 95% confidence interval indicating high certainty in the amount of profit made from the recommender per customer. On the other side the confidence intervals for the profit-based recommender and the random recommender system are more wide and also overlap each other.
+
+```{r confidenceIntervalsRecommenders, echo=FALSE, fig.cap="Recommender Confidence Intervals"}
 result <- group_by(recommender_to_sales, Recommender) %>%
   summarise(
     Count = n(),
@@ -419,22 +499,23 @@ result <- group_by(recommender_to_sales, Recommender) %>%
 # visualize CI
 ggplot(result, aes(x=Recommender, y=Mean, group=1)) +
   geom_point(alpha=0.52) +
-  geom_errorbar(width=.1, aes(ymin=Mean-Ci, ymax=Mean+Ci), colour="darkred") + labs(x="Recommender System",y= "Sales", title="Recommender Confidence Intervals")
+  geom_errorbar(width=.1, aes(ymin=Mean-Ci, ymax=Mean+Ci), colour="darkred") + labs(x="Recommender System",y= "Sales")
 ```
 
-It seems like the profit-oriented recommender performs the best (mu=21.75) while the random recommender (mu=18.5) and the ranking based (mu=19.0) recommender seem to perform quite similar. Furthermore the confidence interval of the profit-oriented recommender is very narrow while the confidence interval of the ranking-based and random recommender system are wider and also overlap. Therefore we should definitely do a statisitcal test to prove if the means are significantly different or not. 
-We will first compare the profit-oriented and ranking-based recommender each with the random recommender to see if the recommenders perform significantly better than a random recommender. Before doing so we first check if the distributions of the recommenders are normally distributed so we can perform a t-test. In order to do so we used the Shapioro-Wilk normality test.
+Therefore we should definitely do a statisitcal test to prove if the means of the different recommender systems are significantly different from each other or not.
 
 ## Shapiro-Wilk Normality Test
+
+Before conducting a t-test to test if the profit means of the different recommender systems are significantly different from each other or not we will first check if their populations are normally distributed, which is a necessary precondition for conducting a t-test. In order to do so we used the Shapiro-Wilk normality test which tests the null-hypothesis that the population is normally distributed.
 
 ```{r echo = FALSE}
 with(recommender_to_sales, shapiro.test(Sales[Recommender == "profit_oriented"]))
 with(recommender_to_sales, shapiro.test(Sales[Recommender == "ranking_based"]))
 with(recommender_to_sales, shapiro.test(Sales[Recommender == "random_recommendations"]))
 ```
-All the p-values are smaller than the significance level of 0.05 which means that the distributions are not normally distributed. Therefore we used the Unpaired Two-Samples Wilcoxon test to compare the means of the different recommenders.
+It turns out that all the p-values are smaller than the significance level of 0.05 which means that we have to refuse the null-hypothesis which in turn implies that the distributions are not normally distributed. Therefore we used the Unpaired Two-Samples Wilcoxon Test (aka Mann-Whitney U Test) to test if the means of the different recommenders are equal or not. The Mann-Whitney U Test is an valid alternative to the t-test in szenarios in which the requirements for the t-test are not met and is widely used in practice.
 
-## Wilcoxon Test
+## Mann-Whitney U Test
 
 ```{r echo = FALSE}
 # perform wulxoc test
@@ -442,12 +523,13 @@ ranking_based_sales <- recommender_to_sales %>% filter(Recommender == "ranking_b
 profit_oriented_sales <- recommender_to_sales %>% filter(Recommender == "profit_oriented")
 random_recommendations_sales <- recommender_to_sales %>% filter(Recommender == "random_recommendations")
 
-wilcox.test(profit_oriented_sales$Sales, random_recommendations_sales$Sales, alternative = "two.sided")
 wilcox.test(ranking_based_sales$Sales, random_recommendations_sales$Sales, alternative = "two.sided")
-wilcox.test(profit_oriented_sales$Sales, ranking_based_sales$Sales, alternative = "two.sided")
+wilcox.test(profit_oriented_sales$Sales, random_recommendations_sales$Sales, alternative = "two.sided")
 ```
 
-We then compared the results of both the ranking-based as well as the profit-oriented recommender systems against the results of the baseline recommender system (that selects products randomly). We first compared the profit-oriented recommender to the random recommender (baseline recommender). The results of the tests show that the means of the both recommenders are not the same (p<0.00001). Surprisingly, the same hypothesis could not be rejected for the comparison of the ranking-based and the baseline recommender system (p=0.2008). As the profit-oriented recommender systems mean value (21.75) is greater than the baseline mean (17.91), ebuy should preferably use the profit-oriented one.
+We first tested if there is a significant difference in the means of the random recommender system and the ranking-based recommender system. Our earlier observations of the confidence intervals of the two recommenders revealed that their confidence intervals are both quite wide and also overlap at large parts (see figure \@ref(fig:confidenceIntervalsRecommenders)). The test now proves that in fact the both means of the two recommenders do not differ significantly (p = 0.2008 > 0.05).
+Although the confidence intervals in figure \@ref(fig:confidenceIntervalsRecommenders) already indicate that the means of the profit-based recommender is significantly different from the random recommender system we conducted a test for that. The result of the test proves our suggestions with an p-value less than 0.001.
+As the mean of the ranking-based recommender system has been shown to not differ significantly from the random recommendersystem we have to choose between the profit-oriented recommender system and the random recommender system. As the profit-oriented recommender systems mean value (21.75) is greater than the baseline mean (17.91), ebuy should preferably use the profit-oriented one.
 
 # Models and Prediction
 ```{r includes02, echo=FALSE, message=FALSE}
