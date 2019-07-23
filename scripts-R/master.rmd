@@ -592,6 +592,37 @@ The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. We
 ```
 
 
+## Experiment: Recommender Systems
+
+For the websites recommender systems, there are different options. In an experiment, three different recommender systems were tested. First a random recommendation system as baseline comparison for the experiment, second a ranking based recommender system and third a profit oriented recommender system. The data consisted of 146 observations for the profit oriented system, 149 for the random one and 154 observations for the ranking based system.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.height=5, fig.width=11}
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "experiment/experimental_results.csv", sep="/")
+experiment <- read_csv(headersPath)
+# plot data
+library(reshape2)
+plotData <- subset(experiment, select=c("random_recommendations","ranking_based","profit_oriented"))
+plotData <- melt(plotData)
+ggplot(plotData) %>%
+  + geom_density(aes(x=value, color = variable),adjust=.8) %>%
+  + scale_colour_manual(name="Recommender System", labels=c("Random", "Ranking Based", "Profit Oriented"), values=c("red","green","blue")) %>%
+  + labs(x = element_text("Average Sales per Person"),       # Change x axis title only
+         y = element_text("Density of Occurance")       # Change y axis title only
+         )
+```
+As can be seen in {FIGURE}, with some smoothing the profit oriented recommender system seems to be much more effective, offering both a higher mean value and a lower standard deviation. To proove this point, the t-tests are calculated for the combinations of both systems on the random recommender system and between the ranking and profit oriented recommender system.
+
+```{r echo=FALSE}
+profExp <- t.test(experiment$profit_oriented, experiment$random_recommendations, alternative="greater", paired=TRUE)
+rkgExp <- t.test(experiment$ranking_based, experiment$random_recommendations, alternative="greater", paired=TRUE)
+profRkg <- t.test(experiment$profit_oriented, experiment$ranking_based, alternative = "greater", paired=TRUE)
+# Build Table with values
+```
+
+The t-test shows that the profit oriented recommender system is indeed significantly better than the random recommendation system, with a p value of {variable}. Furthermore, it performs also significantly better than the ranking based recommender system, making it the best of the three. Our conclusion is that the best system to use is the profit oriented recommender system, because it is able to outperform the other candidate statistically significant.
+
+
 ## Predictions
 
 ```{r predictionDataset}
