@@ -42,7 +42,7 @@ include_graphics("images/wickham2017-data-science-explore.png")
 ```
 
 ## The Data
-Ebuy's data came separated into different files: files that contained the acutal observations and files that described the columns. We first joined the column names with their respective data sets and after examining the data we than proceeded to clean them. This included eliminating empty rows and columns, as well as renaming and forcing some of the variables to be categorical.
+Ebuy's data came separated into different files: files that contained the actual observations and files that described the columns. We first joined the column names with their respective data sets and after examining the data we than proceeded to clean them. This included eliminating empty rows and columns, as well as renaming and forcing some of the variables to be categorical. To get as much knowlegde out of the data as possible we tried to combine the order data with the clickstream data. Unfortunately there was no way to merge the two files thats why we could only analyze the files separately.
 ```{r unzipClickstream1, echo=FALSE, message=FALSE}
 # The first part of the clickstream data comes in a ZIP archive. We have to unzip it first.
 # This was done in 'src/data/script_01_unzip_data.sh' before. Its now part of this "big markdown file".
@@ -137,7 +137,11 @@ orderDfCleaned$US_State <- as.factor(orderDfCleaned$US_State)
 orderDfCleaned$Age <- as.numeric(orderDfCleaned$Age)
 ```
 
-# Summary Statistics
+## What we have done
+
+In our analysis of Ebuy's data we distiguised between different scopes of interest. You could also define these scopes as different views on the data. Namely we distinguished between the customers, the orders and the clicks. Each of these topics raises a lot of interesting questions which we tried to answer with your data as foundation. In [chapter 2](#summary-statistics) we first took a broad overview of what might be interesting in the data and raised some early hypotheses on how to improve Ebuy's business with that knowledge. We then analyzed the data in more depth and highlighted some very interesting observations in [chapter 3](#plots) which was all about visualization. For instance we looked at which states in the US generate the most traffic on your website, what the most popular brands on Ebuy are and which day of the week comes with the most orders. In [chapter 4](#ebuys-experiment) we then looked at the performance data of the three recommender systems you sent us some weeks ago. We came to the conclusion that one of the recommender systems is significantly better than the random recommender system while the other showed a very weak performance. Futhermore in [chapter 5](#models-and-predicitons) we tried to predict what a customer will buy based on some characteristics such as age and gender.
+
+# Summary Statistics {#summary-statistics}
 ## Clicks
 
 The data period contains data for 17 days. To get an overview over the clickstream data, we look at different measures in the data. The table below shows how many sessions and requests Ebuy's web site accumulated per day. The last measure is the average requests per session which makes it easier to compare the average session length between days. Apparently, the data sampling started on April 14th, 2000 in the late evening because there are only 37 requests in five sessions, while every other day generated at least 6800 requests.
@@ -195,33 +199,61 @@ It is always important to know who your customers are when conducting a business
 ```{r ageDistro, echo = FALSE}
 filtered = orderDfCleaned %>%
   na_if("?")  %>%
-  distinct(Customer_ID, .keep_all = TRUE)
+  distinct(Customer_ID, .keep_all = TRUE) %>%
+  mutate(Age = as.numeric(as.character(Age))) %>%
+  filter(!is.na(Age))
 
-summary(as.numeric(as.character(filtered$Age)))
+filtered %>% # start with data frame, and then ...
+    summarize_at(
+      .vars = c("Age"), # select variables that should be in the table
+      .funs = tibble::lst(min, max, mean, median, sd) # which summary statistics do you want?
+    )  %>% 
+    gather(Statistic, Value) %>% # transpose everything, and then ...
+    kable() %>%
+    kable_styling(full_width=FALSE)
 
 ```
 
 When looking at the gender distribution in your customer base it is interesting to observe that most of your customers are women. Maybe ebuy should consider putting some marketing in place to attract more men to the platform or fully commit to only sell products for women.
 
 ```{r genderDistro, echo = FALSE}
-filtered = orderDfCleaned %>%  na_if("NULL")  %>% distinct(Customer_ID, .keep_all = TRUE)
-summary(as.factor(as.character(filtered$Gender)))
+orderDfCleaned %>%  
+  na_if("NULL")  %>% 
+  distinct(Customer_ID, .keep_all = TRUE) %>%
+  filter(!is.na(Gender)) %>%
+  group_by(Gender) %>%
+  summarise(Count = n()) %>%
+  kable() %>%
+  kable_styling(full_width=FALSE)
 
 ```
 
 Furthermore we was interested into how people get to know about ebuy and it turns out that most of ebuy's customers got aware of ebuy through they friends and family in the first place. It seems like ebuy is really dependent on mouth to mouth propaganda. E-mail advertisements are also working quite fine in generating new leads, whereas only a fraction of customers got interested into ebuy via print ads. Maybe ebuy should look closer into social media marketing and other types of modern marketing mechanisms if you want to get more independent from mouth to mouth propaganda which is hard to control although it is working fine for now.
 
 ```{r howDidYouHearAboutUs, echo = FALSE}
-filtered = orderDfCleaned %>%  na_if("?")  %>% distinct(Customer_ID, .keep_all = TRUE)
-summary(as.factor(as.character(filtered$HowDidYouHearAboutUs)))
+orderDfCleaned %>%  
+  na_if("?")  %>% 
+  distinct(Customer_ID, .keep_all = TRUE) %>%
+  filter(!is.na(HowDidYouHearAboutUs)) %>%
+  group_by(HowDidYouHearAboutUs) %>%
+  summarise(Count = n()) %>%
+  arrange(desc(Count)) %>%
+  kable() %>%
+  kable_styling(full_width=FALSE)
 
 ```
 
 We also tried to get insight about how many of your customers are parents. If the share is high maybe it makes sense to also offer products for babies and young children since parents buy the clothing for their kinds until a specific age of the children. Maybe parents will just put a new pyjama for their kid in the basket while shopping a new dress for themselve. It turns out that indeed approximatively 40% of your  customers are parents.
 
 ```{r presenceOfChildren, echo = FALSE}
-filtered = orderDfCleaned %>% na_if("?")  %>% distinct(Customer_ID, .keep_all = TRUE)
-summary(as.factor(as.logical(filtered$Presence_Of_Children)))
+orderDfCleaned %>% 
+  na_if("?") %>% 
+  distinct(Customer_ID, .keep_all = TRUE) %>%
+  filter(!is.na(Presence_Of_Children)) %>%
+  group_by(Presence_Of_Children) %>%
+  summarise(Count = n()) %>%
+  kable(col.names = c("Presence of Children", "Count")) %>%
+  kable_styling(full_width=FALSE)
 
 ```
 
@@ -262,7 +294,7 @@ orderDfCleaned %>%
 ```
 
 
-# Plots
+# Plots {#plots}
 ## Clicks
 ### How are the requests distributed geographically?
 
@@ -365,6 +397,18 @@ ggplot(data=lorenz_money_spent_per_customer_df) +
   geom_abline(color = "grey")
 ```
 
+In the table below we looked at who exactly are your ten most profitable customers. The customer with ID 30208 is by far your most profitable customer having spend approximately twice as much money than thesecond most profitable customer with ID 29244. Ebuy should probably reward some of it's most spending customers to keep those customers active on the platform. It is intersting to see how the average price per item depends between the different customers ranging from an minimum of 6 Euro to a maximum of 36 Euro on average per item. Ebuy could utilize this knowledge to recommend customers with an high average price per item more costly items while showing more cheaper items to those customers who have spent less per item in the past.  
+
+```{r mostSpendingCustomersTable, echo=FALSE}
+orderDfCleaned %>%
+  group_by(Customer_ID) %>%
+  summarise(Total_Spendings = sum(Order_Line_Amount), Total_Item_Count = sum(Order_Line_Quantity), Average_Price_Per_Item = Total_Spendings/Total_Item_Count) %>%
+  arrange(desc(Total_Spendings)) %>%
+  head(10) %>% 
+  kable() %>%
+  kable_styling(full_width = FALSE)
+```
+
 ### How are customer spendings distributed among the different brands?
 
 We also looked into whether people are spending their money equally for all brands or if spendings are focussed on a particular group of brands. The lorenz curve in figure \@ref(fig:lorenzBrandToSales) has a gini coefficient of 0.36 indicating a quite inequal distribution of sales to the respective brands. The upper 10 percent of brands are responsible for approximately 28% of generated sales while the lower 50 percent of the brands are only responsible for 21% of sales. Maybe ebuy should consider to boost some of the very successful brands because people tend to buy more of it. Ebuy could show new customers products of one of the successful brands when they first visit the ebuy page because they will more likely buy it which will in turn increase sales. In the following we will look into which are the most successful brands for men and women.
@@ -411,7 +455,7 @@ mostPopularFemaleBrands = orders %>%
 ```
 
 ```{r brandsFemale, echo=FALSE, fig.cap= "Most Popular Brands for Females (based on cumulated order amount)", fig.align = 'center'}
-ggplot(mostPopularFemaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) +
+ggplot(mostPopularFemaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(x = "Brand", y = "Order Amount")
@@ -428,7 +472,7 @@ mostPopularMaleBrands = orders %>%
 ```
 
 ```{r brandsMale, echo=FALSE, fig.cap="Most Popular Brands for Males (based on cumulated order amount)", fig.align = 'center'}
-ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) +
+ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(x = "Brand", y = "Number of Purchases")
@@ -473,7 +517,7 @@ ggplot(data = lc) +
   geom_abline()
 ```
 
-# Ebuy's Experiment
+# Ebuy's Experiment {#ebuys-experiment}
 ## Data and Summary Statistics
 Ebuy's experiment provided us with data regarding different recommender systems. After loading and examining the dataset we picked all columns of interest (e.g. deciding to keep the first ID column only) and recoded the chosen ID column as a factor. We than calculated basic summary statistics, where the mean values where of most interest.
 ```{r loadexpdata, echo=FALSE}
@@ -566,6 +610,9 @@ It turns out that all the p-values are smaller than the significance level of 0.
 
 ## Mann-Whitney U Test
 
+We first tested if there is a significant difference in the means of the random recommender system and the ranking-based recommender system. Our earlier observations of the confidence intervals of the two recommenders revealed that their confidence intervals are both quite wide and also overlap at large parts (see figure \@ref(fig:confidenceIntervalsRecommenders)). The test now proves that indeed the both means of the two recommender systems do not differ significantly (p = 0.2008 > 0.05).
+Although the confidence intervals in figure \@ref(fig:confidenceIntervalsRecommenders) already indicate that the means of the profit-based recommender is significantly different from the random recommender system we conducted a test for that to be completely sure. The result of the test proves our suggestions with an p-value less than 0.001.
+
 ```{r echo = FALSE}
 # perform wulxoc test
 ranking_based_sales <- recommender_to_sales %>% filter(Recommender == "ranking_based")
@@ -576,11 +623,9 @@ wilcox.test(ranking_based_sales$Sales, random_recommendations_sales$Sales, alter
 wilcox.test(profit_oriented_sales$Sales, random_recommendations_sales$Sales, alternative = "two.sided")
 ```
 
-We first tested if there is a significant difference in the means of the random recommender system and the ranking-based recommender system. Our earlier observations of the confidence intervals of the two recommenders revealed that their confidence intervals are both quite wide and also overlap at large parts (see figure \@ref(fig:confidenceIntervalsRecommenders)). The test now proves that in fact the both means of the two recommenders do not differ significantly (p = 0.2008 > 0.05).
-Although the confidence intervals in figure \@ref(fig:confidenceIntervalsRecommenders) already indicate that the means of the profit-based recommender is significantly different from the random recommender system we conducted a test for that. The result of the test proves our suggestions with an p-value less than 0.001.
 As the mean of the ranking-based recommender system has been shown to not differ significantly from the random recommendersystem we have to choose between the profit-oriented recommender system and the random recommender system. As the profit-oriented recommender systems mean value (21.75) is greater than the baseline mean (17.91), ebuy should preferably use the profit-oriented one.
 
-# Models and Prediction
+# Models and Prediction {#models-and-predicitons}
 ## Training the Model{#subsection-ttm}
 As ebuy's products fall into certain product families, we trained a model that allows to predict for a new customer from which product family he will purchase a product. We first grew a large tree with a complexity parameter of cp=0.00001 (i.e. splits had to decrease the lack of fit by a factor of 0.00001). We then examined the results of a 10-fold cross-validation by plotting the complexity parameter vs. its cross-validated error (as shown in figure \@ref(fig:cpplottree1)).
 ```{r cpplottree1, echo=FALSE, fig.cap="Product Family ID: Complexity parameter vs. cross-validated error", fig.align = 'center'}
