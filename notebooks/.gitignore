@@ -1,6 +1,7 @@
 *.html
 *.pdf
 *.tex
+*.csv
 final-seminar-paper_files/
 product-stats_files/
 customer-stats_files/
