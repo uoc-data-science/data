@@ -58,6 +58,7 @@ clickstreamDf1 <- readdatawithcolumns(headersFile="../data/raw/clickstream/click
 clickstreamDf2 <- readdatawithcolumns(headersFile="../data/raw/clickstream/clickstream_columns.txt",
                                       dataFile="../data/raw/clickstream/clickstream_data_part_2.csv")
 clickstreamDf <- rbind(clickstreamDf1, clickstreamDf2)
+
 #write.csv(clickstreamDf, file="data/interim/clickstream/clickstream_with_headers.csv", row.names=FALSE)
 message("Done!")
 ```
@@ -66,9 +67,9 @@ message("Done!")
 After examining the data sets we than proceeded to clean them.
 ```{r cleaningTheData, echo=FALSE, message=FALSE}
 # This code chunk used to reside in 'script_03_clean_data.r'! Its now part of the "big markdown file".
-cleanFile <- function(filePath, threshold) {
+cleanFile <- function(filePath, threshold, keepColumns) {
   message(sprintf("Loading file from %s.", filePath))
-  df <- read.csv(file=filePath, header=TRUE)
+  df <- read.csv(file=filePath, header=TRUE, na.strings = c("?", "NA", "NULL"))
   # TODO: why does ', na.strings=c("?","NA", "NULL")' not work here?
 
   message("Cleaning data.")
@@ -86,8 +87,11 @@ cleanFile <- function(filePath, threshold) {
   deletableColumns <- list()
   for(c in 1:ncol(dfCleaned)){
     currentColumn <- dfCleaned[,c]
-    unknownPercentage <- sum(currentColumn == "NULL" | currentColumn == "?")/length(currentColumn)
-    if(unknownPercentage > threshold){
+    unknownPercentage <- sum(is.na(currentColumn))/length(currentColumn)
+    if(colnames(dfCleaned)[c] %in% keepColumns){
+      next
+    }
+    if(unknownPercentage >= threshold){
       deletableColumns <- c(deletableColumns, colnames(dfCleaned)[c])
     }
   }
@@ -101,8 +105,10 @@ cleanFile <- function(filePath, threshold) {
   return(dfCleaned)
 }
 
-clickstream_data <- cleanFile("../data/interim/clickstream/clickstream_with_headers.csv", 0.9)
-orderDfCleaned <- cleanFile("../data/interim/orders/orders_with_headers.csv", 0.9)
+clickstream_data <- cleanFile("../data/interim/clickstream/clickstream_with_headers.csv", 0.85, c("US_State", "Customer_ID"))
+orderDfCleaned <- cleanFile("../data/interim/orders/orders_with_headers.csv", 0.85, c())
+
+
 ```
 
 
@@ -133,36 +139,62 @@ summary(partialOrdersDf)
 
 # Summary Statistics
 ## Clicks
-```{r summarytable1, echo=FALSE}
 
-table_data <- clickstream_data %>%
-  select(Request_Processing_Time, Request_Sequence, REQUEST_HOUR_OF_DAY) %>%
-  transmute(mean_RPT = mean(Request_Processing_Time), mean_RS = mean(Request_Sequence), mean_HOD = mean(REQUEST_HOUR_OF_DAY),
-            sd_RPT = sd(Request_Processing_Time), sd_RS = sd(Request_Sequence), sd_HOD = sd(REQUEST_HOUR_OF_DAY),
-            min_RPT = min(Request_Processing_Time), min_RS = min(Request_Sequence), min_HOD = min(REQUEST_HOUR_OF_DAY),
-            max_RPT = max(Request_Processing_Time), max_RS = max(Request_Sequence), max_HOD = max(REQUEST_HOUR_OF_DAY))
+The data period contains data for 17 days. To get an overview over the clickstream data, we look at different measures in the data. The table below shows how many sessions and requests Ebuy's web site accumulated per day. The last measure is the average requests per session which makes it easier to compare the average session length between days. Apparently, the data sampling started on April 14th, 2000 in the late evening because there are only 37 requests in five sessions, while every other day generated at least 6800 requests.
+Also, there are no clear correlations between the day of the week and the session length, but there seems to be a correlation between the day of the week and session count. On weekends, there are less sessions and requests than during workdays. Whether this correlation is significant can be investigated by deeper analysis.
 
-table_data <- table_data[1,] %>%
-  gather("column", "mean", 1:3) %>%
-  gather("sd_data", "sd", 1:3) %>%
-  gather("min_data", "min", 1:3) %>%
-  gather("max_data", "max", 1:3) %>%
-  mutate(column = sapply(strsplit(column, "_"), "[", 2),
-         sd_data = sapply(strsplit(sd_data, "_"), "[", 2),
-         min_data = sapply(strsplit(min_data, "_"), "[", 2),
-         max_data = sapply(strsplit(max_data, "_"), "[", 2)) %>%
-  filter(column == sd_data & column == min_data & column == max_data) %>%
-  select(column, mean, sd, min, max)
+```{r requestsummary, echo=FALSE}
 
-kable(table_data)
+clickstream_data %>%
+  group_by(Request_Date) %>%
+  summarise(Day = first(REQUEST_DAY_OF_WEEK), Sessions = n_distinct(Session_ID), Requests = n(), "Requests per Session" = Requests/Sessions) %>%
+  rename(Date = Request_Date) %>%
+  kable() %>%
+  kable_styling(full_width=FALSE)
+
 ```
+
+After we find out when and how long visitors browse on Ebuy's web site, we want to know what products they look at. Because of the large set of products, we only look at the top 10 products of Ebuy's assortment. Since the clickstream data does not provide information about the product names, we have to choose the product ID. The "Views per Session" measure shows how often the product is viewed per session in which it the product site is visited. By far the most prevalent product is the product with ID 10315. It is also the product with the least views per session, which means that it is relatively also viewed in the most sessions. Thus, it is truly the most popular product in the clickstream data. Also, it accumulated more than twice as many requests as the product with ID 12483, which is the sixth-most viewed product. That shows how large the difference is even between the top products.
+
+```{r productrequests, echo=FALSE}
+
+clickstream_data %>%
+  group_by(Product_ID) %>%
+  summarise(Requests = n(), Sessions = n_distinct(Session_ID), Views_Per_Session = Requests/Sessions) %>%
+  arrange(desc(Requests)) %>%
+  filter(!is.na(Product_ID)) %>%
+  top_n(wt = Requests, n=10) %>%
+  rename("Product ID" = Product_ID, "Views per Session" = Views_Per_Session) %>%
+  kable() %>%
+  kable_styling(full_width=FALSE)
+  
+
+```
+
+Another perspective on the clickstream data is the customer. The question is which customers are the most regular visitors of the Ebuy web site and how long they stay on the site. The information has to be evaluated with caution, because the data only lists customers that are logged into the web site. The customer with the most requests has the customer ID 5224 with 247 requests over the data period. Also, customer 5224 has six sessions in the 17 days of data sampling, which means the customer visits the site about every third day. Within the top 10 customers, there are three customers with only one session and a high "pages per session" value. 
+
+```{r customerrequests, echo=FALSE}
+
+clickstream_data %>%
+  group_by(Customer_ID) %>%
+  summarise(Requests = n(), Sessions = n_distinct(Session_ID), Pages = n()/n_distinct(Session_ID)) %>%
+  arrange(desc(Requests)) %>%
+  filter(!is.na(Customer_ID)) %>%
+  top_n(wt = Requests, n=10) %>%
+  rename("Customer ID" = Customer_ID, "average pages per session" = Pages) %>%
+  kable() %>%
+  kable_styling(full_width=FALSE)
+
+```
+
+
 ## Customers
 
 It is always important to know who your customers are when conducting a business. Therefore we looked at some of the most apparent properties of your customers. First we looked on how old ebuy's customers are. Your youngest customer is 18 years old while your oldest customer indeed is 98 years old. Although it is nice to see that there are some very old people who know how to operate a computer properly for ebuy it is more intersting to see that your average customer is in his/her mid 30's. Maybe ebuy should research what trends are emerging in this age segment so you can fit your offerings to your audience.
 
 ```{r ageDistro, echo = FALSE}
-filtered = orderDfCleaned %>% 
-  na_if("?")  %>% 
+filtered = orderDfCleaned %>%
+  na_if("?")  %>%
   distinct(Customer_ID, .keep_all = TRUE)
 
 summary(as.numeric(as.character(filtered$Age)))
@@ -193,7 +225,7 @@ summary(as.factor(as.logical(filtered$Presence_Of_Children)))
 
 ```
 
-## Products
+## Products {#products_summary}
 For ebuy it should be interesting to find out, which of their products and product families are the ones that sell best. The best selling product is a pair of socks from brand HOSO, their best selling product family has the ID 12295. Unfortunately the data does not provide any meaningful further details, what this product family is made of.
 ```{r mostOrderedProductsAndProductFamilies, echo=FALSE}
 findDistinctBrandname <- function(dataFrame, productId) {
@@ -232,7 +264,11 @@ partialOrdersDf %>%
 
 # Plots
 ## Clicks
-```{r heatmap, echo=FALSE}
+### How are the requests distributed geographically?
+
+Since all available clickstream data show requests from the US market, it is interesting to see how visitors from different US states behave on the web site. Figure \@ref(fig:heatmap) shows how many requests per US state have been recorded in the data time span. While the information of the figure is extremely useful, it has to be noted that `r format(round(100*sum(is.na(clickstream_data$US_State))/length(clickstream_data$US_State), 2), nsmall = 2)`% of the observations in the clickstream data do not include information about the state of the visitor. Still, `r sum(!is.na(clickstream_data$US_State))` entries contain the US state, making the plot meaningful.
+
+```{r heatmap, echo=FALSE, fig.cap="Heatmap of requests per US state", warning=FALSE}
 
 
 map_data <- clickstream_data %>%
@@ -241,9 +277,8 @@ map_data <- clickstream_data %>%
   summarise(Request_Count = n(), state = first(US_State))
 
 plot_usmap(data = map_data, values = "Request_Count", labels = TRUE) +
-  scale_fill_continuous(low = "white", high = "red", name = "average Order Amount") +
-  labs(title = "How much money do customers from different states spend?",
-       subtitle = "Average order amount split by US State") +
+  scale_fill_continuous(low = "white", high = "red", name = "Request Count") +
+  labs(title = "How many requests come from each US state?") +
   theme(plot.title = element_text(face = "bold", size = 15, hjust = 0.5),
         plot.subtitle = element_text(hjust = 0.5, size = 12, face = "italic"),
         legend.position = "bottom", legend.justification = "center",
@@ -251,19 +286,29 @@ plot_usmap(data = map_data, values = "Request_Count", labels = TRUE) +
 
 ```
 
-```{r requests, echo = FALSE}
+First of all, it stands out that there is no recorded data for Wyoming and Vermont. Although it is very likely that there were unrecorded requests from these states, we cannot make assumptions or predictions for the states on this basis.
+For the other states however, the plot can be used to draw conclusions.
+The states with the most requests are New York (`r map_data$Request_Count[map_data$state == "NY"]` requests), California (`r map_data$Request_Count[map_data$state == "CA"]` requests) and Texas (`r map_data$Request_Count[map_data$state == "TX"]` requests). Compared to the average of `r format(round(mean(map_data$Request_Count[!is.na(map_data$state)]), 2), nsmall = 2)` requests per state, these three states are overproportionally represented. Reasons for this high number of requests could be that this states are the states with the highest Gross Domestic Product (GDP) in the year 2000 ([U.S. Bureau of Economic Analysis](https://apps.bea.gov/iTable/iTable.cfm?reqid=70&step=30&isuri=1&major_area=0&area=01000,02000,04000,05000,06000,08000,09000,10000,11000,12000,13000,15000,16000,17000,18000,19000,20000,21000,22000,23000,24000,25000,26000,27000,28000,29000,30000,31000,32000,33000,34000,35000,36000,37000,38000,39000,40000,41000,42000,44000,45000,46000,47000,48000,49000,50000,51000,53000,54000,55000,56000,91000&year=2000&tableid=505&category=1505&area_type=0&year_end=-1&classification=naics&state=0&statistic=1&yearbegin=-1&unit_of_measure=levels)).
+The implications for Ebuy are to especially target visitors from New York, California and Texas to generate profit from the high ratio of visitors coming from these states. Targeting methods could include special offers or extensive marketing.
 
+```{r createRequestData, echo=FALSE}
 data_requests_products <- clickstream_data %>%
   select(Product_ID) %>%
   filter(Product_ID != "?") %>%
   group_by(Product_ID) %>%
   summarise(Request_Count = n())
 
+```
+
+### How many times was each product accessed?
+
+Another important information is which products are viewed most often. Figure \@ref(fig:requests) shows the distribution of requests per product. Although there are too many products to show the individual number of requests per product, it becomes clear that the requests are not equally distributed. The distribution has the form of a long-tail curve, meaning that a small portion of all products get a large proportion of the requests. The implications for Ebuy are that not all products can be treated equally. Ebuy should focus their marketing activities on products that are viewed more often in order to generate more profit. The most viewed product has product ID `r data_requests_products[order(data_requests_products$Request_Count, decreasing = TRUE),][1,1]` and was visited `r data_requests_products[order(data_requests_products$Request_Count, decreasing = TRUE),][2,1]` times. Compared with the IDs of the most bought products in \@ref(products_summary), it becomes apparent that the most viewed product is not the most bought one. Since it is the most viewed product, it has to be interesting for potential customers. Ebuy should investigate what keeps customers from buying that product because they are missing out on profit. Possible reasons for that could be that the price is too high and that customers can buy an equal product cheaper somewhere else, or that the presentation of the product on the web site is not appealing enough to convince visitors to buy it.
+
+```{r requests, echo = FALSE, fig.cap="Requests per product"}
+
 ggplot(data_requests_products) +
   geom_line(aes(x = reorder(Product_ID, desc(Request_Count)), y = Request_Count, group = 1)) +
-  labs(x = "Products", y = "Requests",
-       title = "How many times was each product accessed?",
-       subtitle = "Requests per product")  +
+  labs(x = "Products", y = "Requests")  +
   theme_classic() +
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
         plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
@@ -271,7 +316,14 @@ ggplot(data_requests_products) +
 
 ```
 
-```{r sessionduration, echo=FALSE}
+### How long do customers stay on the Ebuy web site?
+
+To analyze how the average session on the Ebuy web site looks like, we look at the length of the session in two different ways: The first variable is the number of different pages visited during a single session. The second variable is the time between the first and the last request of the session. The scatterplot in figure \@ref(fig:sessionduration) shows how the sessions are distributed regarding the previously mentioned dimensions.
+The first observation is that generally speaking the average session duration in seconds increases with an increasing number of pages visited. This finding is to be expected for normal online shopping behavior. However, the average session duration becomes more scattered with higher pages visited. This can be explained with the fact that a smaller proportion of sessions shows a high amount of pages visited, making outliers more impactful to the average than in the data points with small numbers of visited pages.
+The second observation is that most visitors look at less than ten pages in a session. That shows that only a few visitors use Ebuy's web site to browse through different available products. Most visitors seem to have a clear goal when entering the site and only look at the product (and maybe a few alternative products) and then decide whether they buy that product or not. Ebuy could use improved advertisement (e.g. features like "Customers who bought this product also bought that product") to convince visitors to stay on their web site for longer and thus be more likely to buy more than one product.
+The previous finding could also indicate that there are many regular customers who always buy the same product and thus only stay on the web site for a short period of time since they know what product they want.
+
+```{r sessionduration, echo=FALSE, fig.cap="Scatterplot of session characteristics"}
   duration_data <- clickstream_data %>%
   select(Session_ID, Request_Sequence, Request_Date, Request_Date_Time, Session_First_Request_Date, Session_First_Request_Date_Time) %>%
   unite(col = "Request_Timestamp",c("Request_Date", "Request_Date_Time"), sep = " ", remove = TRUE) %>%
@@ -284,12 +336,10 @@ ggplot(data_requests_products) +
   group_by(Pages_Visited) %>%
   summarise(avg_Session_Duration = mean(Session_Duration), Session_Count = n_distinct(Session_ID)) %>%
   filter(Session_Count > 2 & Pages_Visited > 1)
-  
+
   ggplot(data = duration_data) +
   geom_point(aes(x = Pages_Visited, y = avg_Session_Duration, size = Session_Count)) +
-  labs(x = "Pages Visited", y = "average Session Duration (seconds)", size = "Sessions",
-       title = "How long do customers stay on the site?",
-       subtitle = "Average session duration per session page visits") +
+  labs(x = "Pages Visited", y = "Average Session Duration (seconds)", size = "Sessions") +
   theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
 ```
 
@@ -297,7 +347,7 @@ ggplot(data_requests_products) +
 
 ### How is the sales volume distributed among customers?
 
-We wanted to know if there is maybe a little group of customers which is responsible for large parts of the overall spendings on ebuy. If this is the case it is probably important to focus on such a group as they are generating most of your revenue. Therefore we looked at how the spendings on ebuy are distributed among the customers. The lorenz curve in figure \@ref(fig:calculateMoneySpendPerCustomer) vizualizes this distribution. 
+We wanted to know if there is maybe a little group of customers which is responsible for large parts of the overall spendings on ebuy. If this is the case it is probably important to focus on such a group as they are generating most of your revenue. Therefore we looked at how the spendings on ebuy are distributed among the customers. The lorenz curve in figure \@ref(fig:calculateMoneySpendPerCustomer) vizualizes this distribution.
 As you can see the curve shows that the distribution of sales is not equally distributed among the customers. The curve's gini coefficient has a value of 0.46 indicating an very unequal distribution. Interestingly the upper ten percent of customers are responsible for approximately 42% of total sales. This tells us that indeed there is a  customer group which spends much more on ebuy than the remaining majority. We suggest that ebuy should look take attention on this group and foster their willingness to spend money on ebuy, maybe with exclusive offerings for royality customers.
 
 ```{r calculateMoneySpendPerCustomer, echo=FALSE, fig.cap="Lorenz Curve - Customer Spendings"}
@@ -310,14 +360,14 @@ lorenz_money_spent_per_customer_df <- data.frame(p=lorenz_money_spent_per_custom
 
 ggplot(data=lorenz_money_spent_per_customer_df) +
   geom_line(aes(x=p, y=L)) +
-  scale_x_continuous(name="Cumulative share of Customers", limits=c(0,1)) + 
+  scale_x_continuous(name="Cumulative share of Customers", limits=c(0,1)) +
   scale_y_continuous(name="Cumulative share of Spendings", limits=c(0,1)) +
   geom_abline(color = "grey")
 ```
 
 ### How are customer spendings distributed among the different brands?
 
-We also looked into whether people are spending their money equally for all brands or if spendings are focussed on a particular group of brands. The lorenz curve in figure \@ref(fig:lorenzBrandToSales) has a gini coefficient of 0.36 indicating a quite inequal distribution of sales to the respective brands. The upper 10 percent of brands are responsible for approximately 28% of generated sales while the lower 50 percent of the brands are only responsible for 21% of sales. Maybe ebuy should consider to boost some of the very successful brands because people tend to buy more of it. Ebuy could show new customers products of one of the successful brands when they first visit the ebuy page because they will more likely buy it which will in turn increase sales. In the following we will look into which are the most successful brands for men and women. 
+We also looked into whether people are spending their money equally for all brands or if spendings are focussed on a particular group of brands. The lorenz curve in figure \@ref(fig:lorenzBrandToSales) has a gini coefficient of 0.36 indicating a quite inequal distribution of sales to the respective brands. The upper 10 percent of brands are responsible for approximately 28% of generated sales while the lower 50 percent of the brands are only responsible for 21% of sales. Maybe ebuy should consider to boost some of the very successful brands because people tend to buy more of it. Ebuy could show new customers products of one of the successful brands when they first visit the ebuy page because they will more likely buy it which will in turn increase sales. In the following we will look into which are the most successful brands for men and women.
 
 ```{r lorenzBrandToSales, echo = FALSE, fig.cap="Lorenz Curve - Brand Spendings" }
 orders_with_brand <- orderDfCleaned
@@ -334,7 +384,7 @@ lorenz_money_spent_per_brand_df <- data.frame(p=lorenz_money_spent_per_brand$p, 
 
 ggplot(data=lorenz_money_spent_per_brand_df) +
   geom_line(aes(x=p, y=L)) +
-  scale_x_continuous(name="Cumulative share of Brands", limits=c(0,1)) + 
+  scale_x_continuous(name="Cumulative share of Brands", limits=c(0,1)) +
   scale_y_continuous(name="Cumulative share of Spendings", limits=c(0,1)) +
   geom_abline(color = "grey")
 ```
@@ -351,7 +401,7 @@ orders$Brand = unlist(lapply(orders$Product_Level_2_Path, FUN = function(path){r
 To get an overview over what brands your customers like the most we vizualized the popularity of the brands based on how many articles was bought from the brand. Hanes and American Essentials are the most popular brands among ebuy's female customers (compare figure \@ref(fig:brandsFemale)). Interestingly those are also the two most successful brands for men as you can see in figure \@ref(fig:brandsMale)) although men bought products from American Essential twice as often as from Hanes.
 
 ```{r prepareBrandData, include= FALSE}
-mostPopularFemaleBrands = orders %>% 
+mostPopularFemaleBrands = orders %>%
   filter(Gender == "Female") %>%
   filter(!is.na(Brand)) %>%
   group_by(Brand) %>%
@@ -361,7 +411,7 @@ mostPopularFemaleBrands = orders %>%
 ```
 
 ```{r brandsFemale, echo=FALSE, fig.cap= "Most Popular Brands for Females (based on cumulated order amount)"}
-ggplot(mostPopularFemaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) + 
+ggplot(mostPopularFemaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(x = "Brand", y = "Order Amount")
@@ -378,7 +428,7 @@ mostPopularMaleBrands = orders %>%
 ```
 
 ```{r brandsMale, echo=FALSE, fig.cap="Most Popular Brands for Males (based on cumulated order amount)"}
-ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) + 
+ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) +
   geom_bar(stat = "identity") +
   coord_flip() +
   labs(x = "Brand", y = "Number of Purchases")

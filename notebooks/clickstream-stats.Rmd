@@ -1,0 +1,71 @@
+---
+title: "Descriptive Statistics for Clickstreams"
+output: bookdown::html_document2
+---
+
+```{r include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(usmap)
+library(knitr)
+```
+
+To examine the "Clickstream.csv" file, first we have to load the data:
+
+```{r}
+clickstream_data <- read.csv(file="../data/interim/clickstream/clickstream_cleaned.csv", sep=",")
+```
+
+The first thing we want to look at are the session counts by date. This helps us to find out which days of the data period were the ones with the most sessions. One session is a number of successive page visits from one customer.  
+
+```{r SessionsPerDay, echo=FALSE, fig.cap="Session count against date"}
+data_sessions_per_day <- clickstream_data %>%
+  select(Session_ID, Request_Date, REQUEST_DAY_OF_WEEK) %>%
+  group_by(Request_Date) %>%
+  summarise(Session_Count = n_distinct(Session_ID), Request_Count = n(), Day_Of_Week = first(REQUEST_DAY_OF_WEEK))
+
+ggplot(data_sessions_per_day) +
+  geom_bar(aes(x = Request_Date, y = Session_Count, fill = Day_Of_Week), stat = "identity") +
+  theme(axis.text.x = element_text(angle = 45)) +
+  labs(fill = "Day of the Week", x = "Date", y = "Sessions",
+       title = "How many sessions did the site access per day?",
+       subtitle = "Session count per date (04/14/2000 - 04/30/2000)") +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+It is surprising to see that the session count varies a lot over the data period. Especially on the weekends the traffic is much lower than during the workdays.
+
+Now that we know when customers visit our site, we want to find out what products they look at. The following plot shows that:  
+
+```{r RequestsByProducts, echo=FALSE, fig.cap="Request count against Product ID"}
+data_requests_products <- clickstream_data %>%
+  select(Product_ID, Session_ID) %>%
+  filter(Product_ID != "?") %>%
+  group_by(Product_ID) %>%
+  summarise(Request_Count = n())
+
+ggplot(data_requests_products) +
+  geom_line(aes(x = reorder(Product_ID, desc(Request_Count)), y = Request_Count, group = 1)) +
+  labs(x = "Products", y = "Requests",
+       title = "How many times was each product accessed?",
+       subtitle = "Requests per product")  +
+  theme_classic() +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+        plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
+  scale_y_continuous(expand = c(0,0))
+```
+
+Although the plot does not show exactly which products are the most clicked, it is apparent that there are a few products that get viewed a lot and many products that are only viewed a few times. This long tail is typical for a distribution like this. To find out the products that are requested the most, we take a look at the following table:
+
+```{r RequestsByProductTable, echo=FALSE}
+
+table_data <- data_requests_products[ order(-data_requests_products$Request_Count), ] %>%
+  filter(Request_Count > 250)
+kable(table_data)
+
+```
+
+We see that there are only `r nrow(table_data)` products that have been viewed more than 250 times during the data period. That means, that from `r nrow(data_requests_products)` total viewed products only `r 100 * nrow(table_data)/nrow(data_requests_products)` percent are viewed more than 250 times. Also, we notice that the most-viewed product, `r table_data$Product_ID[1]`, is viewed `r table_data$Request_Count[1]/table_data$Request_Count[1]` times more often than the second-most viewed product.
+

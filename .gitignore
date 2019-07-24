@@ -132,6 +132,7 @@ dmypy.json
 .pyre/
 
 # RStudio files
+.RData
 .Rhistory
 .Rproj.user
 data.Rproj
