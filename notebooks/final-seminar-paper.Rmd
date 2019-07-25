@@ -1,11 +1,12 @@
 ---
-title: "Data analysis: ebuy's sales data"
+title: "Data analysis: Ebuy's sales data"
 author: "Group 3: Julius Braun (xxxxxxx), Patrick Preuß (5813166), Paul Schütz (xxxxxxx)"
 date: "July 2019"
 bibliography: "bibliographies/literature.bib"
 output:
   bookdown::html_document2:
     toc: yes
+    toc_float: true
     toc_depth: 2
     theme: spacelab
 ---
@@ -35,7 +36,7 @@ library(rpart.plot)
 ```
 
 ## Our Approach
-In this report we analysed the data of ebuy, an online sales platform. We used the systematic approach from @wickhamGrolemund2017 of importing, tidying, exploring (transform, visualise, model), and communicating (figure \@ref(fig:wickham2017Explor)) for a data set provided by ebuy itself.
+In this report we analysed the data of Ebuy, an online sales platform. We used the systematic approach from @wickhamGrolemund2017 of importing, tidying, exploring (transform, visualise, model), and communicating (figure \@ref(fig:wickham2017Explor)) for a data set provided by Ebuy itself.
 
 ```{r wickham2017Explor, echo=FALSE, fig.cap="Grolemund and Wickham (2017): Data Exploration", fig.align = 'center'}
 include_graphics("images/wickham2017-data-science-explore.png")
@@ -194,7 +195,7 @@ clickstream_data %>%
 
 ## Customers
 
-It is always important to know who your customers are when conducting a business. Therefore we looked at some of the most apparent properties of your customers. First we looked on how old ebuy's customers are. Your youngest customer is 18 years old while your oldest customer indeed is 98 years old. Although it is nice to see that there are some very old people who know how to operate a computer properly for ebuy it is more intersting to see that your average customer is in his/her mid 30's. Maybe ebuy should research what trends are emerging in this age segment so you can fit your offerings to your audience.
+It is always important to know who your customers are when conducting a business. Therefore we looked at some of the most apparent properties of your customers. First we looked on how old Ebuy's customers are. Your youngest customer is 18 years old while your oldest customer indeed is 98 years old. Although it is nice to see that there are some very old people who know how to operate a computer properly for Ebuy it is more intersting to see that your average customer is in his/her mid 30's. Maybe Ebuy should research what trends are emerging in this age segment so you can fit your offerings to your audience.
 
 ```{r ageDistro, echo = FALSE}
 filtered = orderDfCleaned %>%
@@ -214,7 +215,7 @@ filtered %>% # start with data frame, and then ...
 
 ```
 
-When looking at the gender distribution in your customer base it is interesting to observe that most of your customers are women. Maybe ebuy should consider putting some marketing in place to attract more men to the platform or fully commit to only sell products for women.
+When looking at the gender distribution in your customer base it is interesting to observe that most of your customers are women. Maybe Ebuy should consider putting some marketing in place to attract more men to the platform or fully commit to only sell products for women.
 
 ```{r genderDistro, echo = FALSE}
 orderDfCleaned %>%  
@@ -228,7 +229,7 @@ orderDfCleaned %>%
 
 ```
 
-Furthermore we was interested into how people get to know about ebuy and it turns out that most of ebuy's customers got aware of ebuy through they friends and family in the first place. It seems like ebuy is really dependent on mouth to mouth propaganda. E-mail advertisements are also working quite fine in generating new leads, whereas only a fraction of customers got interested into ebuy via print ads. Maybe ebuy should look closer into social media marketing and other types of modern marketing mechanisms if you want to get more independent from mouth to mouth propaganda which is hard to control although it is working fine for now.
+Furthermore we was interested into how people get to know about Ebuy and it turns out that most of Ebuy's customers got aware of Ebuy through they friends and family in the first place. It seems like Ebuy is really dependent on mouth to mouth propaganda. E-mail advertisements are also working quite fine in generating new leads, whereas only a fraction of customers got interested into Ebuy via print ads. Maybe Ebuy should look closer into social media marketing and other types of modern marketing mechanisms if you want to get more independent from mouth to mouth propaganda which is hard to control although it is working fine for now.
 
 ```{r howDidYouHearAboutUs, echo = FALSE}
 orderDfCleaned %>%  
@@ -258,7 +259,7 @@ orderDfCleaned %>%
 ```
 
 ## Products {#products_summary}
-For ebuy it should be interesting to find out, which of their products and product families are the ones that sell best. The best selling product is a pair of socks from brand HOSO, their best selling product family has the ID 12295. Unfortunately the data does not provide any meaningful further details, what this product family is made of.
+For Ebuy it should be interesting to find out, which of their products and product families are the ones that sell best. The best selling product is a pair of socks from brand HOSO, their best selling product family has the ID 12295. Unfortunately the data does not provide any meaningful further details, what this product family is made of.
 ```{r mostOrderedProductsAndProductFamilies, echo=FALSE}
 findDistinctBrandname <- function(dataFrame, productId) {
   bn <- dataFrame %>%
@@ -269,7 +270,7 @@ findDistinctBrandname <- function(dataFrame, productId) {
   return(bn$BrandName)
 }
 
-topSellingProducts <- orderDfCleaned %>%
+orderDfCleaned %>%
   select(Product_ID, BrandName) %>%
   drop_na(Product_ID) %>%
   count(Product_ID) %>%
@@ -277,9 +278,8 @@ topSellingProducts <- orderDfCleaned %>%
   rowwise() %>%
   mutate(
     brandName = findDistinctBrandname(orderDfCleaned, Product_ID)
-  )
-
-topSellingProducts %>%
+  ) %>%
+  rename("Product ID"=Product_ID, "Brand Name"=brandName, "Total Sales"=n) %>%
   slice(1:5) %>%
   kable(.) %>%
   kable_styling(full_width=FALSE)
@@ -288,6 +288,7 @@ orderDfCleaned %>%
   drop_na(Product_Family_ID) %>%
   count(Product_Family_ID) %>%
   arrange(desc(n)) %>%
+  rename("Product Family ID"=Product_Family_ID, "Total Sales"=n) %>%
   slice(1:5) %>%
   kable(.) %>%
   kable_styling(full_width=FALSE)
@@ -379,8 +380,8 @@ The previous finding could also indicate that there are many regular customers w
 
 ### How is the sales volume distributed among customers?
 
-We wanted to know if there is maybe a little group of customers which is responsible for large parts of the overall spendings on ebuy. If this is the case it is probably important to focus on such a group as they are generating most of your revenue. Therefore we looked at how the spendings on ebuy are distributed among the customers. The lorenz curve in figure \@ref(fig:calculateMoneySpendPerCustomer) vizualizes this distribution.
-As you can see the curve shows that the distribution of sales is not equally distributed among the customers. The curve's gini coefficient has a value of 0.46 indicating an very unequal distribution. Interestingly the upper ten percent of customers are responsible for approximately 42% of total sales. This tells us that indeed there is a  customer group which spends much more on ebuy than the remaining majority. We suggest that ebuy should look take attention on this group and foster their willingness to spend money on ebuy, maybe with exclusive offerings for royality customers.
+We wanted to know if there is maybe a little group of customers which is responsible for large parts of the overall spendings on Ebuy. If this is the case it is probably important to focus on such a group as they are generating most of your revenue. Therefore we looked at how the spendings on Ebuy are distributed among the customers. The lorenz curve in figure \@ref(fig:calculateMoneySpendPerCustomer) vizualizes this distribution.
+As you can see the curve shows that the distribution of sales is not equally distributed among the customers. The curve's gini coefficient has a value of 0.46 indicating an very unequal distribution. Interestingly the upper ten percent of customers are responsible for approximately 42% of total sales. This tells us that indeed there is a  customer group which spends much more on Ebuy than the remaining majority. We suggest that Ebuy should look take attention on this group and foster their willingness to spend money on Ebuy, maybe with exclusive offerings for royality customers.
 
 ```{r calculateMoneySpendPerCustomer, echo=FALSE, fig.cap="Lorenz Curve - Customer Spendings", fig.align = 'center'}
 money_spent_per_customer <- orderDfCleaned %>%
@@ -411,7 +412,7 @@ orderDfCleaned %>%
 
 ### How are customer spendings distributed among the different brands?
 
-We also looked into whether people are spending their money equally for all brands or if spendings are focussed on a particular group of brands. The lorenz curve in figure \@ref(fig:lorenzBrandToSales) has a gini coefficient of 0.36 indicating a quite inequal distribution of sales to the respective brands. The upper 10 percent of brands are responsible for approximately 28% of generated sales while the lower 50 percent of the brands are only responsible for 21% of sales. Maybe ebuy should consider to boost some of the very successful brands because people tend to buy more of it. Ebuy could show new customers products of one of the successful brands when they first visit the ebuy page because they will more likely buy it which will in turn increase sales. In the following we will look into which are the most successful brands for men and women.
+We also looked into whether people are spending their money equally for all brands or if spendings are focussed on a particular group of brands. The lorenz curve in figure \@ref(fig:lorenzBrandToSales) has a gini coefficient of 0.36 indicating a quite inequal distribution of sales to the respective brands. The upper 10 percent of brands are responsible for approximately 28% of generated sales while the lower 50 percent of the brands are only responsible for 21% of sales. Maybe Ebuy should consider to boost some of the very successful brands because people tend to buy more of it. Ebuy could show new customers products of one of the successful brands when they first visit the Ebuy page because they will more likely buy it which will in turn increase sales. In the following we will look into which are the most successful brands for men and women.
 
 ```{r lorenzBrandToSales, echo = FALSE, fig.cap="Lorenz Curve - Brand Spendings", fig.align = 'center'}
 orders_with_brand <- orderDfCleaned
@@ -442,7 +443,7 @@ orders = orderDfCleaned %>%
 orders$Brand = unlist(lapply(orders$Product_Level_2_Path, FUN = function(path){return(str_match(path, "\\/.*\\/.*\\/(.*)")[,2])}))
 ```
 
-To get an overview over what brands your customers like the most we vizualized the popularity of the brands based on how many articles was bought from the brand. Hanes and American Essentials are the most popular brands among ebuy's female customers (compare figure \@ref(fig:brandsFemale)). Interestingly those are also the two most successful brands for men as you can see in figure \@ref(fig:brandsMale)) although men bought products from American Essential twice as often as from Hanes.
+To get an overview over what brands your customers like the most we vizualized the popularity of the brands based on how many articles was bought from the brand. Hanes and American Essentials are the most popular brands among Ebuy's female customers (compare figure \@ref(fig:brandsFemale)). Interestingly those are also the two most successful brands for men as you can see in figure \@ref(fig:brandsMale)) although men bought products from American Essential twice as often as from Hanes.
 
 ```{r prepareBrandData, include= FALSE}
 mostPopularFemaleBrands = orders %>%
@@ -480,7 +481,7 @@ ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y 
 
 ## Orders
 ### Different order volumes on different days of the week?
-Orders at ebuy's online shop might be distributed differently among the different days of the week. To examine, whether this is the case, we plotted a frequency distribution of all orders over the days of week. We first reordered the days in the canonical way (i.e. Monday, Tuesday, Wednesday, ...) and then counted and plotted the order frequencies against them (figure \@ref(fig:orderDayBarPlot1)). Clearly, the most orders are placed during the weekdays (peaking on Wednesdays), the least orders on sunday. In order to ramp up their sales on those days where sales are particulary low (Saturday, Sunday, Monday), ebuy could for instance try to hand out (digital) coupons that are only valid on the weekend, therby hopefully increasing their sales figures.
+Orders at Ebuy's online shop might be distributed differently among the different days of the week. To examine, whether this is the case, we plotted a frequency distribution of all orders over the days of week. We first reordered the days in the canonical way (i.e. Monday, Tuesday, Wednesday, ...) and then counted and plotted the order frequencies against them (figure \@ref(fig:orderDayBarPlot1)). Clearly, the most orders are placed during the weekdays (peaking on Wednesdays), the least orders on sunday. In order to ramp up their sales on those days where sales are particulary low (Saturday, Sunday, Monday), Ebuy could for instance try to hand out (digital) coupons that are only valid on the weekend, therby hopefully increasing their sales figures.
 ```{r orderDayBarPlot1, echo=FALSE, fig.cap="Distribution of orders among different days of the week", fig.align = 'center'}
 orderDfCleaned %>%
   mutate(
@@ -496,11 +497,12 @@ orderDfCleaned %>%
   count(Order_Day_of_Week) %>%
   slice(1:7) %>%
   ggplot(data = .) +
-    geom_bar(mapping = aes(x = Order_Day_of_Week, y = n), stat = "identity")
+    geom_bar(mapping = aes(x = Order_Day_of_Week, y = n), stat = "identity") +
+    labs(x = "Day of Week", y = "Order Volume")
 ```
 
 ### What is the distribution of order amounts?
-For an online shop like ebuy it might be of interest to identify those customers that place the vast majority of all orders. In order to visualize the distribution of order amounts we computed their Lorenz curve and plotted the cummulative percentages (figure \@ref(fig:orderTotalLc)). The curve shows a highly inequal distribution of order amounts: the lower 75% of all orders only account for roughly 25% of the total order amounts, while a quarter of all orders make up for three quarters of the sales total.
+For an online shop like Ebuy it might be of interest to identify those customers that place the vast majority of all orders. In order to visualize the distribution of order amounts we computed their Lorenz curve and plotted the cummulative percentages (figure \@ref(fig:orderTotalLc)). The curve shows a highly inequal distribution of order amounts: the lower 75% of all orders only account for roughly 25% of the total order amounts, while a quarter of all orders make up for three quarters of the sales total.
 ```{r orderTotalLc, echo=FALSE, fig.cap="Lorenz Curve: Distribution of order amounts", fig.align = 'center'}
 lc <- Lc(orderDfCleaned$Order_Amount,
          n = rep(1, length(orderDfCleaned$Order_Amount)),
@@ -523,9 +525,27 @@ Ebuy's experiment provided us with data regarding different recommender systems.
 ```{r loadexpdata, echo=FALSE}
 experimentDf <- read.csv(file="../experiment/experimental_results.csv", sep=",", na.strings=c("NA"))
 experimentDf <- experimentDf[c("id_", "ranking_based", "random_recommendations", "profit_oriented")]
+
 names(experimentDf)[1] <- "id"
 experimentDf$id <- as.factor(experimentDf$id)
-summary(experimentDf)
+
+experimentDf %>%
+  select(
+    "ranking_based",
+    "random_recommendations",
+    "profit_oriented"
+  ) %>%
+  rename(
+    "Ranking-based" = ranking_based,
+    "Random recommendations" = random_recommendations,
+    "Profit-oriented" = profit_oriented
+  ) %>%
+  summarise_all(list(Min=min, Max=max, Median=median, Mean=mean), na.rm=TRUE) %>%
+  gather(key, value) %>%
+  separate(col=key, sep="_", c("Recommender system", "stat")) %>%
+  spread(key=stat, value=value) %>%
+  kable() %>%
+  kable_styling(full_width=FALSE)
 ```
 
 ## Broad Overview of Distributions
@@ -627,7 +647,7 @@ As the mean of the ranking-based recommender system has been shown to not differ
 
 # Models and Prediction {#models-and-predicitons}
 ## Training the Model{#subsection-ttm}
-As ebuy's products fall into certain product families, we trained a model that allows to predict for a new customer from which product family he will purchase a product. We first grew a large tree with a complexity parameter of cp=0.00001 (i.e. splits had to decrease the lack of fit by a factor of 0.00001). We then examined the results of a 10-fold cross-validation by plotting the complexity parameter vs. its cross-validated error (as shown in figure \@ref(fig:cpplottree1)).
+As Ebuy's products fall into certain product families, we trained a model that allows to predict for a new customer from which product family he will purchase a product. We first grew a large tree with a complexity parameter of cp=0.00001 (i.e. splits had to decrease the lack of fit by a factor of 0.00001). We then examined the results of a 10-fold cross-validation by plotting the complexity parameter vs. its cross-validated error (as shown in figure \@ref(fig:cpplottree1)).
 ```{r cpplottree1, echo=FALSE, fig.cap="Product Family ID: Complexity parameter vs. cross-validated error", fig.align = 'center'}
 tree <- rpart(Product_Family_ID ~ Order_Line_Day_of_Week + Gender + Age,
               method="class",
@@ -637,12 +657,13 @@ tree <- rpart(Product_Family_ID ~ Order_Line_Day_of_Week + Gender + Age,
 plotcp(tree)
 ```
 
-To prevent over-fitting, @kabacoff2015 suggests to choose the leftmost cp value below the dotted line (here: cp=0.0007): a tree of that size (here: 45 splits) is the smallest tree whose cross-validated error is whithin one standard error of the minimum cross-validated error value. We therfore pruned the tree to its new size and pretty-printed the resulting tree (figure \@ref(fig:prunedtree1); zoomed-in partial figure \@ref(fig:tree1Zoom1)).
+To prevent over-fitting, @kabacoff2015 suggests to choose the leftmost cp value below the dotted line (here: cp=0.0007): a tree of that size (here: 45 splits) is the smallest tree whose cross-validated error is whithin one standard error of the minimum cross-validated error value. We therefore pruned the tree to its new size and pretty-printed the resulting tree (figure \@ref(fig:prunedtree1)).
 ```{r prunedtree1, echo=FALSE, fig.cap="Product Family ID: Pruned Classification Tree", fig.align = 'center'}
 prune(tree, cp=0.0007) %>%
   prp(., tweak = 1.5,)
 ```
 
+The close up (figure \@ref(fig:tree1Zoom1)) gives a better idea of how a customers would be classified along the tree's splits: customers that are 73 years old or older will likely purchase a product from the category with the ID 12543; a male customer who purchases on any other day of the week than Friday and is younger than 37 will purchase from category 12295, etc. Section \@ref(subsection-pred) gives more detailed information on how such a prediction can be achieved computationally.
 ```{r tree1Zoom1, echo=FALSE, fig.cap="Partially Enlarged Classification Tree", fig.align = 'center'}
 # The rpart package guesses (!) the font and line/node width and height based on your operation system's
 # resolution. This might cause prp() to render an ugly plot. We've chosen a "tweak" factor of 1.5 which produces
@@ -665,8 +686,8 @@ linreg1
 linreg1$finalModel
 ```
 
-## Predictions
-Having trained the models in \@ref(subsection-ttm) ebuy could predict the purchasing behaviour of future customers. Given such a previously unseen customer, ebuy could for instance now predict the product family which she is going to purchase from.
+## Predictions{#subsection-pred}
+Having trained the models in \@ref(subsection-ttm) Ebuy could predict the purchasing behaviour of future customers. Given such a previously unseen customer, Ebuy could for instance now predict the product family which she is going to purchase from.
 ```{r prediction1, eval=FALSE}
 predict(tree, unseenCustomer, type="class")
 ```
