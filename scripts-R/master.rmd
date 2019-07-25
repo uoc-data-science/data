@@ -32,7 +32,7 @@ knitr::opts_knit$set(root.dir = "C:/Github/data")
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
 #knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
 #lh_root
-#knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
+knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
 
 ```
 
@@ -175,7 +175,67 @@ if(didNotImport)
 }
 ```
 
+
+```{r compare_dataimport_RPy, eval=FALSE, include=FALSE}
+
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
+
+
+
+#clickstream dataset compare
+loc_click_r <- paste(rootDir, "00_raw_data/click_r.csv", sep="/")
+write.csv(click_df, file = loc_click_r, row.names =FALSE, na = "")
+
+# py csv
+py_df = read.csv(file = "../00_raw_data/clickstream_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
+
+# r csv
+r_df = read.csv(file = "../00_raw_data/click_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
+
+#head(r_df)
+#head(py_df)
+# show difference between python and r dataset
+diff_r <-r_df[!(r_df%in%py_df)]
+head(diff_r)
+diff_p <-py_df[!(py_df%in%r_df)]
+head(diff_p)
+
+
+#order dataset compare 
+loc_order_r <- paste(rootDir, "00_raw_data/order_r.csv", sep="/")
+write.csv(order_df, file = loc_order_r, row.names =FALSE, na = "")
+
+# py csv
+py_df = read.csv(file = "../00_raw_data/order_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
+
+# r csv
+r_df = read.csv(file = "../00_raw_data/order_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
+
+#head(r_df)
+#head(py_df)
+# show difference between python and r dataset
+diff_r <-r_df[!(r_df%in%py_df)]
+head(diff_r)
+diff_p <-py_df[!(py_df%in%r_df)]
+head(diff_p)
+
+
+```
 Getting to _data manipulation_, a few things within the datasets had to be fixed.
+
+
+
+# Analysis
+
+## Data Manipulation {#dataMan}
+
+Due to the huge size of the datasets, we will
+
+1. create a new set `relevant_df` with the 16 most relevant columns
+1. reduce the original set `order_df` by deleting all twin columns
+
+Besides, all semicolons within the cells were simply erased.
 
 ```{r cleaningFunctions, echo=FALSE}
 cleanNas <- function(x){
@@ -341,10 +401,20 @@ count_2 <- count(or, Order_Week == "2000-02-28")[2,2]
 temp <- count_2 / count(or)
 count_2_p <- percent(temp[1,1])
 ```
+```{r dataCleaningOrder}
+order_df <- order_df %>% 
+  cleanNas() %>%
+  dropEmptyRowsAndCols() %>%
+  dropDuplicateCols()
+
+order_df$Estimated_Income_Code <- deleteSemicolons(order_df$Estimated_Income_Code)
+
+```
 
 What can be observed is that most of the orders were placed at March 1, namely `r count_1`. `r count_2` or `r count_2_p` of all orders have been placed in the week of February 28.<br>
 Further, interestingly the amount of orders of March 1 placed overnight or in the morning is quite high. It could be assumed that there was a special time limited offer in the early hours of March 1.<br><br>
 Overall, only `r count(or, or$Gender)[3,2]` customers specified their gender as "male" and `r count(or, or$Gender)[2,2]` as "female". However, men seem to spend more money on average as the boxplot indicates.
+
 
 ```{r grammarofg, echo=FALSE}
 #x = as.POSIXct(paste(or$Order_Date, or$Order_Time), format="%Y-%m-%d %H:%M:%S")
@@ -357,10 +427,18 @@ or$Estimated_Income_Code <- factor(or$Estimated_Income_Code, levels = c(
   "$50000-$74999", "$75000-$99999", "$100000-$124999", "$125000 OR MORE"
 ))
 
+
+
 boxplot(Order_Amount~Gender, data = order_df, horizontal = TRUE, xlab = "Order Amount", ylab = "Gender")
 #boxplot(Order_Amount~Estimated_Income_Code, data = order_df, par(mar = c(12, 5, 4, 2)+ 0.1), las = 2)
 
 ```
+```{r dataCleanclick}
+# Clean click_df
+click_df <- click_df %>% 
+  dropEmptyRowsAndCols() %>%
+  dropDuplicateCols
+  ```
 
 Of course, this graph can be misleading, assuming that the male customer spending more than $500 skews the distribution but the information is nice anyways.<br>
 Another valuable information is the location of the customer.
@@ -409,6 +487,42 @@ knitr::knit_exit()
 Thereby, date and time are less useful, as the time-format is transformed into double values that provide no information on a first look.
 
 
+```{r lorenzkurve_brandvsclicks}
+library(ineq)
+brand_vs_clicks <- click_df %>%
+  select(BrandName,Session_Visit_Count,Session_ID) %>%
+  group_by(BrandName) %>%
+  summarise(clicks=sum(Session_Visit_Count))
+totalclicks <- sum(brand_vs_clicks$clicks)
+brand_vs_clicks <- brand_vs_clicks %>%
+  select(BrandName,clicks) %>%
+  group_by(BrandName) %>%
+  summarise(clicks = clicks, click_pro = clicks/totalclicks)
+G <- rep(10,10)
+G_kum <- c(0,cumsum(G/100))
+G1 <- brand_vs_clicks$click_pro
+G1_kum <- c(0,cumsum(brand_vs_clicks$click_pro/100))
+D1 <- Lc(G1, n = rep(1,length(G1)), plot = FALSE)
+p <- D1[1]
+L <- D1[2]
+D1_df <- data.frame(p,L)
+xx <- c(G_kum,rev(G_kum))
+yy <- c(G1_kum,rev(G_kum))
+koordinaten <- as.data.frame(xx)
+koordinaten$yy <- yy[1:22]
+gini <- round(ineq(G1) * 100, digits = 1)
+p1 <- ggplot(data=D1_df) +
+  geom_point(aes(x=p, y=L)) +
+  geom_line(aes(x=p, y=L), stat = "identity", color="#990000") +
+  geom_polygon(data = koordinaten, aes(x = xx, y = yy), fill = rgb(255,100,0,55,maxColorValue=255)) +
+  annotate("text", x = 0.9, y = 0.1, label = paste("Gini =", gini), size=3, colour="gray30") +
+  geom_abline()
+p1
+
+#ggplot(brand_vs_clicks)+
+#  geom_point(mapping = aes(x=BrandName,y=click_pro))
+
+```
 
 
 # Analysis
@@ -687,12 +801,125 @@ The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. We
 
 
 
+The table below showes the average ordering customer.
+```{r ave_customer}
+buffer <- order_df %>%
+  select(Customer_ID,
+         Age,Year_of_Birth,Gender,Estimated_Income_Code,Marital_Status,Presence_Of_Children,City,US_State,Country) %>%
+  group_by(Customer_ID) %>%
+  summarise_all(funs(last(.)))
+
+buffer$Age <- 2019 -buffer$Year_of_Birth
+
+
+#age
+
+buffer1 <- buffer %>%
+  select(Age)%>%
+  group_by(Age)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(Age))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer <- buffer1[1:1,1:1]
+
+# gender
+buffer1 <- buffer %>%
+  select(Gender)%>%
+  group_by(Gender)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(Gender))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,2:2] <- buffer1[1:1,1:1]
+
+# relation status
+
+buffer1 <- buffer %>%
+  select(Marital_Status)%>%
+  group_by(Marital_Status)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(Marital_Status))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,3:3] <- buffer1[1:1,1:1]
+
+# children 
+
+buffer1 <- buffer %>%
+  select(Presence_Of_Children)%>%
+  group_by(Presence_Of_Children)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(Presence_Of_Children))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,4:4] <- buffer1[1:1,1:1]
+
+# Estimated Income
+
+buffer1 <- buffer %>%
+  select(Estimated_Income_Code)%>%
+  group_by(Estimated_Income_Code)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(Estimated_Income_Code))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,5:5] <- buffer1[1:1,1:1]
+
+
+# City
+
+buffer1 <- buffer %>%
+  select(City)%>%
+  group_by(City)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(City))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,6:6] <- buffer1[1:1,1:1]
+
+
+# State
+
+buffer1 <- buffer %>%
+  select(US_State)%>%
+  group_by(US_State)%>%
+  summarise(numberof = n())
+
+buffer1 <- filter(buffer1,!is.na(US_State))
+
+buffer1 <- buffer1[order(-buffer1$numberof),]
+
+ave_customer[1:1,7:7] <- buffer1[2:2,1:1]
+
+ave_customer <- t(ave_customer)
+
+
+kable(ave_customer)
+```
+
+
+
+
 ## Comparison of groups
 
 ```{r compare}
 
 ```
 
+<<<<<<< HEAD
 
 ## Experiment: Recommender Systems
 
@@ -725,6 +952,8 @@ profRkg <- t.test(experiment$profit_oriented, experiment$ranking_based, alternat
 The t-test shows that the profit oriented recommender system is indeed significantly better than the random recommendation system, with a p value of {variable}. Furthermore, it performs also significantly better than the ranking based recommender system, making it the best of the three. Our conclusion is that the best system to use is the profit oriented recommender system, because it is able to outperform the other candidate statistically significant.
 
 
+=======
+>>>>>>> 043a2461f48a7329e3a5ae111acd81fcdfc9b3af
 ## Predictions
 
 ```{r predictionDataset}
@@ -746,8 +975,8 @@ temp <- filter(ave_Session_df, Request_count > 1)
 temp <- subset(temp, select=c(Session_duration_mins,Session_day, Session_hour, Referrer, LeadsToBuy))
 
 temp$Session_day <- factor(temp$Session_day, levels = c("Monday", "Tuesday", "Wednesday", 
-                          "Thursday", "Friday", "Saturday", "Sunday"),
-            ordered = TRUE)
+                                                        "Thursday", "Friday", "Saturday", "Sunday"),
+                           ordered = TRUE)
 temp$Session_day <- as.integer(temp$Session_day)
 temp$Referrer <- as.integer(as.factor(temp$Referrer))
 
@@ -781,37 +1010,44 @@ up_train <- upSample(x = train.scaled[, -ncol(train.scaled)],
 
 # Set up repetition for evaluation
 fitControl <- trainControl(## 10-fold CV
+<<<<<<< HEAD
                            method = "repeatedcv",
                            number = 10,
                            ## repeated ten times
                            repeats = 5,
                            classProbs = T,
                            savePredictions = T)
+=======
+  method = "repeatedcv",
+  number = 10,
+  ## repeated ten times
+  repeats = 10)
+>>>>>>> 043a2461f48a7329e3a5ae111acd81fcdfc9b3af
 # Register 4 Processors for parallel optimization
 cl <- makePSOCKcluster(3)
 registerDoParallel(cl)
 # Learn a naive bayes, a logistic regression and a decision tree
 set.seed(1820)
 fit.down.nb <- train(Class ~ ., data = down_train, 
-                 method = "naive_bayes", 
-                 trControl = fitControl)
+                     method = "naive_bayes", 
+                     trControl = fitControl)
 fit.up.nb <- train(Class ~ ., data = up_train, 
-                 method = "naive_bayes", 
-                 trControl = fitControl)
+                   method = "naive_bayes", 
+                   trControl = fitControl)
 set.seed(1820)
 fit.down.log <- train(Class ~ ., data = down_train, 
-                 method = "regLogistic", 
-                 trControl = fitControl)
+                      method = "regLogistic", 
+                      trControl = fitControl)
 fit.up.log <- train(Class ~ ., data = up_train, 
-                 method = "regLogistic", 
-                 trControl = fitControl)
+                    method = "regLogistic", 
+                    trControl = fitControl)
 set.seed(1820)
 fit.down.tree <- train(Class ~ ., data = down_train, 
-                 method = "ranger", 
-                 trControl = fitControl)
+                       method = "ranger", 
+                       trControl = fitControl)
 fit.up.tree <- train(Class ~ ., data = up_train, 
-                 method = "ranger", 
-                 trControl = fitControl)
+                     method = "ranger", 
+                     trControl = fitControl)
 
 # Stop parallel execution
 stopCluster(cl)
@@ -875,15 +1111,16 @@ tr <- read.transactions('market_basket_transactions.csv', format = 'basket', sep
 summary(tr)
 if (!require("RColorBrewer")) {
   # install color package of R
-install.packages("RColorBrewer")
-#include library RColorBrewer
-library(RColorBrewer)
+  install.packages("RColorBrewer")
+  #include library RColorBrewer
+  library(RColorBrewer)
 }
 itemFrequencyPlot(tr,topN=20,type="relative",col=brewer.pal(8,'Pastel2'), main="Absolute Item Frequency Plot")
 association.rules <- apriori(tr, parameter = list(supp=0.0005, conf=0.75,maxlen=5))
 inspect(association.rules)
 plot(association.rules, method = "graph",  engine = "htmlwidget")
 ```
+
 
 ### Predict Moretimebuyer
 
