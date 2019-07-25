@@ -8,7 +8,9 @@ documentclass: book
 output: 
   bookdown::pdf_document2:
     toc: yes 
-    
+    toc_float: true
+    theme: default
+    css: "custom.css"
 ---
 
 ```{r importLibs, include=FALSE, warning=FALSE, echo=FALSE}
