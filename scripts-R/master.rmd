@@ -438,7 +438,7 @@ boxplot(Order_Amount~Gender, data = order_df, horizontal = TRUE, xlab = "Order A
 click_df <- click_df %>% 
   dropEmptyRowsAndCols() %>%
   dropDuplicateCols
-  ```
+```
 
 Of course, this graph can be misleading, assuming that the male customer spending more than $500 skews the distribution but the information is nice anyways.<br>
 Another valuable information is the location of the customer.
