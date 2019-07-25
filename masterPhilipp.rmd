@@ -4,9 +4,8 @@ subtitle: "Philipp Peter, Laurenz Harnischmacher, Nico Lindert"
 date: "24 Mai 2019"
 autor: "Group number 5: 7308029, 7357790, 7309584"
 cover-image: "universitaet_zu_koeln-siegel.jpg"
-documentclass: book
 output: 
-  bookdown::pdf_document2:
+  bookdown::html_document2:
     toc: yes 
     toc_float: true
     theme: default
@@ -79,23 +78,23 @@ knitr::opts_chunk$set(echo = FALSE)
 
 # Introduction
 
-This project report is about the webshop of the company ebuy. It is based on two datasources covering the clickstream and the orders of the webshop. Additionally, the company provided us with data of an experiment on recommender systems. From this data, the goal is to find interesting correlations and infer a usefull prediction. To realize this goal, the data is prepared. First, the data import is described alongside basic information on the data. In this step, the data is also cleaned for further analysis. Next, the data is summarized and visualized to get an impression on how the data looks like and what could be done with the data. After that, the prediction model is presented. Finally, the experiment data is evaluated to find the best recommender system.
+This project report is about the webshop of the company ebuy. It is based on two datasources covering the clickstream and the orders of the webshop. Additionally, the company provided us with data of an experiment on recommender systems. From this data, the goal is to find interesting correlations and infer a usefull prediction. To realize this goal, the data is prepared. First, the data import is described alongside basic information on the data. In this step, the data is also cleaned for further analysis (Chapter [Data Preparation]). Next, the data is summarized and visualized to get an impression on how the data looks like and what could be done with the data (Chapters [Visualisation] and [Summary Statistics]). After that, the prediction model is presented (Chapter [Prediction]). Finally, the experiment data is evaluated to find the best recommender system (Chapter [Experiment]).
 
 PROPOSED STRUCTURE:
 1 Introduction
 2 Data Preparation
   2.1 Data Import
   2.2 Basic Data Description
-  2.3 Data Cleaning
+  2.3 Data Cleaning and Manipulation
 3 Visualisation
 4 Summary Statistics
 5 Prediction
 6 Experiment
 7 Conclusion
 
-# Data Cleaning
+# Data Preparation
 
-This part is rather technical and focuses on showing how the data for analysis is generated from the raw data. You may skip this part and continue with the part on _Basic Data Description_.
+This part is rather technical and focuses on showing how the data for analysis is generated from the raw data. You may skip this part and continue with the part on [Basic Data Description].
 
 ## Data Import {#getdata}
 
@@ -185,7 +184,7 @@ deleteSemicolons <- function(x)
 }
 deleteBackslashs <- function(x)
 {
-  return(gsub("\\\\","",x,fixed=TRUE))
+  return(gsub("\\\\","",x))
 }
 dropColumnsPercNA <- function(x, percentage)
 {
@@ -206,7 +205,7 @@ dropColumnsPercNA <- function(x, percentage)
 }
 ```
 
-```{r dataCleaningOrder, echo=FALSE, cache=TRUE}
+```{r dataCleaningOrder, echo=FALSE}
 order_df <- order_df %>% 
   cleanNas() %>%
   dropEmptyRowsAndCols()
@@ -235,10 +234,11 @@ time_list = c(
 
 for (time in time_list) time <- deleteBackslashs(time)
 
+
 ```
 
 
-```{r dataCleanclick, echo=FALSE, cache=TRUE}
+```{r dataCleanclick, echo=FALSE}
 # Clean click_df
 click_df <- click_df %>% 
   dropEmptyRowsAndCols()
@@ -287,8 +287,8 @@ To be able to look at the aggregated data across sessions, a dataset consisting 
 
 On a first look, the data provides the following information:
 
-```{r summary_or, echo=FALSE}
-# --- Preparation --- #
+```{r prepForVis, echo=FALSE}
+# Clean order_df
 # Selected Column Indices
 sel <- c("Order_Session_ID","Order_Date","Order_Time","Order_ID","Order_Status","Order_Amount","HowDidYouHearAboutUs","City","US_State","Year_of_Birth","Customer_ID","Estimated_Income_Code","Gender","Order_Credit_Card_Brand","BrandName","Product_Object_ID","Assortment_ID")
 sel2 <- c("Session_ID","Request_Sequence","Request_Processing_Time","Request_Query_String","Request_Referrer","Request_Date","Request_Date_Time","Request_Assortment_ID","Request_Subassortment_ID","Request_Template","REQUEST_DAY_OF_WEEK","Product_ID")
@@ -296,6 +296,13 @@ sel2 <- c("Session_ID","Request_Sequence","Request_Processing_Time","Request_Que
 or <- select(order_df,sel)
 cl <- select(click_df, sel2)
 
+# Get rid of semicolons
+or$Estimated_Income_Code <- gsub(";", "", or$Estimated_Income_Code)
+
+#write.csv(or, "order_data_clean.csv")
+#write.csv(cl, "click_data_clean.csv")
+```
+```{r summary_or, echo=FALSE}
 # --- Features --- #
 or$Order_Week <- as.Date(cut(or$Order_Date,
   breaks = "week",
@@ -313,9 +320,11 @@ temp <- count_2 / count(or)
 count_2_p <- percent(temp[1,1])
 ```
 
+
 What can be observed is that most of the orders were placed at March 1, namely `r count_1`. `r count_2` or `r count_2_p` of all orders have been placed in the week of February 28.<br>
 Further, interestingly the amount of orders of March 1 placed overnight or in the morning is quite high. It could be assumed that there was a special time limited offer in the early hours of March 1.<br><br>
 Overall, only `r count(or, or$Gender)[3,2]` customers specified their gender as "male" and `r count(or, or$Gender)[2,2]` as "female". However, men seem to spend more money on average as the boxplot indicates.
+
 
 ```{r grammarofg, echo=FALSE}
 #x = as.POSIXct(paste(or$Order_Date, or$Order_Time), format="%Y-%m-%d %H:%M:%S")
@@ -328,70 +337,24 @@ or$Estimated_Income_Code <- factor(or$Estimated_Income_Code, levels = c(
   "$50000-$74999", "$75000-$99999", "$100000-$124999", "$125000 OR MORE"
 ))
 
+
+
 boxplot(Order_Amount~Gender, data = order_df, horizontal = TRUE, xlab = "Order Amount", ylab = "Gender")
 #boxplot(Order_Amount~Estimated_Income_Code, data = order_df, par(mar = c(12, 5, 4, 2)+ 0.1), las = 2)
 
 ```
 
-```{r}
-knitr::knit_exit()
-```
-
+Of course, this graph can be misleading, assuming that the male customer spending more than $500 skews the distribution but the information is nice anyways.<br>
+Another valuable information is the location of the customer.
 
 Of course, this graph can be misleading, assuming that the male customer spending more than $500 skews the distribution but the information is nice anyways.<br>
 Another valuable information is the location of the customer.
 
-## Der folgende Absatz l??uft noch nicht ##
+# Summary Statistics
 
-```{r heatmap, echo=FALSE}
-# ----- Laurenz' Approach ------ #
-# Customer_Product_heatmap <- order_df %>%
-#   select(US_State, Customer_ID, Order_Line_ID, Order_Line_Amount) %>%
-#   group_by(Customer_ID, US_State) %>%
-#   summarise(numberoforders = n(),totalspend = sum(Order_Line_Amount)) 
-# 
-# ggplot(data= Customer_Product_heatmap)+
-#   geom_tile(mapping = aes(x = US_State, y = Customer_ID, fill = totalspend))
+In order to show important summary statistics, there are tables in the following paragraphs showing the respective top 5 results from the tables. The first dataset to look at is the clickstream dataset.
 
-# import csv that matches abbreviations and state names
-statesPath <- paste(rootDir, "00_raw_data/states.csv", sep="/")
-statesCSV <- read_csv(statesPath, col_names = TRUE)
-statesCSV$region <- tolower(statesCSV$region)
-
-states <- map_data("state") # import latitude longitude data
-states <- merge(states, statesCSV, by = "region", all = TRUE) # add abbreviations to states data
-
-# Merge to one map dataset
-order_map <- merge(order_df, states, by = "US_State", all.x = TRUE)
-
-# ggplot(order_map, aes(x = long, y = lat, group = group))+
-#   geom_polygon(aes(fill = ))+
-#   geom_path()+ 
-#   scale_fill_gradientn(colours=rev(heat.colors(10)),na.value="grey90")+
-#   coord_map()
-
-```
-
-Most of the customers are located in XYZ.<br><br>
-Yet, all insights refer to the order dataset. The clickstream dataset provides a lot more data but not necessarily more interesting insights. As the name implicates, it carries information about where the customer clicked on the website. What can 
-
-
-
-```{r firstLook , echo=FALSE}
-
-
-#knitr::knit_exit()
-```
-Thereby, date and time are less useful, as the time-format is transformed into double values that provide no information on a first look.
-
-
-
-
-# Analysis
-
-## Summary tables
-
-### Clickstream tables
+## Clickstream table
 
 ```{r Clickstreamtables , echo=FALSE}
 buffer<- click_df %>%
@@ -459,9 +422,12 @@ names(Session_top5)<- c("Top1","Top2","Top3","Top4","Top5")
 kable(Session_top5)
 ```
 
-In the `click_df` we united the first clickstream dataset and the secound clickstream dataset. Together the `click_df` contains `r nrow(click_df)` click observations. We identifyed the top five from the `click_df` which are show above.
+This table shows the clickstream datasets. Together it contains `r nrow(click_df)` click observations. We identifyed the top five referrering sites which are show above. Most referres are counted for the gazelle.com website with 93730 refers. This is a very clear first place and it also contains most of the clickstream data. </br>
+Among the products, the clicks are a lot more equally distributed. The most favorite product is the Cellulite Trimming Gel with 321 clicks. Compared to the overall number of observations this seems to be very little, but in these clickstream observations all intermediate steps are contained as well, resulting in less actual products being clicked. </br>
+The favorite hour of the day for clicking on this webshop is 2 am. This is an interesting insight, as it might help improve the site to match customers that browse the webshop at night. The other hours are all in the morning, between 7 and 11 am. </br>
+From the days, obviously the weekend is most common with being among the top three. Interestingly the friday is not one of the top five clicked days.
 
-
+## Session Table
 
 ```{r Sessiontable, echo=FALSE, warning=FALSE}
 df <- data.frame(W=ave_Session_df$Request_count,X=ave_Session_df$Session_duration_mins, Y=ave_Session_df$Visited_assortments, Z=ave_Session_df$Visited_products) # fake data
@@ -479,11 +445,11 @@ summary_stats$summary_stats <- c("Request_count","Session_duration_mins","Visite
 kable(summary_stats) 
 ```
 
-From the `click_df` dataset we extractet the `ave_Session_df`dataset.
-This dataset contains `r nrow(ave_Session_df)`  session observations.
-The tabel above summarizes  the average session. 
+The session dataset consists of `r nrow(ave_Session_df)`  session observations. As can be seen in the median for the request count, at least 50 % of the sessions do not consist of more than one observation. Logically, the shortest session duration is zero, as this metric can only be calculated by looking at the first and the last request time. Accordingly, most sessions also do not look at more than one product and at more than one assortment.
 
-### Order tables
+## Order tables
+
+The first table shows, similar to the clickstream data, the top 5 elements of selected categories.
 
 ```{r Ordertables, echo=FALSE}
 
@@ -556,6 +522,11 @@ kable(Order_top5)
 
 ```
 
+As can be seen in the table, not all products are associated with a product name. For this reason, the top product identifiers are listed to provide this information for later interpretation. Another interesting aspect is that some customers purchase many times. Other customers purchase many items at once. The second aggregation includes all preceding purchases, which means that for example the customer with the identifier 30208 ordered 30 times, but only one item each resulting in the 30 items in the purchased products per customer row. </br>
+The most popular brand is AME by a large margin, followed by Silk Reflections and ELT.</br>
+The top sale hours are, in contrast to the click hours, rather in the afternoon. But as can be seen, all values are close together meaning that the difference between the hours is not that large. Looking at the most popular days for purchasing, the wednesday is clearly on top. Here, the difference to the clickstreams is clearer, because the weekend comes almost in last place for purchasing. </br>
+
+The following table is based on a subset of the order data, all orders that are marked as a return.
 
 ```{r ReturnSummary, echo=FALSE, warning=FALSE}
 
@@ -591,7 +562,8 @@ kable(summary_Return)
 
 ```
 
-The table "Summary_Return" is based on `r nrow(ave_Return)` return observations. We extracted these return from the order dataset.
+The table "Summary_Return" is based on `r nrow(ave_Return)` return observations. As can be seen, there are not a lot of observations for this category of orders, thus this summary table is a little less meaningful than the others above. </br>
+The following table is based on all orders that have a ordered quantity larger than zero to make the summary statistics for the whole dataset more representative of the actual orders.
 
 
 ```{r OrderSummary, echo=FALSE, warning=FALSE}
@@ -632,46 +604,7 @@ kable(summary_Order)
 
 ```
 
-The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. We extracted these orders from the order dataset.The negative minimum in the row “Order Amount” looks suspicious. Research in the data revealed that the orders: order-Id 12314 and order-Id 10930 used a special combination of products and the promotion code “FRIEND” to generate a negative order amount.  However, the credit card payment amount indicates that the coups didn’t succeed.  Also the datasets cannot tell if the negative Order Amount were create willingly or through accident. 
-
-
-
-## Comparison of groups
-
-```{r compare}
-
-```
-
-
-## Experiment: Recommender Systems
-
-For the websites recommender systems, there are different options. In an experiment, three different recommender systems were tested. First a random recommendation system as baseline comparison for the experiment, second a ranking based recommender system and third a profit oriented recommender system. The data consisted of 146 observations for the profit oriented system, 149 for the random one and 154 observations for the ranking based system.
-
-```{r echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.width=8}
-rootDir <- knitr::opts_knit$get("root.dir")
-headersPath <- paste(rootDir, "experiment/experimental_results.csv", sep="/")
-experiment <- read_csv(headersPath)
-# plot data
-library(reshape2)
-plotData <- subset(experiment, select=c("random_recommendations","ranking_based","profit_oriented"))
-plotData <- melt(plotData)
-ggplot(plotData) %>%
-  + geom_density(aes(x=value, color = variable),adjust=.8) %>%
-  + scale_colour_manual(name="Recommender System", labels=c("Random", "Ranking Based", "Profit Oriented"), values=c("red","green","blue")) %>%
-  + labs(x = element_text("Average Sales per Person"),       # Change x axis title only
-         y = element_text("Density of Occurance")       # Change y axis title only
-         )
-```
-As can be seen in {FIGURE}, with some smoothing the profit oriented recommender system seems to be much more effective, offering both a higher mean value and a lower standard deviation. To proove this point, the t-tests are calculated for the combinations of both systems on the random recommender system and between the ranking and profit oriented recommender system.
-
-```{r echo=FALSE}
-profExp <- t.test(experiment$profit_oriented, experiment$random_recommendations, alternative="greater", paired=TRUE)
-rkgExp <- t.test(experiment$ranking_based, experiment$random_recommendations, alternative="greater", paired=TRUE)
-profRkg <- t.test(experiment$profit_oriented, experiment$ranking_based, alternative = "greater", paired=TRUE)
-# Build Table with values
-```
-
-The t-test shows that the profit oriented recommender system is indeed significantly better than the random recommendation system, with a p value of {variable}. Furthermore, it performs also significantly better than the ranking based recommender system, making it the best of the three. Our conclusion is that the best system to use is the profit oriented recommender system, because it is able to outperform the other candidate statistically significant.
+The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. Here can be seen that most people order the product at least twice, as shown by the order quantity median. Most people also use a promotion, which means that promotions have a large impact on purchases. The negative minimum in the row Order Amount looks suspicious. Research in the data revealed that the orders: order-Id 12314 and order-Id 10930 used a special combination of products and the promotion code FRIEND to generate a negative order amount.  However, the credit card payment amount indicates that the coups did not succeed.  Also the datasets cannot tell if the negative Order Amount were create willingly or through accident.
 
 
 ## Predictions
@@ -702,7 +635,7 @@ temp$Referrer <- as.integer(as.factor(temp$Referrer))
 
 ```
 
-```{r predictionPreprocess}
+```{r predictionPreprocess, cache=TRUE}
 library(doParallel)
 # Partition the data in a 80%/20% split
 set.seed(1805)
@@ -754,14 +687,6 @@ fit.down.log <- train(Class ~ ., data = down_train,
 fit.up.log <- train(Class ~ ., data = up_train, 
                  method = "regLogistic", 
                  trControl = fitControl)
-set.seed(1820)
-fit.down.tree <- train(Class ~ ., data = down_train, 
-                 method = "ranger", 
-                 trControl = fitControl)
-fit.up.tree <- train(Class ~ ., data = up_train, 
-                 method = "ranger", 
-                 trControl = fitControl)
-
 # Stop parallel execution
 stopCluster(cl)
 
@@ -769,17 +694,19 @@ fitted.down.log <- predict(fit.down.log, newdata = test.scaled, type = "prob")
 fitted.up.log <- predict(fit.up.log, newdata = test.scaled, type = "prob")
 fitted.down.nb <- predict(fit.down.nb, newdata = test.scaled, type = "prob")
 fitted.up.nb <- predict(fit.up.nb, newdata = test.scaled, type = "prob")
-fitted.down.tree <- predict(fit.down.tree, newdata = test.scaled, type = "prob")
-fitted.up.tree <- predict(fit.up.tree, newdata = test.scaled, type = "prob")
 
 library(ggplot2)
 library(plotROC)
 ggplot() %>%
   + geom_roc(fit.up.log$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "red", hjust = -0.4, vjust = 1.5) %>%
   + geom_roc(fit.up.nb$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "blue", hjust = -0.4, vjust = 1.5) %>%
-  + geom_roc(fit.up.tree$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "green", hjust = -0.4, vjust = 1.5) %>%
   + coord_equal()
 ```
+
+```{r}
+knitr::knit_exit()
+```
+
 
 ## Evaluation of models
 
@@ -950,4 +877,35 @@ text(fit.pruned, use.n = TRUE,all = TRUE,cex=.6)
 prediction_p <- predict(fit.pruned,test,type = "class")
 table(prediction_p,test$moretimebuyer) 
 ```
+
+## Experiment: Recommender Systems
+
+For the websites recommender systems, there are different options. In an experiment, three different recommender systems were tested. First a random recommendation system as baseline comparison for the experiment, second a ranking based recommender system and third a profit oriented recommender system. The data consisted of 146 observations for the profit oriented system, 149 for the random one and 154 observations for the ranking based system.
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.width=8}
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "experiment/experimental_results.csv", sep="/")
+experiment <- read_csv(headersPath)
+# plot data
+library(reshape2)
+plotData <- subset(experiment, select=c("random_recommendations","ranking_based","profit_oriented"))
+plotData <- melt(plotData)
+ggplot(plotData) %>%
+  + geom_density(aes(x=value, color = variable),adjust=.8) %>%
+  + scale_colour_manual(name="Recommender System", labels=c("Random", "Ranking Based", "Profit Oriented"), values=c("red","green","blue")) %>%
+  + labs(x = element_text("Average Sales per Person"),       # Change x axis title only
+         y = element_text("Density of Occurance")       # Change y axis title only
+         )
+```
+As can be seen in {FIGURE}, with some smoothing the profit oriented recommender system seems to be much more effective, offering both a higher mean value and a lower standard deviation. To proove this point, the t-tests are calculated for the combinations of both systems on the random recommender system and between the ranking and profit oriented recommender system.
+
+```{r echo=FALSE}
+profExp <- t.test(experiment$profit_oriented, experiment$random_recommendations, alternative="greater", paired=TRUE)
+rkgExp <- t.test(experiment$ranking_based, experiment$random_recommendations, alternative="greater", paired=TRUE)
+profRkg <- t.test(experiment$profit_oriented, experiment$ranking_based, alternative = "greater", paired=TRUE)
+# Build Table with values
+```
+
+The t-test shows that the profit oriented recommender system is indeed significantly better than the random recommendation system, with a p value of {variable}. Furthermore, it performs also significantly better than the ranking based recommender system, making it the best of the three. Our conclusion is that the best system to use is the profit oriented recommender system, because it is able to outperform the other candidate statistically significant.
+
 # Conclusion
