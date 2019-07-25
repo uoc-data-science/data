@@ -1,6 +1,6 @@
 ---
 title: "Data analysis: Ebuy's sales data"
-author: "Group 3: Julius Braun (xxxxxxx), Patrick Preuß (5813166), Paul Schütz (xxxxxxx)"
+author: "Group 3: Jan Julius Braun (6000100), Patrick Preuß (5813166), Paul Schütz (xxxxxxx)"
 date: "July 2019"
 bibliography: "bibliographies/literature.bib"
 output:
@@ -18,7 +18,7 @@ set.seed(26769)
 ```
 
 # Introduction
-```{r includes01, echo=FALSE, message=FALSE}
+```{r includes01, echo=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
 library(ggplot2)
 library(tidyr)
@@ -42,7 +42,7 @@ In this report we analysed the data of Ebuy, an online sales platform. We used t
 include_graphics("images/wickham2017-data-science-explore.png")
 ```
 
-## The Data
+## The Data {#data-cleaning}
 Ebuy's data came separated into different files: files that contained the actual observations and files that described the columns. We first joined the column names with their respective data sets and after examining the data we than proceeded to clean them. This included eliminating empty rows and columns, as well as renaming and forcing some of the variables to be categorical. To get as much knowlegde out of the data as possible we tried to combine the order data with the clickstream data. Unfortunately there was no way to merge the two files thats why we could only analyze the files separately.
 ```{r unzipClickstream1, echo=FALSE, message=FALSE}
 # The first part of the clickstream data comes in a ZIP archive. We have to unzip it first.
@@ -145,8 +145,8 @@ In our analysis of Ebuy's data we distiguised between different scopes of intere
 # Summary Statistics {#summary-statistics}
 ## Clicks
 
-The data period contains data for 17 days. To get an overview over the clickstream data, we look at different measures in the data. The table below shows how many sessions and requests Ebuy's web site accumulated per day. The last measure is the average requests per session which makes it easier to compare the average session length between days. Apparently, the data sampling started on April 14th, 2000 in the late evening because there are only 37 requests in five sessions, while every other day generated at least 6800 requests.
-Also, there are no clear correlations between the day of the week and the session length, but there seems to be a correlation between the day of the week and session count. On weekends, there are less sessions and requests than during workdays. Whether this correlation is significant can be investigated by deeper analysis.
+The data period contained data for 17 days. To get an overview over the clickstream data, we looked at different measures in the data. The table below shows how many sessions and requests Ebuy's web site accumulated per day. The last measure is the average requests per session which made it easier to compare the session length between days. Apparently, the data sampling started on April 14th, 2000 in the late evening because there were only 37 requests in five sessions, while every other day generated at least 6800 requests.
+Also, there were no clear correlations between the day of the week and the session length, but there seemed to be a correlation between the day of the week and session count. On weekends, there were less sessions and requests than during workdays. Whether this correlation is significant could be investigated by deeper analysis.
 
 ```{r requestsummary, echo=FALSE}
 
@@ -159,7 +159,7 @@ clickstream_data %>%
 
 ```
 
-After we find out when and how long visitors browse on Ebuy's web site, we want to know what products they look at. Because of the large set of products, we only look at the top 10 products of Ebuy's assortment. Since the clickstream data does not provide information about the product names, we have to choose the product ID. The "Views per Session" measure shows how often the product is viewed per session in which it the product site is visited. By far the most prevalent product is the product with ID 10315. It is also the product with the least views per session, which means that it is relatively also viewed in the most sessions. Thus, it is truly the most popular product in the clickstream data. Also, it accumulated more than twice as many requests as the product with ID 12483, which is the sixth-most viewed product. That shows how large the difference is even between the top products.
+After we found out when and how long visitors browsed on Ebuy's web site, we wanted to know what products they looked at. Because of the large set of products, we only looked at the top 10 products of Ebuy's assortment. Since the clickstream data did not provide information about the product names, we had to choose the product ID. The "Views per Session" measure showed how often the product was viewed in each session in which the product site was visited. By far the most prevalent product was the product with ID 10315. It is also the product with the least views per session, which means that it is relatively also viewed in the most sessions. Thus, it was truly the most popular product in the clickstream data. Also, it accumulated more than twice as many requests as the product with ID 12483, which is the sixth most viewed product. That shows how large the difference was even between the top products.
 
 ```{r productrequests, echo=FALSE}
 
@@ -172,11 +172,11 @@ clickstream_data %>%
   rename("Product ID" = Product_ID, "Views per Session" = Views_Per_Session) %>%
   kable() %>%
   kable_styling(full_width=FALSE)
-  
+
 
 ```
 
-Another perspective on the clickstream data is the customer. The question is which customers are the most regular visitors of the Ebuy web site and how long they stay on the site. The information has to be evaluated with caution, because the data only lists customers that are logged into the web site. The customer with the most requests has the customer ID 5224 with 247 requests over the data period. Also, customer 5224 has six sessions in the 17 days of data sampling, which means the customer visits the site about every third day. Within the top 10 customers, there are three customers with only one session and a high "pages per session" value. 
+Another perspective on the clickstream data was the customer. The question was which customers were the most regular visitors of the Ebuy web site and how long they stayed on the site. The information had to be evaluated with caution, because the data only listed customers that were logged into the web site. The customer with the most requests had the customer ID 5224 with 247 requests over the data period. Also, customer 5224 had six sessions in the 17 days of data sampling, which means the customer visited the site about every third day. Within the top 10 customers, there were three customers with only one session and a high "pages per session" value.
 
 ```{r customerrequests, echo=FALSE}
 
@@ -186,7 +186,7 @@ clickstream_data %>%
   arrange(desc(Requests)) %>%
   filter(!is.na(Customer_ID)) %>%
   top_n(wt = Requests, n=10) %>%
-  rename("Customer ID" = Customer_ID, "average pages per session" = Pages) %>%
+  rename("Customer ID" = Customer_ID, "Average pages per session" = Pages) %>%
   kable() %>%
   kable_styling(full_width=FALSE)
 
@@ -208,7 +208,7 @@ filtered %>% # start with data frame, and then ...
     summarize_at(
       .vars = c("Age"), # select variables that should be in the table
       .funs = tibble::lst(min, max, mean, median, sd) # which summary statistics do you want?
-    )  %>% 
+    )  %>%
     gather(Statistic, Value) %>% # transpose everything, and then ...
     kable() %>%
     kable_styling(full_width=FALSE)
@@ -219,7 +219,7 @@ When looking at the gender distribution in your customer base it is interesting 
 
 ```{r genderDistro, echo = FALSE}
 orderDfCleaned %>%  
-  na_if("NULL")  %>% 
+  na_if("NULL")  %>%
   distinct(Customer_ID, .keep_all = TRUE) %>%
   filter(!is.na(Gender)) %>%
   group_by(Gender) %>%
@@ -233,7 +233,7 @@ Furthermore we was interested into how people get to know about Ebuy and it turn
 
 ```{r howDidYouHearAboutUs, echo = FALSE}
 orderDfCleaned %>%  
-  na_if("?")  %>% 
+  na_if("?")  %>%
   distinct(Customer_ID, .keep_all = TRUE) %>%
   filter(!is.na(HowDidYouHearAboutUs)) %>%
   group_by(HowDidYouHearAboutUs) %>%
@@ -247,8 +247,8 @@ orderDfCleaned %>%
 We also tried to get insight about how many of your customers are parents. If the share is high maybe it makes sense to also offer products for babies and young children since parents buy the clothing for their kinds until a specific age of the children. Maybe parents will just put a new pyjama for their kid in the basket while shopping a new dress for themselve. It turns out that indeed approximatively 40% of your  customers are parents.
 
 ```{r presenceOfChildren, echo = FALSE}
-orderDfCleaned %>% 
-  na_if("?") %>% 
+orderDfCleaned %>%
+  na_if("?") %>%
   distinct(Customer_ID, .keep_all = TRUE) %>%
   filter(!is.na(Presence_Of_Children)) %>%
   group_by(Presence_Of_Children) %>%
@@ -258,8 +258,9 @@ orderDfCleaned %>%
 
 ```
 
-## Products {#products_summary}
+## Products {#products-summary}
 For Ebuy it should be interesting to find out, which of their products and product families are the ones that sell best. The best selling product is a pair of socks from brand HOSO, their best selling product family has the ID 12295. Unfortunately the data does not provide any meaningful further details, what this product family is made of.
+
 ```{r mostOrderedProductsAndProductFamilies, echo=FALSE}
 findDistinctBrandname <- function(dataFrame, productId) {
   bn <- dataFrame %>%
@@ -299,7 +300,7 @@ orderDfCleaned %>%
 ## Clicks
 ### How are the requests distributed geographically?
 
-Since all available clickstream data show requests from the US market, it is interesting to see how visitors from different US states behave on the web site. Figure \@ref(fig:heatmap) shows how many requests per US state have been recorded in the data time span. While the information of the figure is extremely useful, it has to be noted that `r format(round(100*sum(is.na(clickstream_data$US_State))/length(clickstream_data$US_State), 2), nsmall = 2)`% of the observations in the clickstream data do not include information about the state of the visitor. Still, `r sum(!is.na(clickstream_data$US_State))` entries contain the US state, making the plot meaningful.
+Since all available clickstream data showed requests from the US market, it was interesting to see how visitors from different US states behaved on the web site. Figure \@ref(fig:heatmap) shows how many requests per US state have been recorded in the data time span. While the information of the figure is extremely useful, it has to be noted that `r format(round(100*sum(is.na(clickstream_data$US_State))/length(clickstream_data$US_State), 2), nsmall = 2)`% of the observations in the clickstream data did not include information about the state of the visitor. Still, `r sum(!is.na(clickstream_data$US_State))` entries contained the US state, making the plot meaningful.
 
 ```{r heatmap, echo=FALSE, fig.cap="Heatmap of requests per US state", warning=FALSE, fig.align = 'center'}
 
@@ -319,9 +320,9 @@ plot_usmap(data = map_data, values = "Request_Count", labels = TRUE) +
 
 ```
 
-First of all, it stands out that there is no recorded data for Wyoming and Vermont. Although it is very likely that there were unrecorded requests from these states, we cannot make assumptions or predictions for the states on this basis.
-For the other states however, the plot can be used to draw conclusions.
-The states with the most requests are New York (`r map_data$Request_Count[map_data$state == "NY"]` requests), California (`r map_data$Request_Count[map_data$state == "CA"]` requests) and Texas (`r map_data$Request_Count[map_data$state == "TX"]` requests). Compared to the average of `r format(round(mean(map_data$Request_Count[!is.na(map_data$state)]), 2), nsmall = 2)` requests per state, these three states are overproportionally represented. Reasons for this high number of requests could be that this states are the states with the highest Gross Domestic Product (GDP) in the year 2000 ([U.S. Bureau of Economic Analysis](https://apps.bea.gov/iTable/iTable.cfm?reqid=70&step=30&isuri=1&major_area=0&area=01000,02000,04000,05000,06000,08000,09000,10000,11000,12000,13000,15000,16000,17000,18000,19000,20000,21000,22000,23000,24000,25000,26000,27000,28000,29000,30000,31000,32000,33000,34000,35000,36000,37000,38000,39000,40000,41000,42000,44000,45000,46000,47000,48000,49000,50000,51000,53000,54000,55000,56000,91000&year=2000&tableid=505&category=1505&area_type=0&year_end=-1&classification=naics&state=0&statistic=1&yearbegin=-1&unit_of_measure=levels)).
+First of all, it stood out that there was no recorded data for Wyoming and Vermont. Although it is very likely that there were unrecorded requests from these states, we cannot make assumptions or predictions for the states on this basis.
+For the other states however, the plot could be used to draw conclusions.
+The states with the most requests were New York (`r map_data$Request_Count[map_data$state == "NY"]` requests), California (`r map_data$Request_Count[map_data$state == "CA"]` requests) and Texas (`r map_data$Request_Count[map_data$state == "TX"]` requests). Compared to the average of `r format(round(mean(map_data$Request_Count[!is.na(map_data$state)]), 2), nsmall = 2)` requests per state, these three states were overproportionally represented. Reasons for this high number of requests could be that this states were the states with the highest Gross Domestic Product (GDP) in the year 2000 ([U.S. Bureau of Economic Analysis](https://apps.bea.gov/iTable/iTable.cfm?reqid=70&step=30&isuri=1&major_area=0&area=01000,02000,04000,05000,06000,08000,09000,10000,11000,12000,13000,15000,16000,17000,18000,19000,20000,21000,22000,23000,24000,25000,26000,27000,28000,29000,30000,31000,32000,33000,34000,35000,36000,37000,38000,39000,40000,41000,42000,44000,45000,46000,47000,48000,49000,50000,51000,53000,54000,55000,56000,91000&year=2000&tableid=505&category=1505&area_type=0&year_end=-1&classification=naics&state=0&statistic=1&yearbegin=-1&unit_of_measure=levels)).
 The implications for Ebuy are to especially target visitors from New York, California and Texas to generate profit from the high ratio of visitors coming from these states. Targeting methods could include special offers or extensive marketing.
 
 ```{r createRequestData, echo=FALSE}
@@ -335,7 +336,7 @@ data_requests_products <- clickstream_data %>%
 
 ### How many times was each product accessed?
 
-Another important information is which products are viewed most often. Figure \@ref(fig:requests) shows the distribution of requests per product. Although there are too many products to show the individual number of requests per product, it becomes clear that the requests are not equally distributed. The distribution has the form of a long-tail curve, meaning that a small portion of all products get a large proportion of the requests. The implications for Ebuy are that not all products can be treated equally. Ebuy should focus their marketing activities on products that are viewed more often in order to generate more profit. The most viewed product has product ID `r data_requests_products[order(data_requests_products$Request_Count, decreasing = TRUE),][1,1]` and was visited `r data_requests_products[order(data_requests_products$Request_Count, decreasing = TRUE),][2,1]` times. Compared with the IDs of the most bought products in \@ref(products_summary), it becomes apparent that the most viewed product is not the most bought one. Since it is the most viewed product, it has to be interesting for potential customers. Ebuy should investigate what keeps customers from buying that product because they are missing out on profit. Possible reasons for that could be that the price is too high and that customers can buy an equal product cheaper somewhere else, or that the presentation of the product on the web site is not appealing enough to convince visitors to buy it.
+Another important information was which products were viewed most often. Figure \@ref(fig:requests) shows the distribution of requests per product. Although there were too many products to show the individual number of requests per product, it becomes clear that the requests were not equally distributed. The distribution has the form of a long-tail curve, meaning that a small portion of all products got a large proportion of the requests. The implications for Ebuy are that not all products can be treated equally. Ebuy should focus their marketing activities on products that are viewed more often in order to generate more profit. The most viewed product has product ID `r data_requests_products[order(data_requests_products$Request_Count, decreasing = TRUE),][1,1]` and was visited `r data_requests_products[order(data_requests_products$Request_Count, decreasing = TRUE),][2,1]` times. Compared with the IDs of the most bought products in \@ref(products-summary), it became apparent that the most viewed product was not the most bought one. Since it was the most viewed product, it had to be interesting for potential customers. Ebuy should investigate what kept customers from buying that product because they were missing out on profit. Possible reasons for that could be that the price was too high and that customers could buy an equal product cheaper somewhere else, or that the presentation of the product on the web site was not appealing enough to convince visitors to buy it.
 
 ```{r requests, echo = FALSE, fig.cap="Requests per product", fig.align = 'center'}
 
@@ -351,10 +352,10 @@ ggplot(data_requests_products) +
 
 ### How long do customers stay on the Ebuy web site?
 
-To analyze how the average session on the Ebuy web site looks like, we look at the length of the session in two different ways: The first variable is the number of different pages visited during a single session. The second variable is the time between the first and the last request of the session. The scatterplot in figure \@ref(fig:sessionduration) shows how the sessions are distributed regarding the previously mentioned dimensions.
-The first observation is that generally speaking the average session duration in seconds increases with an increasing number of pages visited. This finding is to be expected for normal online shopping behavior. However, the average session duration becomes more scattered with higher pages visited. This can be explained with the fact that a smaller proportion of sessions shows a high amount of pages visited, making outliers more impactful to the average than in the data points with small numbers of visited pages.
-The second observation is that most visitors look at less than ten pages in a session. That shows that only a few visitors use Ebuy's web site to browse through different available products. Most visitors seem to have a clear goal when entering the site and only look at the product (and maybe a few alternative products) and then decide whether they buy that product or not. Ebuy could use improved advertisement (e.g. features like "Customers who bought this product also bought that product") to convince visitors to stay on their web site for longer and thus be more likely to buy more than one product.
-The previous finding could also indicate that there are many regular customers who always buy the same product and thus only stay on the web site for a short period of time since they know what product they want.
+To analyze how the average session on the Ebuy web site looks like, we looked at the length of the session in two different ways: The first variable was the number of different pages visited during a single session. The second variable was the time between the first and the last request of the session. The scatterplot in figure \@ref(fig:sessionduration) shows how the sessions were distributed regarding the previously mentioned dimensions.
+The first observation was that generally speaking the average session duration in seconds increased with an increasing number of pages visited. This finding was expected for normal online shopping behavior. However, the average session duration became more scattered with higher pages visited. This can be explained with the fact that a smaller proportion of sessions showed a high amount of pages visited, making outliers more impactful to the average than in the data points with small numbers of visited pages.
+The second observation was that most visitors looked at less than ten pages in a session. That showed that only a few visitors used Ebuy's web site to browse through different available products. Most visitors seem to have had a clear goal when entering the site and only looked at the product (and maybe a few alternative products) and then decided whether they buy that product or not. Ebuy could use improved advertisement (e.g. features like "Customers who bought this product also bought that product") to convince visitors to stay on their web site for longer and thus be more likely to buy more than one product.
+The previous finding could also indicate that there were many regular customers who always bought the same product and thus only stayed on the web site for a short period of time since they knew what product they wanted.
 
 ```{r sessionduration, echo=FALSE, fig.cap="Scatterplot of session characteristics", fig.align = 'center'}
   duration_data <- clickstream_data %>%
@@ -405,7 +406,7 @@ orderDfCleaned %>%
   group_by(Customer_ID) %>%
   summarise(Total_Spendings = sum(Order_Line_Amount), Total_Item_Count = sum(Order_Line_Quantity), Average_Price_Per_Item = Total_Spendings/Total_Item_Count) %>%
   arrange(desc(Total_Spendings)) %>%
-  head(10) %>% 
+  head(10) %>%
   kable() %>%
   kable_styling(full_width = FALSE)
 ```
@@ -550,7 +551,7 @@ experimentDf %>%
 
 ## Broad Overview of Distributions
 
-When taking a broad look on the means and densities of the different recommender systems, you can clearly see that the profit-oriented recommender system has the highest mean sales with an average of 21.75€ per customer (see figure \@ref(fig:profitDensityAndMean)) in contrast to an average of  19€ per customer for the ranking-based recommender (\@ref(fig:rankingDensityAndMean)) and 18.50€ for the random recommender (see figure \@ref(fig:randomDensityAndMean)). It is also worth to mention that the density for the profit-based recommender system is pretty narrow (compare figure  \@ref(fig:profitDensityAndMean)), indicating a lower standard deviation and probably a tighter confidence interval than the other two wider distributions for the ranking-based (see figure \@ref(fig:rankingDensityAndMean)) and the random recommender systems (see figure \@ref(fig:randomDensityAndMean)).
+When taking a broad look on the means and densities of the different recommender systems, you can clearly see that the profit-oriented recommender system has the highest mean sales with an average of \$21.75 per customer (see figure \@ref(fig:profitDensityAndMean)) in contrast to an average of  \$19 per customer for the ranking-based recommender (\@ref(fig:rankingDensityAndMean)) and \$18.50 for the random recommender (see figure \@ref(fig:randomDensityAndMean)). It is also worth to mention that the density for the profit-based recommender system is pretty narrow (compare figure  \@ref(fig:profitDensityAndMean)), indicating a lower standard deviation and probably a tighter confidence interval than the other two wider distributions for the ranking-based (see figure \@ref(fig:rankingDensityAndMean)) and the random recommender systems (see figure \@ref(fig:randomDensityAndMean)).
 
 ```{r recommenderSetup, include=FALSE}
 recommender_to_sales <- setNames(data.frame(matrix(ncol = 3, nrow = 0)), c("Id", "Recommender", "Sales"))
@@ -643,7 +644,7 @@ wilcox.test(ranking_based_sales$Sales, random_recommendations_sales$Sales, alter
 wilcox.test(profit_oriented_sales$Sales, random_recommendations_sales$Sales, alternative = "two.sided")
 ```
 
-As the mean of the ranking-based recommender system has been shown to not differ significantly from the random recommendersystem we have to choose between the profit-oriented recommender system and the random recommender system. As the profit-oriented recommender systems mean value (21.75) is greater than the baseline mean (17.91), ebuy should preferably use the profit-oriented one.
+As the mean of the ranking-based recommender system has been shown to not differ significantly from the random recommendersystem we have to choose between the profit-oriented recommender system and the random recommender system. As the profit-oriented recommender systems mean value (21.75) is greater than the baseline mean (17.91), Ebuy should preferably use the profit-oriented one.
 
 # Models and Prediction {#models-and-predicitons}
 ## Training the Model{#subsection-ttm}
@@ -695,6 +696,20 @@ predict(tree, unseenCustomer, type="class")
 
 # Summary
 Ebuy's data provided a welcome opportunity to take a data scientific look at real world data. Using the techniques learnt we could examine interesting phenomena and problems from such data.
+In the [first part](#data-cleaning), we processed and cleaned the raw data, removing unneccessary columns and preparing the data for the analysis. In this step we also tried to merge the order data with the clickstream data because working with only one data set is more convenient and enables more ways to analyze the data. Since merging was not possible because of missing or incoherent data, we could only look at both data sets seperately.
 
+In the [second part](#summary-statistics), we analyzed the data sets and created overviews over basic information that can be found inside of them. We found out that the requests, products and customers are very inequally distributed and that a small proportion of observations make up a high proportion of the whole set.
+Afterwards, we analyzed the data in more detail, and created and discussed different plots. We found out that the US states New York, California and Texas generated the most traffic on Ebuy's web site. The different products accumulated very different numbers of requests and most customers stayed on the site for short sessions. Based on these findings, we advised Ebuy to target specific groups of customers/products with their marketing in order to increase their generated profit.
+For customer data, we found that the top ten percent of customers are responsible for about 42% of Ebuy's profit. Implications of that are to make special offers for those customers to generate higher profit from their willingness to pay. Next, we looked at the distribution of brands and discovered that they also are distributed inequally. The top 10 percent of brands made up over a quarter of the total sales volume, making them fitting brands for advertisement. In further analysis we looked at the difference in brand popularity between men and women. For both genders, American Essentials and Hanes are by far the most popular brands but for women, Hanes is number one while for men, American Essentials is more popular.
+Regarding the orders, we looked at the different order volumes between different days of the week. We found out that workdays are more successful than weekends, the most orders are placed on wednesdays and the least on sundays. Action potential raised by this could include coupons that are only valid on weekends to promote orders on these days.
+Similarly to the analysis of the customer data, we were interested in the relative importance of orders. Thus, we looked at how much percent of orders make up which percentage of total sales and found out that the orders are highly inequally distributed. The lowest 75% of orders generate only a quarter of total sales, while the top 25% generate three quarters.
+
+In the [third part](#ebuys-experiment), we used the provided data of Ebuy's experiment to analyse which of their recommender system generates the most profit. First, we cleaned the data and removed redundant ID columns. Then, we got an overview of the all systems by looking at the distribution and the mean of the generated sales. It became clear that the profit-based recommender had the highest mean (\$21.75) in comparison to the ranking-based (\$19) and random-based (\$18.50) recommenders.
+Afterwards, we looked at the confidence intervals and saw that the profit-based recommender system had the best performance and also a tight 95% confidence interval, which indicates a high certainty in the expected sales per customer.
+To find the statistically best performing recommender system, we performed a Shapiro-Wilk Normality Test and a Mann-Whitney U Test. The Shapiro-Wilk Normality Test showed that the data is not normally distributed. Then, we used the Mann-Whitney U Test which is widely used in practice and found out that the profit-based recommender system is significantly (p-value < 0.001) superior to the other systems.
+
+In the [last part](#models-and-predictions), we used the order data to predict which product families a customer was most likely to purchase. We created a decision tree based on the characteristics Age, Gender and Day of the week. Because of the large amount of product families the tree was also very large, but it can be used to predict what purchasing behavior a new customer with certain characteristics had. This model could help Ebuy to identify marketing potential and target specific groups of customers in a way that maximizes the generated profit. Another model we created was a linear regression that predicted order amounts based on the customer age and gender.
+
+Finally, we can say that the data was sufficient to draw conclusions and advise Ebuy for their further marketing actions. Due to the fact that the different data sets could not be connected because the order data was from january 2000 and the clickstream data was from april 2000, there was certainly a loss in analysis potential. If the data could be connected it would enable many ways to analyze the data further and answer questions like: Which browsing behavior leads to a purchase? How many clickstream sessions convert to purchases? How can the online shopping experience can be improved to generate more sales? Unfortunately this kind of analysis was not possible. Still, we found out a lot about the customer, the orders and the browsing behavior of potential customers. Concluding, this project was a success and gave a lot of insight into the data of Ebuy and showed clear implications for Ebuy. However, there is still improvement potential for the data. Coherent data would help to validate the findings and draw even more conclusions.
 
 # Literature
