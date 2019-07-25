@@ -29,7 +29,7 @@ library(usmap)
 library(ineq)
 library(janitor)
 library(stringr)
-library(randomForest)
+library(car)
 library(caret)
 library(rpart)
 library(rpart.plot)
@@ -49,13 +49,16 @@ Ebuy's data came separated into different files: files that contained the actual
 # This was done in 'src/data/script_01_unzip_data.sh' before. Its now part of this "big markdown file".
 
 unzip("../data/raw/clickstream/clickstream_data.zip", exdir=".")
-# Extrating to "../data/interim/clickstream/" works fine under Linux, but not under Windows (even
+# Extracting to "../data/interim/clickstream/" works fine under Linux, but not under Windows (even
 # within a cygwin/gitbash shell)! Extracting to "." is ugly but gets the job done.
 ```
 
 ```{r loadingTheData, echo=FALSE, message=FALSE}
-# This code chunk used to reside in 'src/data/script_02_join_data_with_column_names.r'! Its now part of
-# the "big markdown file".
+
+# README: This code chunk used to reside in 'src/data/script_02_join_data_with_column_names.r'! Its now part of
+# the "big markdown file". There also is a corresponding Python script 'src/data/script_02_join_data_with_column_names.py'
+# that does the same thing but is not featured in this report!
+
 readdatawithcolumns <- function(headersFile, dataFile) {
     message("Reading headers...")
     tmpHeaderNames <- read.csv(file=headersFile, sep=":", header=FALSE)
@@ -85,7 +88,11 @@ write.csv(clickstreamDf, file="../data/interim/clickstream/clickstream_with_head
 ```
 
 ```{r cleaningTheData, echo=FALSE, message=FALSE}
-# This code chunk used to reside in 'src/data/script_03_clean_data.r'! Its now part of the "big markdown file".
+
+# README: This code chunk used to reside in 'src/data/script_03_clean_data.r'! Its now part of the "big markdown file".
+#There also is a corresponding Python script 'src/data/script_03_clean_data.py'
+# that does the same thing but is not featured in this report!
+
 cleanFile <- function(filePath, threshold, keepColumns) {
   message(sprintf("Loading file from %s.", filePath))
   df <- read.csv(file=filePath, header=TRUE, na.strings = c("?", "NA", "NULL"))
@@ -126,7 +133,9 @@ cleanFile <- function(filePath, threshold, keepColumns) {
 clickstream_data <- cleanFile("../data/interim/clickstream/clickstream_with_headers.csv", 0.85, c("US_State", "Customer_ID"))
 orderDfCleaned <- cleanFile("../data/interim/orders/orders_with_headers.csv", 0.85, c())
 
-
+# README: There is both an R ('src/data/script_004_join_data_sets.r') as well as a Python script
+# ('src/data/script_004_join_data_sets.py') for joining the two data sets. Unfourtunately, joining
+# didn't work - there simly was not a single matching tuple!
 ```
 
 ```{r pickColumnsForceCat01, echo=FALSE}
@@ -258,7 +267,7 @@ orderDfCleaned %>%
 
 ```
 
-## Products {#products-summary}
+## Orders {#products-summary}
 For Ebuy it should be interesting to find out, which of their products and product families are the ones that sell best. The best selling product is a pair of socks from brand HOSO, their best selling product family has the ID 12295. Unfortunately the data does not provide any meaningful further details, what this product family is made of.
 
 ```{r mostOrderedProductsAndProductFamilies, echo=FALSE}
@@ -295,6 +304,24 @@ orderDfCleaned %>%
   kable_styling(full_width=FALSE)
 ```
 
+When reasoning about what price tags to put on items in the future, Ebuy should take a look at what its customers are willing to pay today. Calculating the usual statistics for the two different types of order amounts stored in Ebuy's data we find an average order total between 6\$ and 25\$.
+```{r orderTotals, echo=FALSE}
+orderDfCleaned %>%
+  select(
+    "Order_Amount",
+    "Order_Line_Amount"
+  ) %>%
+  rename(
+    "Order Amount" = Order_Amount,
+    "Order Line Amount" = Order_Line_Amount
+  ) %>%
+  summarise_all(list(Min=min, Max=max, Median=median, Mean=mean), na.rm=TRUE) %>%
+  gather(key, value) %>%
+  separate(col=key, sep="_", c("Order Amount Type", "stat")) %>%
+  spread(key=stat, value=value) %>%
+  kable() %>%
+  kable_styling(full_width=FALSE)
+```
 
 # Plots {#plots}
 ## Clicks
@@ -482,7 +509,7 @@ ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y 
 
 ## Orders
 ### Different order volumes on different days of the week?
-Orders at Ebuy's online shop might be distributed differently among the different days of the week. To examine, whether this is the case, we plotted a frequency distribution of all orders over the days of week. We first reordered the days in the canonical way (i.e. Monday, Tuesday, Wednesday, ...) and then counted and plotted the order frequencies against them (figure \@ref(fig:orderDayBarPlot1)). Clearly, the most orders are placed during the weekdays (peaking on Wednesdays), the least orders on sunday. In order to ramp up their sales on those days where sales are particulary low (Saturday, Sunday, Monday), Ebuy could for instance try to hand out (digital) coupons that are only valid on the weekend, therby hopefully increasing their sales figures.
+Orders at Ebuy's online shop might be distributed differently among the different days of the week. To examine, whether this is the case, we plotted a frequency distribution of all orders over the days of week. We first reordered the days in the canonical way (i.e. Monday, Tuesday, Wednesday, ...) and then counted and plotted the order frequencies against them (figure \@ref(fig:orderDayBarPlot1)). Clearly, the most orders are placed during the weekdays (peaking on Wednesdays), the least orders on sunday. In order to ramp up their sales on those days where sales are particulary low (Saturday, Sunday, Monday), Ebuy could for instance try to hand out (digital) coupons that are only valid on the weekend, thereby hopefully increasing their sales figures.
 ```{r orderDayBarPlot1, echo=FALSE, fig.cap="Distribution of orders among different days of the week", fig.align = 'center'}
 orderDfCleaned %>%
   mutate(
@@ -673,25 +700,65 @@ The close up (figure \@ref(fig:tree1Zoom1)) gives a better idea of how a custome
 include_graphics("images/decision-tree-zoom-01.png")
 ```
 
-Next we computed a 10-fold cross-validated linear regression model that helped us understand, how the different properties of customers affected the amount of money they would spend in total.
-```{r linReg1, echo=FALSE}
-ctrl <- trainControl(method = "cv",
-                     number = 10)
 
-linreg1 <- train(Order_Line_Amount ~ Age + Gender,
+In order to create a linear regression model, that predicts the amount of money a customer would spend, we first computed scatterplot matrixes of different predictor variables. Most of the variables were not suitable for a linear model (see figure \@ref(fig:lmScatterMatrix1) for an example) and thus were discarded. We found (weak) visual correlations for the day of purchase, the customer's gender, the state he or she lives in, and the product family chosen from.
+```{r lmScatterMatrix1, echo=FALSE, fig.cap="Scatter plot matrix for different (order-related) variables", fig.align = 'center'}
+as.data.frame(orderDfCleaned[c("Order_Line_Amount",
+                               "Order_Line_Day_of_Week",
+                               "Order_Hour_of_Day",
+                               "Age", "Gender",
+                               "US_State", "Product_Family_ID")]) %>%
+  scatterplotMatrix(.)
+```
+
+We then used these variables (day of purchase, the customer's gender, the state, and product family) in a repeated 10-fold cross-validated linear regression model. The resulting model has a mean absolute error of 4.4 on a scale from -40 to 234 with the actual mean value being 11.6 (see \@ref(products-summary)).
+```{r linReg1, echo=FALSE, warning=FALSE}
+ctrl <- trainControl(method = "cv",
+                     number = 10,
+                     repeats = 5)
+
+linreg1 <- train(Order_Line_Amount ~ Order_Line_Day_of_Week + Gender + US_State + Product_Family_ID,
                  data = orderDfCleaned,
                  trControl = ctrl,
                  na.action  = na.pass,
                  method = "lm")
 linreg1
-linreg1$finalModel
+# show the coefficients with: linreg1$finalModel
 ```
 
+
 ## Predictions{#subsection-pred}
-Having trained the models in \@ref(subsection-ttm) Ebuy could predict the purchasing behaviour of future customers. Given such a previously unseen customer, Ebuy could for instance now predict the product family which she is going to purchase from.
-```{r prediction1, eval=FALSE}
-predict(tree, unseenCustomer, type="class")
+Having trained the models in \@ref(subsection-ttm) Ebuy could predict the purchasing behaviour of future customers. Given such a previously unseen customer, Ebuy could for instance predict the product family which he is going to purchase from:
+```{r prediction1}
+# a fake order from a fake customer:
+unseenCustomer <- data.frame(Order_Line_Day_of_Week = c("Thursday"),
+                             Gender = c("Male"),
+                             Age = c(23),
+                             US_State = c("CO"))
+
+# predict the product family:
+predict(tree, unseenCustomer, type="class") %>%
+  kable(col.names = c("Predicted product family")) %>%
+  kable_styling(full_width=FALSE)
 ```
+
+The predicted product family (12295) matches the one we did predict "manually" in \@ref(subsection-ttm). With the predictive power of such a decision tree Ebuy would be able to display product suggestions to its customers that will very likely match their taste.
+
+Once Ebuy picked a product from the predicted product family to show their customer, they could also calculate a custom price. This could be done by utilizing the linear model computed before, calculating what price the given user would be willing to pay:
+```{r prediction2, warning=FALSE}
+# the same fake order/customer with the product family predicted above:
+unseenCustomerWithPF <- data.frame(Order_Line_Day_of_Week = c("Thursday"),
+                                   Gender = c("Male"),
+                                   Age = c(23),
+                                   US_State = c("CO"),
+                                   Product_Family_ID = c("12295"))
+
+# use the linear model to predict a price:
+predict(linreg1, unseenCustomerWithPF, se.fit = TRUE) %>%
+  kable(col.names = c("Predicted price (in $)")) %>%
+  kable_styling(full_width=FALSE)
+```
+Based on the customer's data and the predicted product family Ebuy would set a price for the picked product of 7.98\$. Additional models, that of course can only be generated once there is a matching pair of 'Order' and 'Clickstream' data, could be used to for instance determine what product to pick from the predicted product family based on the user's clicks.
 
 
 # Summary
