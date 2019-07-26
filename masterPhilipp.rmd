@@ -80,17 +80,6 @@ knitr::opts_chunk$set(echo = FALSE)
 
 This project report is about the webshop of the company ebuy. It is based on two datasources covering the clickstream and the orders of the webshop. Additionally, the company provided us with data of an experiment on recommender systems. From this data, the goal is to find interesting correlations and infer a usefull prediction. To realize this goal, the data is prepared. First, the data import is described alongside basic information on the data. In this step, the data is also cleaned for further analysis (Chapter [Data Preparation]). Next, the data is summarized and visualized to get an impression on how the data looks like and what could be done with the data (Chapters [Visualisation] and [Summary Statistics]). After that, the prediction model is presented (Chapter [Prediction]). Finally, the experiment data is evaluated to find the best recommender system (Chapter [Experiment]).
 
-PROPOSED STRUCTURE:
-1 Introduction
-2 Data Preparation
-  2.1 Data Import
-  2.2 Basic Data Description
-  2.3 Data Cleaning and Manipulation
-3 Visualisation
-4 Summary Statistics
-5 Prediction
-6 Experiment
-7 Conclusion
 
 # Data Preparation
 
@@ -688,7 +677,7 @@ test.scaled <- predict(preProc, test)
 train.scaled$LeadsToBuy <- as.factor(train.scaled$LeadsToBuy)
 ```
 
-```{r predictionProcess}
+```{r predictionProcess, cache=TRUE}
 
 set.seed(1811)
 down_train <- downSample(x = train.scaled[, -ncol(train.scaled)],
@@ -703,8 +692,11 @@ fitControl <- trainControl(## 10-fold CV
                            number = 10,
                            ## repeated ten times
                            repeats = 5,
-                           classProbs = T,
-                           savePredictions = T)
+                           ## Estimate class probabilities
+                           classProbs = TRUE,
+                           ## Evaluate performance using 
+                           ## the following function
+                           summaryFunction = twoClassSummary)
 # Register 4 Processors for parallel optimization
 cl <- makePSOCKcluster(3)
 registerDoParallel(cl)
@@ -712,19 +704,25 @@ registerDoParallel(cl)
 set.seed(1820)
 fit.down.nb <- train(Class ~ ., data = down_train, 
                  method = "naive_bayes", 
-                 trControl = fitControl)
+                 trControl = fitControl,
+                 metric = "ROC")
 fit.up.nb <- train(Class ~ ., data = up_train, 
                  method = "naive_bayes", 
-                 trControl = fitControl)
+                 trControl = fitControl,
+                 metric = "ROC")
 set.seed(1820)
 fit.down.log <- train(Class ~ ., data = down_train, 
                  method = "regLogistic", 
-                 trControl = fitControl)
+                 trControl = fitControl,
+                 metric = "ROC")
 fit.up.log <- train(Class ~ ., data = up_train, 
                  method = "regLogistic", 
-                 trControl = fitControl)
+                 trControl = fitControl,
+                 metric = "ROC")
 # Stop parallel execution
 stopCluster(cl)
+
+resamp <- resamples(x = list(Upsample_Logistic = fit.up.log, Downsample_Logistic = fit.down.log, Upsample_Naive_Bayes = fit.up.nb, Downsample_Naive_Bayes =  fit.down.nb))
 
 fitted.down.log <- predict(fit.down.log, newdata = test.scaled, type = "prob")
 fitted.up.log <- predict(fit.up.log, newdata = test.scaled, type = "prob")
@@ -733,23 +731,17 @@ fitted.up.nb <- predict(fit.up.nb, newdata = test.scaled, type = "prob")
 ```
 
 ```{r}
-knitr::knit_exit()
+theme1 <- trellis.par.get()
+theme1$plot.symbol$col = rgb(.2, .2, .2, .4)
+theme1$plot.symbol$pch = 16
+theme1$plot.line$col = rgb(1, 0, 0, .7)
+theme1$plot.line$lwd <- 2
+trellis.par.set(theme1)
+bwplot(resamp, layout = c(3, 1))
 ```
 
 
-```{r predictionEvaluation}
-library(ggplot2)
-library(plotROC)
-g <- ggplot() %>%
-  + geom_roc(fit.up.log$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "red", hjust = -0.4, vjust = 1.5) %>%
-  + geom_roc(fit.up.nb$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "blue", hjust = -0.4, vjust = 1.5) %>%
-  + coord_equal() %>%
-plot(g)
-```
-
-
-
-### Predict Moretimebuyer
+## Predict Moretimebuyer
 To make your company able to improve customer loyalty we build an induction tree model, which separates the one-time ordering customer from more time ordering customer. The underlaying assumption is that more time buyers are more value. We used a tree model since, compared with other models the findings can be communicated low-tech within our company. The rules separating the customers can be looked up at the induction tree graphic. The prediction model and the findings enable your company to target those customers which are more likely place a second order. This leads to a better marketing fund utilization and a stronger customer loyalty.
 
 ```{r unloadplyr, warning=FALSE, include=FALSE}
@@ -926,8 +918,8 @@ One way to mine the result of the prediction tree would be to rank the instances
 For the websites recommender systems, there are different options. In an experiment, three different recommender systems were tested. First a random recommendation system as baseline comparison for the experiment, second a ranking based recommender system and third a profit oriented recommender system. The data consisted of 146 observations for the profit oriented system, 149 for the random one and 154 observations for the ranking based system.
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.width=8}
-rootDir <- knitr::opts_knit$get("root.dir")
-headersPath <- paste(rootDir, "experiment/experimental_results.csv", sep="/")
+
+headersPath <- "experiment/experimental_results.csv"
 experiment <- read_csv(headersPath)
 # plot data
 library(reshape2)
