@@ -774,7 +774,7 @@ detach("package:plyr",unload = TRUE)
 
 ```
 
-```{r moretimebuyer_prepare, echo=FALSE,warning=FALSE}
+```{r moretimebuyer_prepare, echo=FALSE,warning=FALSE , cache=FALSE}
 
 buffer<- order_df %>%
   select(Order_Customer_ID,Order_ID,Order_Line_ID,
@@ -856,7 +856,7 @@ In order to train the decision tree, we created a dataset out of the order datas
 #build first model and show tree
 fit <- rpart(moretimebuyer~.
              ,data = trainset,method = "class",
-             control = rpart.control(xval = 10,minbucket = 6))
+             control = rpart.control(xval = 10,minbucket = 5))
 rpart.plot(fit,type = 1,extra = "auto")
 ```
 
@@ -896,7 +896,15 @@ In order to avoid overfitting, the cross-validation error from the first tree is
  
 ```{r secoundtree,echo=FALSE,warning=FALSE}
 # build secound tree
-fit.pruned <- prune(fit,cp = fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"] )
+cp = fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"]
+lastcp = fit$cptable[which.min(fit$cptable[,"CP"]),"CP"]
+
+if (cp == lastcp) {
+  cp = fit$cptable[nrow(fit$cptable)-1,"CP"]
+}
+
+
+fit.pruned <- prune(fit,cp = cp ,control = rpart.control(xval = 10,minbucket = 5))
 rpart.plot(fit.pruned,type = 1,extra = "auto")
 
 ```
