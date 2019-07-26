@@ -655,6 +655,8 @@ The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. He
 
 # Predictions
 
+## Predict on Clickstream
+
 ```{r predictionDataset, echo=FALSE, include=FALSE, warning=FALSE}
 #library(rpart)
 #library(caTools)
@@ -763,7 +765,7 @@ bwplot(resamp, layout = c(3, 1))
 ```
 
 
-## Predict Moretimebuyer
+## Predict on Orders
 To make your company able to improve customer loyalty we build an induction tree model, which separates the “one-time ordering customers” from “more time ordering customers”. The underlaying assumption is that “more time buyers” are more value. We used a tree model since, compared with other models the findings can be communicated low-tech within our company. The rules separating the customers can be looked up at the induction tree graphic. The prediction model and the findings enable your company to target those customers which are more likely place a second order. This leads to a better marketing fund utilization and a stronger customer loyalty.
 
 ```{r unloadplyr, warning=FALSE, include=FALSE}
@@ -976,3 +978,8 @@ profRkg <- t.test(experiment$profit_oriented, experiment$ranking_based, alternat
 The t-test shows that the profit-oriented recommender system is indeed significantly better than the random recommendation system, with a p value of {variable}. Furthermore, it performs also significantly better than the ranking based recommender system, making it the best of the three. Our conclusion is that the best system to use is the profit-oriented recommender system, because it is able to outperform the other candidate statistically significantly.
 
 # Conclusion
+
+To conclude, we first summarize the most interesting findings in your data. First most orders were placed on the 1st of march and in this week beginning at the 28th of February also 56% of all purchases were made. Another finding regarding order amount is that men seem to have a higher order amount than women on average. In addition to that the highest order amount was also placed by a man, but women have by far more outlier in terms of order amount. A third finding is that clicks and purchases are distributed unevenly over our products. It could be that products with high amounts of clicks promote the products with a high amount of purchase. Interesting findings in the clickstream dataset are that your top referrer is www.gazelle.com by far. Another is that the product with the highest number of clicks it Cellulite Trimming Gel, but the number of clicks is distributed mostly evenly over your top 5 products. The favorite hour of the day for clicks on your webshop is 2 am also most clicks are placed over the weekend. The average session indicates that most visitors only look at one site of your webshop and one product. The summary of the order dataset shows that the most ordered product is the product with the ID 12883. Unfortunately, for all top 5 products the names are missing. Fortunately, most of the orders include brand names. The best-selling brand is AME far with 822 sails. In contrast to the top click days the top days for orders are mostly weekdays. In terms of orders Wednesday is leading with 934 orders. In the average order the most interesting finding is the negative order amount. Research in the data revealed that the orders: order-Id 12314 and order-Id 10930 used a special combination of products and the promotion code FRIEND to generate a negative order amount. Further investigation is recommended here. Anyway, the credit card payment amount indicated that the cops did not succeed. Though the prediction we discovered that one strong indicator separating one-time buyer from more time buyer is the Credit Card Payment Amount. This discovered rule and the other rules shown in the prediction tree can be used to gain a competitive advantage. One way to do so is to use the prediction model on order of new customers. Another is to train your employees with the tree so they can target customers, which are more likely to do another order. The accuracy out the tree can be improved with additional observations of more time buyers first orders. 
+
+Though the prediction we discovered that one strong indicator separating one-time buyer from the more time buyer is the Credit Card Payment Amount. This discovered rule and the other rules shown in the prediction tree can be used to gain a competitive advantage. One way to do so is to use the prediction model in order for new customers. Another is to train your employees with the tree so they can target customers, which are more likely to do another order. The accuracy out the tree can be improved with additional observations of more time buyers first orders.
+
