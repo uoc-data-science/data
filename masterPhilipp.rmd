@@ -79,10 +79,8 @@ knitr::opts_chunk$set(echo = FALSE)
 
 # Introduction
 
-This project report is about the webshop of the company ebuy. It is based on two data sources covering the clickstream and the orders of the webshop. Additionally, the company provided us with data of an experiment on recommender systems. From this data, the goal is to find interesting correlations and infer useful predictions. To realize this goal, the data is prepared. First, the data import is described alongside basic information on the data. In this step, the data is also cleaned for further analysis (Chapter [Data Preparation]). Next, the data is summarized and visualized to get an impression on how the data looks like and what could be done with the data (Chapters [Visualisation] and [Summary Statistics]). After that, the prediction models are presented (Chapter [Prediction]). One based on the clickstream and one based in the orders. Finally, the experiment data is evaluated to find the best recommender system (Chapter [Experiment]).
-
-3 Visualization
-
+This project report is about the webshop of the company ebuy. It is based on two data sources covering some clickstream and some order transactions of the webshop. Additionally, the company provided us with data of an experiment on recommender systems. Based on this data, interesting correlations should be found and useful predictions inferred. Hence, the data is prepared.<br>
+First, the data import is described alongside basic information on the data. In this step, the data is also cleaned for further analysis (Chapter [Data Preparation]). Next, the data is summarized and visualized to get an impression on how the data looks like and what could be done with the data (Chapters [Visualisation] and [Summary Statistics]). After that, the prediction models are presented (Chapter [Prediction]). One based on the clickstream and one based in the orders. Finally, the experiment data is evaluated to find the best recommender system (Chapter [Experiment]).
 
 # Data Preparation
 
@@ -90,7 +88,7 @@ This part is rather technical and focuses on showing how the data for analysis i
 
 ## Data Import {#getdata}
 
-Before any visualization or even analysis can take place, the data has to be imported, cleaned and prepared. The import includes the extraction of the zip archives and reading in the data. In the read in process, the different candidates for NULL values are all transformed to a representation of missing data. This includes empty cells, question marks, NULL fields, NA fields and Nan fields. Furthermore, the headers are matched with the data from an external file.
+Before any visualization or even analysis can take place, the data has to be imported, cleaned and prepared. The import includes the extraction of the zip archives and reading in the data. In the read-in process, the different candidates for NULL values are transformed to a representation of missing data. This includes empty cells, question marks, NULL fields, NA fields and Nan fields. Furthermore, the headers are matched with predefined data of a separate file.
 
 ```{r dataImport, echo=FALSE, warning=FALSE, include=FALSE, cache=TRUE}
 
@@ -116,7 +114,7 @@ click_df <- read_csv(dataPath2, col_names = result2, na=c("", "?", "NULL", "NA",
 click_df2 <- read_csv(dataPath3, col_names = result2, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 20700)
 ```
 
-Initially the data consists of `r length(click_df)` in the clickstream data and `r length(click_df[[1]])` rows in the first dataset. In an additional dataset there are another `r length(click_df2[[1]])` rows. Those two are merged in the next step. </br>
+Initially, the data consists of `r length(click_df)` features in the clickstream data. While the first dataset carried `r length(click_df[[1]])` observations, the second consists of another `r length(click_df2[[1]])`. Those two are merged in the next step. </br>
 In the order dataset, there are `r length(order_df)` columns and `r length(order_df[[1]])` observations.
 
 ```{r mergeClick, cache=TRUE}
@@ -126,8 +124,8 @@ click_df <- rbind(click_df,click_df2)
 
 ## Basic Data Description
 
-Starting off with the clickstream data, it ranges from `r min(click_df$Request_Date)` to `r max(click_df$Request_Date)`. It consists of all individual requests made by people accessing the webshop. So, it contains basic information on the request, meaning which site was requested, when it was requested and some technical information on the request. Apart from that, each observation also contains the session information. That means that there exists a portion of requests that belong to one session of a customer. The session variables save the information where the first request was made. Apart from this metadata, the rows also contain the level the customer currently visits. Whenever a product is visited, the observation in clickstream contains the information on that product, too. </br></br>
-Unfortunately, the order data covers a different timeframe than the clickstream data. Its time range is from `r min(order_df$Order_Date)` to `r max(order_df$Order_Date)`. Apart from the time, order data has a similar structure. Each row is an item contained in an order. This means that it has unique metadata, such as an identifier and which product is selected with which amount. On top of that, there is shared metadata for order items that are bought together in one shopping tour. For the products, similar metadata is given as in the clickstream table. Apart from the data that is directly related to the order, there is also customer related data which describes properties of the customer. For example, there is a column containing the gender of the customer and whether he/she owns a car. Unfortunately, only a fraction of the observation had a good cover on answered customer questions. This made the customer question unsuitable for prediction and statistical analysis. 
+Starting off with the clickstream data, it ranges from `r min(click_df$Request_Date)` to `r max(click_df$Request_Date)`. It consists of all individual requests made by people accessing the webshop. So, it contains basic information on the request, meaning which site was requested, when it was requested and some technical information on the request. Apart from that, each observation also contains the session information. That means that there exists a portion of requests that belong to one session of a customer. The session variables save the information where the first request was made. Next to metadata, the rows also contain the level the customer currently visits. Whenever a product is visited, the observation in clickstream contains information about that product, too. </br></br>
+Unfortunately, the order data covers a different timeframe than the clickstream data. It ranges from `r min(order_df$Order_Date)` to `r max(order_df$Order_Date)`. Further, order data has a similar structure. Each row is an item contained in an order. This means that it has unique metadata, such as an identifier and which product is selected with which amount. On top of that, there is shared metadata for order items that are bought together within one shopping tour. For the products, similar metadata is given in the clickstream table. Apart from the data that is directly related to the order, there is also customer related data which describes properties of the customer. For example, there is a column containing the gender of the customer and whether he/she owns a car. Unfortunately, only a fraction of the observation had a good cover on answered customer questions. This made the customer question unsuitable for prediction and statistical analysis.
 
 ## Data Cleaning
 ```{r variableConfiguration, cache=TRUE}
@@ -814,7 +812,7 @@ bwplot(resamp, layout = c(3, 1))
 The table shows that the models with the upsampled dataset outperform the downsampled datasets. The difference between naive bayes and logistic regression is that the sensitivity and the specificity differ quite a bit. The decision which model suits the business context best depends on the business context. The logistic regression offers a higher sensitivity, thus detects the people who want to buy better. On the other hand, the naive bayes model is better at finding those customers that do not want to buy anything. So we have two different good performing models with a similar ROC value for usage on the website.
 
 ## Predict on Orders
-To make your company able to improve customer loyalty we build an induction tree model, which separates the “one-time ordering customers” from “more time ordering customers”. The underlaying assumption is that “more time buyers” are more value. We used a tree model since, compared with other models the findings can be communicated low-tech within our company. The rules separating the customers can be looked up at the induction tree graphic. The prediction model and the findings enable your company to target those customers which are more likely place a second order. This leads to a better marketing fund utilization and a stronger customer loyalty.
+To make your company able to improve customer loyalty we build an induction tree model, which separates the b one-time ordering customersb  from b more time ordering customersb . The underlaying assumption is that b more time buyersb  are more value. We used a tree model since, compared with other models the findings can be communicated low-tech within our company. The rules separating the customers can be looked up at the induction tree graphic. The prediction model and the findings enable your company to target those customers which are more likely place a second order. This leads to a better marketing fund utilization and a stronger customer loyalty.
 
 ```{r unloadplyr, warning=FALSE, include=FALSE}
 library(plyr)
@@ -993,7 +991,7 @@ kable(result)
 ```
 
 
-One way to mine the result of the prediction tree would be to rank the instances by the “True probability” and target the instances over a certain threshold. Like in the table above with a threshold of 0.8 True_probability. Another approach is to train customer support personnel, sales personnel, and marketing personnel with the second induction tree model to give them a better understanding of profitable customers. This will enable our employees to target these customers directly. Both suggested methods can be applied by itself or together.
+One way to mine the result of the prediction tree would be to rank the instances by the b True probabilityb  and target the instances over a certain threshold. Like in the table above with a threshold of 0.8 True_probability. Another approach is to train customer support personnel, sales personnel, and marketing personnel with the second induction tree model to give them a better understanding of profitable customers. This will enable our employees to target these customers directly. Both suggested methods can be applied by itself or together.
 
 ## Experiment
   Recommender Systems
