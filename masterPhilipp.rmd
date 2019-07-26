@@ -856,7 +856,7 @@ In order to train the decision tree, we created a dataset out of the order datas
 #build first model and show tree
 fit <- rpart(moretimebuyer~.
              ,data = trainset,method = "class",
-             control = rpart.control(xval = 10,minbucket = 5))
+             control = rpart.control(xval = 10,minbucket = 6))
 rpart.plot(fit,type = 1,extra = "auto")
 ```
 
@@ -892,7 +892,7 @@ plotcp(fit)
 kable(fit$cptable)
 ```
 
-In order to avoid overfitting, the cross-validation error from the first tree is used to build a second tree. The graph shows the cross-validation error vs. the model complexity. The complexity of the minimal cross-validation error is used to prune the second tree. 
+In order to avoid overfitting, the cross-validation error from the first tree is used to build a second tree. The graph shows the cross-validation error vs. the model complexity. The cross-validation error is used to find the optimal complexity and this complexity is used to prune the second tree.
  
 ```{r secoundtree,echo=FALSE,warning=FALSE}
 # build secound tree
@@ -904,7 +904,8 @@ if (cp == lastcp) {
 }
 
 
-fit.pruned <- prune(fit,cp = cp ,control = rpart.control(xval = 10,minbucket = 5))
+
+fit.pruned <- prune(fit,cp = cp ,control = rpart.control(xval = 10,minbucket = 6))
 rpart.plot(fit.pruned,type = 1,extra = "auto")
 
 ```
@@ -931,19 +932,20 @@ prediction <- as.data.frame(predict(fit,testset,type = "prob"))
 prediction[,3:3] <- testset[,13:13]
 prediction[,4:4] <- testset[,8:8]
 prediction[,5:5] <- testset[,10:10]
-prediction[,5:5] <- testset[,11:11]
+prediction[,6:6] <- testset[,11:11]
 names(prediction)[1] <- "False_probability"
 names(prediction)[2] <- "True_probability"
 
-result <- filter(prediction, True_probability>0.6)
+result <- filter(prediction, True_probability>0.8)
 
 kable(result)
 
 ```
 
-One way to mine the result of the prediction tree would be to rank the instances by the “True probability” and target the instances over a certain threshold. Like in the table above with a threshold of 0.6%. Another approach is to train customer support personnel, sales personnel, and marketing personnel with the second induction tree model to give them a better understanding of profitable customers. This will enable our employees to target these customers directly. Both suggested methods can be applied by itself or together.
+One way to mine the result of the prediction tree would be to rank the instances by the “True probability” and target the instances over a certain threshold. Like in the table above with a threshold of 0.8 True_probability. Another approach is to train customer support personnel, sales personnel, and marketing personnel with the second induction tree model to give them a better understanding of profitable customers. This will enable our employees to target these customers directly. Both suggested methods can be applied by itself or together.
 
-## Experiment: Recommender Systems
+## Experiment
+  Recommender Systems
 
 For the websites recommender systems, there are different options. In an experiment, three different recommender systems were tested. First a random recommendation system as baseline comparison for the experiment, second a ranking based recommender system and third a profit-oriented recommender system. The data consisted of 146 observations for the profit-oriented system, 149 for the random one and 154 observations for the ranking based system.
 
