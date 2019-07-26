@@ -1,5 +1,5 @@
 ---
-title: "Programming Data Science Report"
+title: "Programming Data Science Report Group number 5"
 subtitle: "Philipp Peter, Laurenz Harnischmacher, Nico Lindert"
 date: "24 Mai 2019"
 autor: "Group number 5: 7308029, 7357790, 7309584"
@@ -27,6 +27,7 @@ library(scales)
 library(lubridate)
 library(maps)
 library(readr)
+library(usmap)
 ```
 
 ```{r dataPaths, echo=FALSE, warning=FALSE, include=FALSE}
@@ -121,6 +122,7 @@ In the order dataset, there are `r length(order_df)` columns and `r length(order
 ```{r mergeClick, cache=TRUE}
 click_df <- rbind(click_df,click_df2)
 ```
+
 
 ## Basic Data Description
 
@@ -276,8 +278,6 @@ To be able to look at the aggregated data across sessions, a dataset consisting 
 
 # Visualisation
 
-On a first look, the data provides the following information:
-
 ```{r prepForVis, echo=FALSE}
 # Clean order_df
 # Selected Column Indices
@@ -293,6 +293,30 @@ or$Estimated_Income_Code <- gsub(";", "", or$Estimated_Income_Code)
 #write.csv(or, "order_data_clean.csv")
 #write.csv(cl, "click_data_clean.csv")
 ```
+
+On a first look, the data provides the following information:
+
+```{r summary_cl, echo=FALSE}
+
+# --- Features --- #
+cl$Request_Week <- as.Date(cut(cl$Request_Date,
+  breaks = "week",
+  start.on.monday = TRUE))
+cl$Daypart <- cut(hour(ymd_hms(cl$Request_Date_Time)), c(0,6,12,18,Inf), c("Overnight (0-6AM)", "Morning (6-12AM)", "Afternoon (12AM-6PM)", "Prime (6PM-0AM)"))
+
+# --- Graphs --- #
+g <- ggplot(cl, aes(Request_Date)) + geom_bar(aes(fill = Daypart)) + labs(x = "Request Date", y = "Number of Requests")
+plot(g)
+
+# --- Counters --- #
+count_3 <- count(cl, Request_Date == "2000-04-27")[2,2]
+# count_2 <- count(cl, Request_Week == "2000-02-28")[2,2]
+# temp <- count_2 / count(or)
+# count_2_p <- percent(temp[1,1])
+```
+
+Besides one pike at the end of April the distribution of clicks is even over the time range of the clickstream dataset. In terms of daypart overnight, morning and afternoon seems to have approximately the same number of clicks over time. 
+
 ```{r summary_or, echo=FALSE}
 # --- Features --- #
 or$Order_Week <- as.Date(cut(or$Order_Date,
@@ -336,7 +360,24 @@ boxplot(Order_Amount~Gender, data = order_df, horizontal = TRUE, xlab = "Order A
 ```
 
 Of course, this graph can be misleading, assuming that the male customer spending more than $500 skews the distribution but the information is nice anyways.<br>
+
+
 Another valuable information is the location of the customer.
+
+```{r heatmap, echo=FALSE}
+# 260719
+order_map <- select(order_df, "US_State")
+order_map$count <- 1
+order_map <- aggregate(order_map$count, by = list(order_map$US_State), FUN = sum)
+order_map$state <- order_map$Group.1
+
+plot_usmap(data = order_map, values = "x", lines = "black") +
+  scale_fill_continuous(name = "Number of Orders", label = scales::comma) + 
+  theme(legend.position = "right")
+
+```
+
+
 
 
 Besides the fact, that the clickstream data and the order data cover different time ranges we compared both datasets. Therefore, we calculate the number of clicks per product from the clickstream dataset and the number of purchases from the order dataset. We compared the distribution of both via a Lorenz curve. Although the result might be compromised by the time gap the Lorenz curve still shows interesting insights about the distribution of clicks and purchases per product. 
