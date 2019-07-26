@@ -633,8 +633,13 @@ kable(summary_Order)
 The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. Here can be seen that most people order the product at least twice, as shown by the order quantity median. Most people also use a promotion, which means that promotions have a large impact on purchases. The negative minimum in the row Order Amount looks suspicious. Research in the data revealed that the orders: order-Id 12314 and order-Id 10930 used a special combination of products and the promotion code FRIEND to generate a negative order amount.  However, the credit card payment amount indicates that the coups did not succeed. Also, the datasets cannot tell if the negative Order Amount were created willingly or through accident.
 
 
-# Predictions
+# Prediction
 
+## Predict Buyer
+
+Using the sesssion dataset, the idea is to predict from the session metadata whether a customer is going to buy something at the end of the session. For that, useful features are selected, namely the session duration, the session day, hour and the referrer. Using this as a basic dataset, there is an issure with the session duration. As mentioned earlier, it is not possible to calculate a session duration for sessions with just one request. For that reason, all entries with only one request are filtered. </br>
+
+From this subset of session data there are `r sum(temp$LeadsToBuy == "Yes")` positive and `r sum(temp$LeadsToBuy == "No")` samples. To cope with the class imbalances, for the models a downsampled version and an upsampled version of the data is created to even out the classes. Then, a logistic regression and a naive bayes classifier are trained on both datasets, the up and downsampled version. To increase generalization performance, 5 repeats of 10-fold cross validation are run. The results for the ROC, the sens and the spec are in the following table.
 ```{r predictionDataset, echo=FALSE, include=FALSE, warning=FALSE}
 #library(rpart)
 #library(caTools)
@@ -742,9 +747,10 @@ trellis.par.set(theme1)
 bwplot(resamp, layout = c(3, 1))
 ```
 
+The table shows that the models with the upsampled dataset outperform the downsampled datasets. The difference between naive bayes and logistic regression is that the sensitivity and the specificity differ quite a bit. The decision which model suits the business context best depends on the business context. The logistic regression offers a higher sensitivity, thus detects the people who want to buy better. On the other hand, the naive bayes model is better at finding those customers that do not want to buy anything. So we have two different good performing models with a similar ROC value for usage on the website.
 
 ## Predict Moretimebuyer
-To make your company able to improve customer loyalty we build an induction tree model, which separates the “one-time ordering customers” from “more time ordering customers”. The underlaying assumption is that “more time buyers” are more value. We used a tree model since, compared with other models the findings can be communicated low-tech within our company. The rules separating the customers can be looked up at the induction tree graphic. The prediction model and the findings enable your company to target those customers which are more likely place a second order. This leads to a better marketing fund utilization and a stronger customer loyalty.
+To make your company able to improve customer loyalty we build an induction tree model, which separates the one-time ordering customers from more time ordering customers. The underlaying assumption is that more time buyers have a higher value. We used a tree model, because the findings can be communicated low-tech within our company. The rules separating the customers can be looked up at the induction tree graphic. The prediction model and the findings enable your company to target those customers which are more likely to place a second order. This leads to a better marketing fund utilization and a stronger customer loyalty.
 
 ```{r unloadplyr, warning=FALSE, include=FALSE}
 library(plyr)
@@ -830,7 +836,7 @@ trainset <- totalset[1:(nrow(totalset)*0.8),]
 testset <- totalset[(nrow(totalset)*0.2):nrow(totalset),]
 ```
 
-In order to train the decision tree, we created a dataset out of the order dataset, which only includes the first orders of all customers and a label if the order was followed by at least one another order. This dataset contains `r nrow(buffer)` first order observations of which, `r nrow(buffer3)` observations are “more time buyers” and `r nrow(buffer4)` observations are “one time buyers”.
+In order to train the decision tree, we created a dataset out of the order dataset, which only includes the first orders of all customers and a label if the order was followed by at least one another order. This dataset contains `r nrow(buffer)` first order observations of which, `r nrow(buffer3)` observations are more time buyers and `r nrow(buffer4)` observations are one time buyers.
 
 ```{r moretimebuyer_firstmodel ,echo=FALSE,warning=FALSE}
 #build first model and show tree
@@ -840,7 +846,7 @@ fit <- rpart(moretimebuyer~.
 rpart.plot(fit,type = 1,extra = "auto")
 ```
 
-The first tree indicates, that the credit card payment amount is a strong indicator for the prediction “more time buyer” true or false. The splitting rule, the classification, the probability of classification, and the percentage of entities at are point are listed at each splitting point. A probability under 0.5 means the prediction is “one-time buyer” and a probability over 0.5 means the model predicts “more time buyer”.  The tree is obviously not suitable for communication within our company due to the complexity. Also, the tree is likely to be overfitted to the training dataset.  
+The first tree indicates, that the credit card payment amount is a strong indicator for the prediction more time buyer true or false. The splitting rule, the classification, the probability of classification, and the percentage of entities at are point are listed at each splitting point. A probability under 0.5 means the prediction is one-time buyer and a probability over 0.5 means the model predicts more time buyer.  The tree is obviously not suitable for communication within our company due to the complexity. Also, the tree is likely to be overfitted to the training dataset.  
 
 ```{r moretimebuyer_firstmodel_testresults,echo=FALSE,warning=FALSE}
 #show testset results
@@ -852,7 +858,7 @@ names(prediction)[2] <- "True_probability"
 kable(head(prediction))
 ```
 
-The table above is a sample of the prediction results and the testdata set. The first two columns list the instances probability to be “one-time buyer” as False probability and “more time buyer” as TRUE probability. The third and fourth columns list the actual label and the credit card payment amount of each instance.   
+The table above is a sample of the prediction results and the testdata set. The first two columns list the instances probability to be one-time buyer as False probability and more time buyer as TRUE probability. The third and fourth columns list the actual label and the credit card payment amount of each instance.   
 
 ```{r moretimebuyer_firstmodel_cm ,echo=FALSE,warning=FALSE}
 # show confusion matrix 
@@ -865,7 +871,7 @@ kable(modelaccuracy,col.names = "model accuracy",label = NA )
 kable(table(Confusion_matrix,testset$moretimebuyer),caption = "Confusion_matrix",label = NA)
 ```
 
-In order to evaluate the model, we use the overall accuracy and a confusion matrix. Despite the complexity the first tree is doing a fair prediction on the testdata set, but the model is far better in identifying “one-time buyer” than “more time buyer”. The likely cause for this is the small amount of “more time buyer” observations in the training set. Still the model is doing a far better job than random guessing, where the accuracy would be around 50%.
+In order to evaluate the model, we use the overall accuracy and a confusion matrix. Despite the complexity the first tree is doing a fair prediction on the testdata set, but the model is far better in identifying one-time buyer than more time buyer. The likely cause for this is the small amount of more time buyer observations in the training set. Still the model is doing a far better job than random guessing, where the accuracy would be around 50%.
 
 ```{r moretimebuyer_firstmodel_fit,echo=FALSE,warning=FALSE}
 plotcp(fit)
@@ -881,7 +887,7 @@ rpart.plot(fit.pruned,type = 1,extra = "auto")
 
 ```
 
-The second tree is less complex then the first one. Like before the splitting rule, the classification, the probability of classification, and the percentage of entities at a point are shown for each splitting point. Also, a probability under 0.5 means the prediction is “one-time buyer” and a probability over 0.5 means the model predicts “more time buyer”. The main benefit of the second tree is the simplification, which makes it easier to communicate findings and to use them as a competitive advantage in sale campaigns and in marketing campaigns.
+The second tree is less complex then the first one. Like before the splitting rule, the classification, the probability of classification, and the percentage of entities at a point are shown for each splitting point. Also, a probability under 0.5 means the prediction is one-time buyer and a probability over 0.5 means the model predicts more time buyer. The main benefit of the second tree is the simplification, which makes it easier to communicate findings and to use them as a competitive advantage in sale campaigns and in marketing campaigns.
 
 ```{r moretimebuyer_secoundmodel_cm ,echo=FALSE,warning=FALSE}
 # show confusion matrix 
@@ -913,7 +919,7 @@ kable(result)
 
 ```
 
-One way to mine the result of the prediction tree would be to rank the instances by the “True probability” and target the instances over a certain threshold. Like in the table above with a threshold of 0.6%. Another approach is to train customer support personnel, sales personnel, and marketing personnel with the second induction tree model to give them a better understanding of profitable customers. This will enable our employees to target these customers directly. Both suggested methods can be applied by itself or together.
+One way to mine the result of the prediction tree would be to rank the instances by the True probability and target the instances over a certain threshold. Like in the table above with a threshold of 0.6%. Another approach is to train customer support personnel, sales personnel, and marketing personnel with the second induction tree model to give them a better understanding of profitable customers. This will enable our employees to target these customers directly. Both suggested methods can be applied by itself or together.
 
 ## Experiment: Recommender Systems
 
