@@ -205,7 +205,7 @@ dropColumnsPercNA <- function(x, percentage)
 }
 ```
 
-```{r dataCleaningOrder, echo=FALSE}
+```{r dataCleaningOrder, echo=FALSE, cache=TRUE}
 order_df <- order_df %>% 
   cleanNas() %>%
   dropEmptyRowsAndCols()
@@ -238,7 +238,7 @@ for (time in time_list) time <- deleteBackslashs(time)
 ```
 
 
-```{r dataCleanclick, echo=FALSE}
+```{r dataCleanclick, echo=FALSE, cache=TRUE}
 # Clean click_df
 click_df <- click_df %>% 
   dropEmptyRowsAndCols()
@@ -347,8 +347,43 @@ boxplot(Order_Amount~Gender, data = order_df, horizontal = TRUE, xlab = "Order A
 Of course, this graph can be misleading, assuming that the male customer spending more than $500 skews the distribution but the information is nice anyways.<br>
 Another valuable information is the location of the customer.
 
-Of course, this graph can be misleading, assuming that the male customer spending more than $500 skews the distribution but the information is nice anyways.<br>
-Another valuable information is the location of the customer.
+```{r lorenzkurve_brandvsclicks}
+library(ineq)
+brand_vs_clicks <- click_df %>%
+  select(BrandName,Session_Visit_Count,Session_ID) %>%
+  group_by(BrandName) %>%
+  summarise(clicks=sum(Session_Visit_Count))
+totalclicks <- sum(brand_vs_clicks$clicks)
+brand_vs_clicks <- brand_vs_clicks %>%
+  select(BrandName,clicks) %>%
+  group_by(BrandName) %>%
+  summarise(clicks = clicks, click_pro = clicks/totalclicks)
+G <- rep(10,10)
+G_kum <- c(0,cumsum(G/100))
+G1 <- brand_vs_clicks$click_pro
+G1_kum <- c(0,cumsum(brand_vs_clicks$click_pro/100))
+D1 <- Lc(G1, n = rep(1,length(G1)), plot = FALSE)
+p <- D1[1]
+L <- D1[2]
+D1_df <- data.frame(p,L)
+xx <- c(G_kum,rev(G_kum))
+yy <- c(G1_kum,rev(G_kum))
+koordinaten <- as.data.frame(xx)
+koordinaten$yy <- yy[1:22]
+gini <- round(ineq(G1) * 100, digits = 1)
+p1 <- ggplot(data=D1_df) +
+  geom_point(aes(x=p, y=L)) +
+  geom_line(aes(x=p, y=L), stat = "identity", color="#990000") +
+  geom_polygon(data = koordinaten, aes(x = xx, y = yy), fill = rgb(255,100,0,55,maxColorValue=255)) +
+  annotate("text", x = 0.9, y = 0.1, label = paste("Gini =", gini), size=3, colour="gray30") +
+  geom_abline()
+p1
+
+#ggplot(brand_vs_clicks)+
+#  geom_point(mapping = aes(x=BrandName,y=click_pro))
+
+```
+
 
 # Summary Statistics
 
@@ -412,11 +447,11 @@ buffer <-buffer[order(-buffer$Clicks_per_day),]
 
 Session_top5[1:5,7:8] <- buffer[1:5,1:2]
 
-names(Session_top5)<- c("Referrer","Number_of_Referres","Product","Clicks_on_Product",
+names(Session_top5)<- c("Referrer","Number_of_Referrers","Product","Clicks_on_Product",
                       "Top_Click_Hours","Clicks_per_Hour","Top_Click_Days","Clicks_per_Day")
 
 Session_top5 <-as.data.frame(t(Session_top5))
-names(Session_top5)<- c("Top1","Top2","Top3","Top4","Top5")
+names(Session_top5)<- c("Top 1","Top 2","Top 3","Top 4","Top 5")
 
 
 kable(Session_top5)
@@ -607,20 +642,18 @@ kable(summary_Order)
 The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. Here can be seen that most people order the product at least twice, as shown by the order quantity median. Most people also use a promotion, which means that promotions have a large impact on purchases. The negative minimum in the row Order Amount looks suspicious. Research in the data revealed that the orders: order-Id 12314 and order-Id 10930 used a special combination of products and the promotion code FRIEND to generate a negative order amount.  However, the credit card payment amount indicates that the coups did not succeed.  Also the datasets cannot tell if the negative Order Amount were create willingly or through accident.
 
 
-## Predictions
+# Predictions
 
-```{r predictionDataset}
-
-knitr::knit_exit()
-library(rpart)
-library(caTools)
-library(rpart.plot)
-require(tree)
-library(party)
-library(class)
-library(rpart.utils)
-library(e1071)
+```{r predictionDataset, echo=FALSE, include=FALSE, warning=FALSE}
+#library(rpart)
+#library(caTools)
+#library(rpart.plot)
+#library(party)
+#library(class)
+#library(rpart.utils)
+#library(e1071)
 library(caret)
+library(doParallel)
 
 # Columns for session click prediction
 # RequestReferrer / RequestTemplate , RequestDayOfWeek, RequestHourOfDay, Session User AGent, , SessionFirstRequestHourOfDay, SessionFirstDayOfWeek
@@ -635,8 +668,7 @@ temp$Referrer <- as.integer(as.factor(temp$Referrer))
 
 ```
 
-```{r predictionPreprocess, cache=TRUE}
-library(doParallel)
+```{r predictionPreprocess, echo=FALSE, warning=FALSE}
 # Partition the data in a 80%/20% split
 set.seed(1805)
 temp$LeadsToBuy <- factor(temp$LeadsToBuy, labels=c("No", "Yes"))
@@ -654,6 +686,10 @@ test.scaled <- predict(preProc, test)
 
 # Sample the data, renames target to Class
 train.scaled$LeadsToBuy <- as.factor(train.scaled$LeadsToBuy)
+```
+
+```{r predictionProcess}
+
 set.seed(1811)
 down_train <- downSample(x = train.scaled[, -ncol(train.scaled)],
                          y = train.scaled$LeadsToBuy)
@@ -694,13 +730,6 @@ fitted.down.log <- predict(fit.down.log, newdata = test.scaled, type = "prob")
 fitted.up.log <- predict(fit.up.log, newdata = test.scaled, type = "prob")
 fitted.down.nb <- predict(fit.down.nb, newdata = test.scaled, type = "prob")
 fitted.up.nb <- predict(fit.up.nb, newdata = test.scaled, type = "prob")
-
-library(ggplot2)
-library(plotROC)
-ggplot() %>%
-  + geom_roc(fit.up.log$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "red", hjust = -0.4, vjust = 1.5) %>%
-  + geom_roc(fit.up.nb$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "blue", hjust = -0.4, vjust = 1.5) %>%
-  + coord_equal()
 ```
 
 ```{r}
@@ -708,64 +737,30 @@ knitr::knit_exit()
 ```
 
 
-## Evaluation of models
-
-```{r}
-fitted.down.log$LeadsToBuy <- as.factor(fitted.down.log["TRUE"] >= .5)
-confusionMatrix(data = fitted.down.log$LeadsToBuy, reference = as.factor(test.scaled$LeadsToBuy))
-# twoClassSummary(fitted.down.log, lev = levels(as.factor(c("TRUE","FALSE"))))
-
-# summary(willbuy.logit)
-# anova(willbuy.logit, test="Chisq")
-
-# fitted.results <- ifelse(fitted.results > 0.5,1,0)
-
-# misClasificError <- mean(fitted.results != test$LeadsToBuy)
-# print(paste('Accuracy',1-misClasificError))
-
-library(ROCR)
-pr <- prediction(fitted.down.log, test.scaled$LeadsToBuy)
-prf <- performance(pr, measure = "tpr", x.measure = "fpr")
-plot(prf)
-auc <- performance(pr, measure = "auc")
-auc
-
+```{r predictionEvaluation}
+library(ggplot2)
+library(plotROC)
+g <- ggplot() %>%
+  + geom_roc(fit.up.log$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "red", hjust = -0.4, vjust = 1.5) %>%
+  + geom_roc(fit.up.nb$pred,mapping = aes(m = Yes, d = factor(obs, levels = c("Yes", "No"))), color = "blue", hjust = -0.4, vjust = 1.5) %>%
+  + coord_equal() %>%
+plot(g)
 ```
 
 
-## Market Basket Analysis
-Analyze session data for click behavior. Products visited together.
-
-```{r prediction, echo=FALSE}
-pred <- ave_Session_df
-pred <- pred %>%
-  subset(select=c(Session_ID, Visited_Products_List))
-```
-```{r}
-library(plyr)
-library(arules)
-library(arulesViz)
-transactionData <- ddply(pred,c("Session_ID"))
-write.csv(transactionData,"market_basket_transactions.csv", quote = FALSE, row.names = FALSE)
-tr <- read.transactions('market_basket_transactions.csv', format = 'basket', sep=',')
-summary(tr)
-if (!require("RColorBrewer")) {
-  # install color package of R
-install.packages("RColorBrewer")
-#include library RColorBrewer
-library(RColorBrewer)
-}
-itemFrequencyPlot(tr,topN=20,type="relative",col=brewer.pal(8,'Pastel2'), main="Absolute Item Frequency Plot")
-association.rules <- apriori(tr, parameter = list(supp=0.0005, conf=0.75,maxlen=5))
-inspect(association.rules)
-plot(association.rules, method = "graph",  engine = "htmlwidget")
-```
 
 ### Predict Moretimebuyer
+To make your company able to improve customer loyalty we build an induction tree model, which separates the one-time ordering customer from more time ordering customer. The underlaying assumption is that more time buyers are more value. We used a tree model since, compared with other models the findings can be communicated low-tech within our company. The rules separating the customers can be looked up at the induction tree graphic. The prediction model and the findings enable your company to target those customers which are more likely place a second order. This leads to a better marketing fund utilization and a stronger customer loyalty.
 
-```{r moretimebuyer}
+```{r unloadplyr, warning=FALSE, include=FALSE}
+library(plyr)
 
+detach("package:plyr",unload = TRUE)
+  
 
+```
+
+```{r moretimebuyer_prepare, echo=FALSE,warning=FALSE}
 
 buffer<- order_df %>%
   select(Order_Customer_ID,Order_ID,Order_Line_ID,
@@ -775,15 +770,12 @@ buffer<- order_df %>%
          Order_Credit_Card_Brand,Gender) %>%
   group_by(Order_Customer_ID,Order_ID,Order_Line_ID)
 
-
 buffer_order <- order_df %>%
   select(Order_Customer_ID,Order_ID)%>%
-  group_by(Order_Customer_ID) %>%
+  group_by(Order_Customer_ID)%>%
   summarise(Orders = length(unique(Order_ID)))
 
-
 buffer <- merge(buffer,buffer_order,by = "Order_Customer_ID")
-
 
 buffer <- buffer %>%
   select(Order_Customer_ID,Order_ID,Order_Line_ID,Order_Line_Quantity,Product_ID,Order_Date,Order_Promotion_Code,Order_Discount_Amount,Order_Line_Unit_List_Price,
@@ -813,13 +805,11 @@ buffer$moretimebuyer <- replace(buffer$moretimebuyer,buffer$Orders< 2,FALSE)
 
 buffer <-buffer[order(-buffer$moretimebuyer),]
 
-
 buffer <- buffer %>%
-  select(Order_Line_Quantity,Product_ID,Order_Date,Order_Promotion_Code,
+  select(Order_Line_Quantity,Product_ID,Order_Date,
          Order_Discount_Amount,Order_Line_Unit_List_Price,Order_Line_Unit_Sale_Price,Order_Amount,
-         Product,Order_Credit_Card_Payment_Amount,BrandName,Order_Hour_of_Day,Order_Day_of_Week,
+         Order_Credit_Card_Payment_Amount,Order_Hour_of_Day,Order_Day_of_Week,
          Order_Credit_Card_Brand,Gender,moretimebuyer)
-
 
 #split T and F and randomize
 
@@ -831,52 +821,105 @@ buffer4 <- filter(buffer,moretimebuyer==FALSE)
 
 buffer4 <- buffer4[sample(nrow(buffer4)),]
 
-train <- buffer3[1:78,]
-train <- rbind(train,buffer4[1:100,])
+totalset <- rbind(buffer3,buffer4[1:350,])
 
-test <- buffer3[78:156,]
-test <- rbind(test,buffer4[100:200,])
+totalset <- totalset[sample(nrow(totalset)),]
 
-
+totalset$moretimebuyer <- as.factor(totalset$moretimebuyer)
 
 library(rpart)
-library(rpart.utils)
 library(rpart.plot)
 
-fit <- rpart(moretimebuyer~
-               Order_Credit_Card_Payment_Amount+Order_Hour_of_Day+Order_Day_of_Week+
-               Order_Credit_Card_Brand+
-               Gender
-             ,data = train,method = "class",
-             control = rpart.control(xval = 10))
+# split training and test datasets
 
-rpart.rules(fit)
+trainset <- totalset[1:(nrow(totalset)*0.8),]
+testset <- totalset[(nrow(totalset)*0.2):nrow(totalset),]
+```
 
+In order to train the decision tree, we created a dataset out of the order dataset, which only includes the first orders of all customers and a label if the order was followed by at least one another order. This dataset contains `r nrow(buffer)` first order observations of which, `r nrow(buffer3)` observations are “more time buyers” and `r nrow(buffer4)` observations are “one time buyers”.
 
-plot(fit, uniform = TRUE,margin = 0.1,main = "O Tree")
-text(fit, use.n = TRUE,all = TRUE,cex=.6)
-prediction <- predict(fit,test,type = "class")
-table(prediction,test$moretimebuyer) 
+```{r moretimebuyer_firstmodel ,echo=FALSE,warning=FALSE}
+#build first model and show tree
+fit <- rpart(moretimebuyer~.
+             ,data = trainset,method = "class",
+             control = rpart.control(xval = 10,minbucket = 6))
+rpart.plot(fit,type = 1,extra = "auto")
+```
 
+The first tree indicates, that the credit card payment amount is a strong indicator for the prediction “more time buyer” true or false. The splitting rule, the classification, the probability, and the percent of the entities at are point are listed at each splitting point. A probability under 0.5 means the prediction is “one-time buyer” and a probability over 0.5 means the model predicts “more time buyer”.  The obviously not suitable for communication within our company due to the complexity. Also the tree is likely to overfitted to the training dataset.   
 
+```{r moretimebuyer_firstmodel_testresults,echo=FALSE,warning=FALSE}
+#show testset results
+prediction <- as.data.frame(predict(fit,testset,type = "prob"))
+prediction[,3:3] <- testset[,13:13]
+prediction[,4:4] <- testset[,8:8]
+names(prediction)[1] <- "False_probability"
+names(prediction)[2] <- "True_probability"
+kable(head(prediction))
+```
+
+The table is a sample of the prediction results and test set data. The first two columns list the instances probability to be “one-time buyer” as False probability and “more time buyer” as TRUE probability. The third and fourth columns list the actual label and the credit card payment amount of each instance.   
+
+```{r moretimebuyer_firstmodel_cm ,echo=FALSE,warning=FALSE}
+# show confusion matrix 
+Confusion_matrix <- predict(fit,testset,type = "class")
+buffer1 <- table(testset$moretimebuyer,Confusion_matrix)
+modelaccuracy <- round((sum(diag(buffer1))/sum(buffer1)),4)
+
+kable(modelaccuracy,col.names = "model accuracy",label = NA )
+
+kable(table(Confusion_matrix,testset$moretimebuyer),caption = "Confusion_matrix",label = NA)
+```
+
+In order to evaluate the model, we use the overall accuracy and a confusion matrix. Despite the complexity the first tree is doing a fair prediction on the test dataset, but the model is far better in identifying “one-time buyer” than “more time buyer”. The likely cause for this is the small amount of “more time buyer” observations in the training set. Still the model is doing a far better job than random guessing, where the accuracy would be around 50%. 
+
+```{r moretimebuyer_firstmodel_fit,echo=FALSE,warning=FALSE}
 plotcp(fit)
 kable(fit$cptable)
-
-
-# cp 0.06 best performace for minimal False classified as True
-
-# cp 0.04 to 0.56 best performace for minimal True classified as False
-
-fit.pruned <- prune(fit,cp = fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"] )
-
-rpart.rules(fit.pruned)
-
-
-plot(fit.pruned, uniform = TRUE,margin = 0.1, main= "P Tree")
-text(fit.pruned, use.n = TRUE,all = TRUE,cex=.6)
-prediction_p <- predict(fit.pruned,test,type = "class")
-table(prediction_p,test$moretimebuyer) 
 ```
+
+In order to avoid overfitting, the cross-validation error from the first tree is used to build a second tree. The graph shows the cross-validation error vs. the model complexity. The complexity of the minimal cross-validation error is used to prune the second tree. 
+ 
+```{r secoundtree,echo=FALSE,warning=FALSE}
+# build secound tree
+fit.pruned <- prune(fit,cp = fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"] )
+rpart.plot(fit.pruned,type = 1,extra = "auto")
+
+```
+
+The second tree is less complex then the first one. Like before the splitting rule, the classification, the probability of classification, and the percent of entities at a point are shown for each splitting point. Also, a probability under 0.5 means the prediction is “one-time buyer” and a probability over 0.5 means the model predicts “more time buyer”. The main benefit of the second tree is the simplification, which makes it easier to communicate findings and to use them as a competitive advantage in sale campaigns and in marketing campaigns.
+
+```{r moretimebuyer_secoundmodel_cm ,echo=FALSE,warning=FALSE}
+# show confusion matrix 
+Confusion_matrix <- predict(fit.pruned,testset,type = "class")
+buffer1 <- table(testset$moretimebuyer,Confusion_matrix)
+modelaccuracy <- round((sum(diag(buffer1))/sum(buffer1)),4)
+
+kable(modelaccuracy,col.names = "model accuracy" )
+
+
+kable(table(Confusion_matrix,testset$moretimebuyer),caption = "Confusion_matrix")
+```
+
+The performance of the second tree is slightly worse than the performance of the first tree. The performance is listed as overall accuracy and confusion matrix a above. Despise that the prediction is still better than random guessing. And since the main aim of the second model is simplified communication of the findings the small reduction in reduction is a fair tradeoff.  Overall the second tree combinates a good prediction and a less complex model. 
+
+```{r moretimebuyer_secoundmodel_results ,echo=FALSE,warning=FALSE}
+#show testset results
+prediction <- as.data.frame(predict(fit,testset,type = "prob"))
+prediction[,3:3] <- testset[,13:13]
+prediction[,4:4] <- testset[,8:8]
+prediction[,5:5] <- testset[,10:10]
+prediction[,5:5] <- testset[,11:11]
+names(prediction)[1] <- "False_probability"
+names(prediction)[2] <- "True_probability"
+
+result <- filter(prediction, True_probability>0.6)
+
+kable(result)
+
+```
+
+One way to mine the result of the prediction tree would be to rank the instances by the “True probability” and target the instances over a certain threshold. Like in the table above with a threshold of 0.6%. Another approach is to train customer support personnel, sales personnel and marketing personnel with the second induction tree model to give them a better understanding of profitable customers. This will enable our employees to target these customers directly. Both suggested methods can be applied by it self or together. 
 
 ## Experiment: Recommender Systems
 
