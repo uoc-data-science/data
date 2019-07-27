@@ -63,6 +63,9 @@ if(file.exists("01-raw-data/clickstream/clickstream_data_part_2.csv")){
     rowType_clickstream2 <- c(rowType_clickstream2, as.character(clickstream_columns[i,1]))
     colnames(clickstream2)[i] <- sub(':.*', '', clickstream_columns[i,1])
   }
+  if(ncol(clickstream)-1 == ncol(clickstream2)){
+    clickstream <- clickstream[,-1]
+  }
   
   # Merge both clickstream files and write them into merged_clickstream.csv
   merged_clickstream <-  rbind(clickstream, clickstream2)
