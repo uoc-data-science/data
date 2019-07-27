@@ -1,0 +1,20 @@
+Dear Prof. Grahl,
+this pull request is the submission of group nr 5: 
+-	7308029 Philipp Peter
+-	7309584 Nico Lindert
+-	7357790 Laurenz Harnischmacher 
+
+A finished version of our markdown is in the file report_group_nr5.html outside of the folder. 
+
+The required r code is in the file report_group_nr5.rmd also outside the folder. 
+Our R code covers the entire project pipeline starting at data moving to model prediction. 
+The required python code is in the folder scripts-python. 
+Except the output comparison this function is on purpose not in the main r code, 
+but in the Compare_r_py_import.rmd. This file is located in the folder scripts-R.
+
+The entire python code is executed by running the file initialize_data.py. 
+Our python code covers the steps data moving, data import, data cleaning and clean data saving. 
+
+
+Kind regards
+Group nr 5 
