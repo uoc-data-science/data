@@ -13,7 +13,7 @@ if(file.exists("01-raw-data/clickstream/clickstream_data.csv")){
 }
 if(!file.exists("01-raw-data/clickstream/clickstream_data.csv")){
   if(file.exists("01-raw-data/clickstream/clickstream_data.zip")){
-    clickstream <- read.csv(unzip("01-raw-data/clickstream/clickstream_data.zip", "01-raw-data/clickstream/clickstream_data.csv"), header=FALSE, sep=",", stringsAsFactors=FALSE)
+    clickstream <- read.csv(unzip("01-raw-data/clickstream/clickstream_data.zip", "clickstream_data.csv"), header=FALSE, sep=",", stringsAsFactors=FALSE)
   }
 }
 
