@@ -17,6 +17,11 @@ library(stringr)
 orders <- read.csv("01-raw-data/orders/order_data.csv", header=FALSE, sep=",", stringsAsFactors=FALSE)
 orders_columns <-read.delim("01-raw-data/orders/order_columns.txt", header=FALSE, sep="\n")
 
+if(file.exists("01-raw-data/clickstream/clickstream_data_part_2.csv")){
+  clickstream2 <- read.csv("01-raw-data/clickstream/clickstream_data_part_2.csv", header=FALSE, sep=",", stringsAsFactors=FALSE)
+}
+clickstream_columns <-read.delim("01-raw-data/clickstream/clickstream_columns.txt", header=FALSE, sep="\n")
+
 #load the clickstream CSV into R-Studio in-memory-array
 if(file.exists("01-raw-data/clickstream/clickstream_data.csv")){
   clickstream <- read.csv("01-raw-data/clickstream/clickstream_data.csv", header=FALSE, sep=",", stringsAsFactors=FALSE)
@@ -24,14 +29,19 @@ if(file.exists("01-raw-data/clickstream/clickstream_data.csv")){
 if(!file.exists("01-raw-data/clickstream/clickstream_data.csv")){
   if(file.exists("01-raw-data/clickstream/clickstream_data.zip")){
     clickstream <- read.csv(unzip("01-raw-data/clickstream/clickstream_data.zip", "clickstream_data.csv"), header=FALSE, sep=",", stringsAsFactors=FALSE)
-    write.csv(clickstream, file = '01-raw-data/clickstream/clickstream_data.csv')
+    
   }
 }
 
+n_row_orig_clickstream = nrow(clickstream)
+n_col_orig_clickstream = ncol(clickstream)
+
+
+n_col_orig_orders = ncol(orders)
+
 if(file.exists("01-raw-data/clickstream/clickstream_data_part_2.csv")){
-  clickstream2 <- read.csv("01-raw-data/clickstream/clickstream_data_part_2.csv", header=FALSE, sep=",", stringsAsFactors=FALSE)
+  n_row_orig_clickstream = n_row_orig_clickstream + nrow(clickstream2)
 }
-clickstream_columns <-read.delim("01-raw-data/clickstream/clickstream_columns.txt", header=FALSE, sep="\n")
 
 #load the experiment CSV into R-Studio in-memory-array
 experiment <- read.csv("01-raw-data/experiment/experimental_results.csv", header=TRUE, sep=",", stringsAsFactors=FALSE)
