@@ -242,7 +242,7 @@ click_df$LeadsToBuy <- click_df$Request_Template == "checkout/thankyou\\.jhtml"
 1. All semicolons within cells are simply erased.
 1. Besides, backslashes within cells are erased as well.
 
-In addition to the cleaning tasks, further columns were created. Particularly important is the column "LeadsToBuy" which is a boolean column being `True` whenever a clickstream interaction leads to the buying of products. This is realized by comparing the requested site with a special other site that only occurs after a checkout has been completed.
+In addition to the cleaning tasks, further columns were created. Particularly important is the column "LeadsToBuy" which is a boolean column being `TRUE` whenever a clickstream interaction leads to the buying of products. This is realized by comparing the requested site with a special other site that only occurs after a checkout has been completed.
 
 ```{r sessionDataframe, cache=TRUE}
 ave_Session_df <- click_df %>%
@@ -682,11 +682,9 @@ The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. Wh
 
 ## Predict on Clickstream
 
-Using the sesssion dataset, the idea is to predict from the session metadata whether a customer is going to buy something at the end of the session. For that, useful features are selected, namely the session duration, the session day, hour and the referrer. Using this as a basic dataset, there is an issure with the session duration. As mentioned earlier, it is not possible to calculate a session duration for sessions with just one request. For that reason, all entries with only one request are filtered. </br>
+Using the session dataset, the idea is to predict whether a customer is going to buy something at the end of the session based on available metadata. Therefore, useful features are selected, namely the session duration, the session day, hour and the referrer. With this basic dataset, there is an issue with the session duration. As mentioned earlier, it is not possible to calculate a session duration for sessions with just one request. For that reason, all entries with only one request are dropped. </br>
 
-From this subset of session data there are `r sum(temp$LeadsToBuy == "Yes")` positive and `r sum(temp$LeadsToBuy == "No")` samples. To cope with the class imbalances, for the models a downsampled version and an upsampled version of the data is created to even out the classes. Then, a logistic regression and a naive bayes classifier are trained on both datasets, the up and downsampled version. To increase generalization performance, 5 repeats of 10-fold cross validation are run. The results for the ROC, the sens and the spec are in the following table.
-
-
+Remaining are `r sum(temp$LeadsToBuy == "Yes")` positive and `r sum(temp$LeadsToBuy == "No")` samples. To cope with the class imbalances, for modelling a downsampled and an upsampled version of data is created to even out the classes. Then, a logistic regression and a naive bayes classifier are trained on both datasets, the up and downsampled version. To increase generalization performance, five repeats of 10-fold cross validation are run. The results for the ROC, the sens and the spec can be found in the following table.
 
 ```{r predictionDataset, echo=FALSE, include=FALSE, warning=FALSE}
 #library(rpart)
@@ -795,10 +793,10 @@ trellis.par.set(theme1)
 bwplot(resamp, layout = c(3, 1))
 ```
 
-The table shows that the models with the upsampled dataset outperform the downsampled datasets. The difference between naive bayes and logistic regression is that the sensitivity and the specificity differ quite a bit. The decision which model suits the business context best depends on the business context. The logistic regression offers a higher sensitivity, thus detects the people who want to buy better. On the other hand, the naive bayes model is better at finding those customers that do not want to buy anything. So we have two different good performing models with a similar ROC value for usage on the website.
+The table shows that the models with the upsampled dataset outperform the downsampled datasets. The difference between naive bayes and logistic regression is that the sensitivity and the specificity differ quite a lot. Deciding, which model suits the business context best depends on the business context. The logistic regression offers a higher sensitivity, thus detects the people _who want to buy_ better. On the other hand, the naive bayes model is better at finding those customers that _do not want to buy anything_. So, we have two different but well performing models with a similar ROC value for usage on the website.
 
 ## Predict on Orders
-To make your company able to improve customer loyalty we build an induction tree model, which separates the b one-time ordering customersb  from b more time ordering customersb . The underlaying assumption is that b more time buyersb  are more value. We used a tree model since, compared with other models the findings can be communicated low-tech within our company. The rules separating the customers can be looked up at the induction tree graphic. The prediction model and the findings enable your company to target those customers which are more likely place a second order. This leads to a better marketing fund utilization and a stronger customer loyalty.
+To make your company able to improve customer loyalty, we built an induction tree model that separates the b one-time ordering customersb  from b more time ordering customersb . The underlaying assumption is that b more time buyersb  are more value. We used a tree model since, compared with other models the findings can be communicated low-tech within our company. The rules separating the customers can be looked up at the induction tree graphic. The prediction model and the findings enable your company to target those customers which more likely place a second order. This leads to a better marketing fund utilization and a stronger customer loyalty.
 
 ```{r unloadplyr, warning=FALSE, include=FALSE}
 library(plyr)
@@ -884,7 +882,7 @@ trainset <- totalset[1:(nrow(totalset)*0.8),]
 testset <- totalset[(nrow(totalset)*0.2):nrow(totalset),]
 ```
 
-In order to train the decision tree, we created a dataset out of the order dataset, which only includes the first orders of all customers and a label if the order was followed by at least one another order. This dataset contains `r nrow(buffer)` first order observations of which, `r nrow(buffer3)` observations are more time buyers and `r nrow(buffer4)` observations are one time buyers.
+In order to train the decision tree, we created a dataset out of the order dataset, which only includes the first orders of all customers and a label if the order was followed by at least one other order. This dataset contains `r nrow(buffer)` first order observations of which `r nrow(buffer3)` observations are more time buyers and `r nrow(buffer4)` observations are one time buyers.
 
 ```{r moretimebuyer_firstmodel ,echo=FALSE,warning=FALSE}
 #build first model and show tree
@@ -894,7 +892,7 @@ fit <- rpart(moretimebuyer~.
 rpart.plot(fit,type = 1,extra = "auto")
 ```
 
-The first tree indicates, that the credit card payment amount is a strong indicator for the prediction more time buyer true or false. The splitting rule, the classification, the probability of classification, and the percentage of entities at are point are listed at each splitting point. A probability under 0.5 means the prediction is one-time buyer and a probability over 0.5 means the model predicts more time buyer.  The tree is obviously not suitable for communication within our company due to the complexity. Also, the tree is likely to be overfitted to the training dataset.  
+The first tree indicates, that the credit card payment amount is a strong indicator for predicting wheter someone is a more time buyer or not. The splitting rule, the classification, the probability of classification, and the percentage of entities at a point are listed at each splitting point. A probability below 0.5 means the prediction is one-time buyer and a probability above 0.5 means the model predicts more time buyer. The tree is obviously not suitable for communication within our company due to the complexity. Also, the tree is likely to suffer from being overfitted to the training dataset.  
 
 ```{r moretimebuyer_firstmodel_testresults,echo=FALSE,warning=FALSE}
 #show testset results
@@ -906,7 +904,7 @@ names(prediction)[2] <- "True_probability"
 kable(head(prediction))
 ```
 
-The table above is a sample of the prediction results and the testdata set. The first two columns list the instances probability to be one-time buyer as False probability and more time buyer as TRUE probability. The third and fourth columns list the actual label and the credit card payment amount of each instance.   
+The table above is a sample of the prediction results and the test-dataset. The first two columns list the instances' probability to be a one-time buyer as `FALSE` probability and more time buyer as `TRUE` probability. The third and fourth column list the actual label and the credit card payment amount of each instance.   
 
 ```{r moretimebuyer_firstmodel_cm ,echo=FALSE,warning=FALSE}
 # show confusion matrix 
@@ -919,7 +917,7 @@ kable(modelaccuracy,col.names = "model accuracy",label = NA )
 kable(table(Confusion_matrix,testset$moretimebuyer),caption = "Confusion_matrix",label = NA)
 ```
 
-In order to evaluate the model, we use the overall accuracy and a confusion matrix. Despite the complexity the first tree is doing a fair prediction on the testdata set, but the model is far better in identifying one-time buyer than more time buyer. The likely cause for this is the small amount of more time buyer observations in the training set. Still the model is doing a far better job than random guessing, where the accuracy would be around 50%.
+In order to evaluate the model, we use overall accuracy and a confusion matrix. Despite complexity, the first tree is doing a fair prediction on the test-dataset but the model is far better in identifying one-time buyers than more time buyers. This is probably caused by the small amount of more time buyer observations in the training set. Still, the model is doing a far better job than random guessing where the accuracy would be around 50%.
 
 ```{r moretimebuyer_firstmodel_fit,echo=FALSE,warning=FALSE}
 plotcp(fit)
@@ -944,7 +942,7 @@ rpart.plot(fit.pruned,type = 1,extra = "auto")
 
 ```
 
-The second tree is less complex then the first one. Like before the splitting rule, the classification, the probability of classification, and the percentage of entities at a point are shown for each splitting point. Also, a probability under 0.5 means the prediction is one-time buyer and a probability over 0.5 means the model predicts more time buyer. The main benefit of the second tree is the simplification, which makes it easier to communicate findings and to use them as a competitive advantage in sale campaigns and in marketing campaigns.
+The second tree is less complex then the first one. As before, the splitting rule, the classification, the probability of classification, and the percentage of entities at a point are shown for each splitting point. Again, a probability below 0.5 classifies as one-time buyer and a probability above 0.5 more time buyer. The main benefit of the second tree is the _simplification_, which makes it easier to communicate findings and to use them as a competitive advantage for sales or marketing campaigns.
 
 ```{r moretimebuyer_secoundmodel_cm ,echo=FALSE,warning=FALSE}
 # show confusion matrix 
@@ -958,7 +956,7 @@ kable(modelaccuracy,col.names = "model accuracy" )
 kable(table(Confusion_matrix,testset$moretimebuyer),caption = "Confusion_matrix")
 ```
 
-The performance of the second tree is slightly worse than the performance of the first tree. The performance is listed as overall accuracy and as a confusion matrix above. Despise that the prediction is still better than random guessing. And since the main aim of the second model is simplified communication of the findings the small reduction in performance is a fair tradeoff.  Overall the second tree combinates a good prediction and a less complex model. 
+The performance of the second tree is slightly worse than the performance of the first tree. It is listed as overall accuracy and as a confusion matrix above. Nevertheless, the prediction is still better than random guessing. Further, since the main aim of the second model is simplified communication of the findings, the small reduction in performance is a fair tradeoff. Overall the second tree combines good prediction with a less complex model. 
 
 ```{r moretimebuyer_secoundmodel_results ,echo=FALSE,warning=FALSE}
 #show testset results
@@ -976,13 +974,18 @@ kable(result)
 
 ```
 
-
-One way to mine the result of the prediction tree would be to rank the instances by the b True probabilityb  and target the instances over a certain threshold. Like in the table above with a threshold of 0.8 True_probability. Another approach is to train customer support personnel, sales personnel, and marketing personnel with the second induction tree model to give them a better understanding of profitable customers. This will enable our employees to target these customers directly. Both suggested methods can be applied by itself or together.
+One way to mine the results of the prediction tree would be to rank instances by the b True probabilityb  and target instances above a certain threshold. As above, with a threshold of 0.8 True_probability. Another approach is to train customer support personnel, sales personnel, and marketing personnel with the second induction tree model to give them a better understanding of profitable customers. This will enable our employees to target these customers directly. Both suggested methods can be applied by itself or together.
 
 ## Experiment
-  Recommender Systems
 
-For the websites recommender systems, there are different options. In an experiment, three different recommender systems were tested. First a random recommendation system as baseline comparison for the experiment, second a ranking based recommender system and third a profit-oriented recommender system. The data consisted of 146 observations for the profit-oriented system, 149 for the random one and 154 observations for the ranking based system.
+_Recommender Systems_<br>
+For the website's recommender systems, there are different options. In an experiment, three different recommender systems were tested:
+
+1. A random recommendation system as baseline comparison for the experiment
+1. A ranking based recommender system 
+1. A profit-oriented recommender system
+
+The data consisted of 146 observations for the profit-oriented system, 149 for the random one and 154 observations for the ranking based system.
 
 ```{r echo=FALSE, warning=FALSE, message=FALSE, fig.height=3, fig.width=8}
 
@@ -1008,7 +1011,7 @@ profRkg <- t.test(experiment$profit_oriented, experiment$ranking_based, alternat
 # Build Table with values
 ```
 
-The t-test shows that the profit-oriented recommender system is indeed significantly better than the random recommendation system, with a p value of {variable}. Furthermore, it performs also significantly better than the ranking based recommender system, making it the best of the three. Our conclusion is that the best system to use is the profit-oriented recommender system, because it is able to outperform the other candidate statistically significantly.
+The t-test shows that the profit-oriented recommender system is indeed significantly better than the random recommendation system, with a p value of {variable}. Furthermore, it performs also significantly better than the ranking based recommender system, making it the best of the three. To sum up, the best system to use is the _profit-oriented recommender system_, because it is able to outperform the other candidates statistically significantly.
 
 # Conclusion
 
