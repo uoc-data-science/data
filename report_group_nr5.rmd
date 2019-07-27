@@ -1005,14 +1005,37 @@ ggplot(plotData) %>%
 
 As can be seen in the figure, with some smoothing the profit-oriented recommender system seems to be much more effective, offering both a higher mean value and a lower standard deviation. To prove this point, the t-tests are calculated for the combinations of both systems on the random recommender system and between the ranking and profit oriented recommender system.
 
-```{r echo=FALSE}
+```{r p__value, message=FALSE, warning=FALSE, include=FALSE}
 profExp <- t.test(experiment$profit_oriented, experiment$random_recommendations, alternative="greater", paired=TRUE)
 rkgExp <- t.test(experiment$ranking_based, experiment$random_recommendations, alternative="greater", paired=TRUE)
 profRkg <- t.test(experiment$profit_oriented, experiment$ranking_based, alternative = "greater", paired=TRUE)
 # Build Table with values
+
+p.value <- profExp[["p.value"]]
+tabpvalue1 <- as.data.frame(p.value,"profit_oriented and random_recommendations")
+
+
+p.value <- rkgExp[["p.value"]]
+tabvpalue2 <- as.data.frame(p.value,"ranking_based and random_recommendations")
+
+
+p.value <- profRkg[["p.value"]]
+tabvpalue3 <- as.data.frame(p.value,"profit_oriented and ranking_based")
+
+
+tabpvalue <- rbind(tabpvalue1,tabvpalue2,tabvpalue3)
+
 ```
 
+```{r}
+kable(tabpvalue)
+```
+
+
 The t-test shows that the profit-oriented recommender system is indeed significantly better than the random recommendation system. Furthermore, it performs also significantly better than the ranking based recommender system, making it the best of the three. To sum up, the best system to use is the _profit-oriented recommender system_, because it is able to outperform the other candidates statistically significantly.
+
+
+
 
 # Conclusion
 
