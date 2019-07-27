@@ -121,11 +121,11 @@ $~$
 # Data import {#dataimport}
 
 ```{r dataImport, echo=FALSE, warning=FALSE, message=FALSE}
-#source('03-scripts/1-Import and Clean Data(Stefan).R')
+source('03-scripts/1-Import and Clean Data(Stefan).R')
 #nur solange import auskommentiert, Werte werden sonst nicht gesetzt:
-ratiobadvalues <- 90
-ratiosamevalues <- 97
-ratiosamevaluesandnull <- 90
+#ratiobadvalues <- 90
+#ratiosamevalues <- 97
+#ratiosamevaluesandnull <- 90
 ```
 
 This report is based on 
