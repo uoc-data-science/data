@@ -86,7 +86,7 @@ In order to run this report properly, the __following preconditions__ have to be
 * The folder _"DSP-data"_ including all it's subfolders
 * The following databases:
     * _"order.csv"_ and it's column-description _"order_columns.txt"_ in _"DSP-data/01-raw-data/orders"_
-    * _"clickstream_data.csv"_ and it's column-description _"clickstream_columns.txt"_ in _"DSP-data/01-raw-data/clickstream"_
+    * _"clickstream_data.csv"_ (or corresponding zip-file) and it's column-description _"clickstream_columns.txt"_ in _"DSP-data/01-raw-data/clickstream"_
     * _"experimental_results.csv"_ in _"DSP-data/01-raw-data/experiment"_
     * Optionally: _"clickstream_data_part_2.csv"_  in _"DSP-data/01-raw-data/clickstream"_
 * The following R-libraries:
@@ -131,12 +131,12 @@ source('03-scripts/1-Import and Clean Data(Stefan).R')
 This report is based on 
 
 `r if(file.exists("01-raw-data/orders/order_data.csv")){"*  _order_data.csv_"}` with `r nrow(read.csv("01-raw-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` entries
-`r if(file.exists("01-raw-data/clickstream/clickstream_data.csv") | file.exists("01-raw-data/clickstream/clickstream_data.zip")){"*  _clickstream_data.csv_"}` with `r nrow(read.csv("01-raw-data/clickstream/clickstream_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` entries
+`r if(file.exists("01-raw-data/clickstream/clickstream_data.csv") | file.exists("01-raw-data/clickstream/clickstream_data.zip")){"*  _clickstream_data.csv_"}` with `r n_row_orig_clickstream` entries
 `r if(file.exists("01-raw-data/clickstream/clickstream_data_part_2.csv")){"*  _clickstream_data_part_2.csv_"}` with `r nrow(read.csv("01-raw-data/clickstream/clickstream_data_part_2.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` entries
 
 `r if(file.exists("01-raw-data/clickstream/clickstream_data_part_2.csv")){"Both clickstream-files have then been merged to the file clickstream_data.csv_"}`.
 
-In an automated process, we have removed `r ncol(read.csv("01-raw-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE)) - ncol(read.csv("02-clean-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` out of `r ncol(read.csv("01-raw-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` columns from the _order_data.csv_-file due to lack of meaningfulness. For the same reason and in the same manner, we have removed`r ncol(read.csv("01-raw-data/clickstream/clickstream_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE)) - ncol(read.csv("02-clean-data/clickstream/clickstream_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` out of `r ncol(read.csv("01-raw-data/clickstream/clickstream_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` columns in the _clickstream_data.csv_-file.
+In an automated process, we have removed `r ncol(read.csv("01-raw-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE)) - ncol(read.csv("02-clean-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` out of `r ncol(read.csv("01-raw-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` columns from the _order_data.csv_-file due to lack of meaningfulness. For the same reason and in the same manner, we have removed`r n_col_orig_clickstream - ncol(read.csv("02-clean-data/clickstream/clickstream_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` out of `r n_col_orig_clickstream` columns in the _clickstream_data.csv_-file.
 
 We assumed such a lack of meaningfulness whenever a column met one of the following conditions:
 
