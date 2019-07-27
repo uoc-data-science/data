@@ -1,8 +1,18 @@
 # dec=".", quote="\"", comment.char=""
 
 #prepare workspace by deleting data from environment
-rm(list=ls())
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
 library(plyr)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(sqldf)
+library(tidyr)
+library(usmap)
+library(reshape2)
+library(stringr)
 #load the order CSV into R-Studio in-memory-array:
 orders <- read.csv("01-raw-data/orders/order_data.csv", header=FALSE, sep=",", stringsAsFactors=FALSE)
 orders_columns <-read.delim("01-raw-data/orders/order_columns.txt", header=FALSE, sep="\n")
@@ -19,7 +29,7 @@ if(!file.exists("01-raw-data/clickstream/clickstream_data.csv")){
 }
 
 if(file.exists("01-raw-data/clickstream/clickstream_data_part_2.csv")){
-clickstream2 <- read.csv("01-raw-data/clickstream/clickstream_data_part_2.csv", header=FALSE, sep=",", stringsAsFactors=FALSE)
+  clickstream2 <- read.csv("01-raw-data/clickstream/clickstream_data_part_2.csv", header=FALSE, sep=",", stringsAsFactors=FALSE)
 }
 clickstream_columns <-read.delim("01-raw-data/clickstream/clickstream_columns.txt", header=FALSE, sep="\n")
 
@@ -48,14 +58,14 @@ for (i in 1:nrow(clickstream_columns)) {
 merged_clickstream <- clickstream
 # Second clickstream file:
 if(file.exists("01-raw-data/clickstream/clickstream_data_part_2.csv")){
-for (i in 1:nrow(clickstream_columns))
-{
-  rowType_clickstream2 <- c(rowType_clickstream2, as.character(clickstream_columns[i,1]))
-  colnames(clickstream2)[i] <- sub(':.*', '', clickstream_columns[i,1])
-}
-
-# Merge both clickstream files and write them into merged_clickstream.csv
-merged_clickstream <-  rbind(clickstream, clickstream2)
+  for (i in 1:nrow(clickstream_columns))
+  {
+    rowType_clickstream2 <- c(rowType_clickstream2, as.character(clickstream_columns[i,1]))
+    colnames(clickstream2)[i] <- sub(':.*', '', clickstream_columns[i,1])
+  }
+  
+  # Merge both clickstream files and write them into merged_clickstream.csv
+  merged_clickstream <-  rbind(clickstream, clickstream2)
 }
 
 
@@ -110,9 +120,9 @@ trashless_clickstream <- merged_clickstream[,!deletecolumn]
 clickstreamtojoin <- trashless_clickstream
 deleterow <- vector(mode = "logical", length = nrow(clickstreamtojoin))
 for (i in 1:nrow(clickstreamtojoin)){
-    if(clickstreamtojoin$`Session Customer ID`[i] == "?"){
+  if(clickstreamtojoin$`Session Customer ID`[i] == "?"){
     deleterow[i] <- TRUE
-    }
+  }
 }
 joined_csv <- clickstreamtojoin[!deleterow,]
 names(joined_csv)[names(joined_csv)=="Customer ID"] <- "Customer ID different"
@@ -175,7 +185,7 @@ cleanURL <- function(file, x) {
   }
   
   if(file == "clickstream") {
-
+    
     for (i in 1:10) {#nrow(clickstream)){
       print(paste(i , " " , x))
       clickstream[i,x] <- gsub('\\\\', '', clickstream[i,x])
