@@ -1,7 +1,7 @@
 ---
 title: "Programming Data Science Report Group number 5"
 subtitle: "Philipp Peter, Laurenz Harnischmacher, Nico Lindert"
-date: "24 Mai 2019"
+date: "27 July 2019"
 autor: "Group number 5: 7308029, 7357790, 7309584"
 cover-image: "universitaet_zu_koeln-siegel.jpg"
 output: 
@@ -237,12 +237,12 @@ click_df <- click_df %>%
 click_df$LeadsToBuy <- click_df$Request_Template == "checkout/thankyou\\.jhtml"
 ```
 
-1. Empty rows/observations and columns/features are removed
+1. Empty rows/observations and columns/features are removed.
 1. Column names included spaces that become problematic in later analysis. They are simply replaced by underscores.
-1. All semicolons within cells are simply erased
+1. All semicolons within cells are simply erased.
 1. Besides, backslashes within cells are erased as well.
 
-In addition to the cleaning tasks, additional columns were created. One particularly important one is the column LeadsToBuy, that is a boolean column being true whenever a clickstream interaction leads to the buying of products. This is realized by comparing the requested site with a special one that only occurs after a checkout has been completed.
+In addition to the cleaning tasks, further columns were created. Particularly important is the column "LeadsToBuy" which is a boolean column being `True` whenever a clickstream interaction leads to the buying of products. This is realized by comparing the requested site with a special other site that only occurs after a checkout has been completed.
 
 ```{r sessionDataframe, cache=TRUE}
 ave_Session_df <- click_df %>%
@@ -272,7 +272,7 @@ ave_Session_df$Referrer<- replace_na(ave_Session_df$Referrer, "none")
 ave_Session_df$Referrer <- as.factor(ave_Session_df$Referrer)
 ```
 
-To be able to look at the aggregated data across sessions, a dataset consisting of the sessions is created. It contains the session duration, the visited products, whether a session leads to the purchase of a product and a list of all visited products.
+To be able to look at aggregated data across sessions, a dataset consisting of sessions is created. It contains session duration, visited products, whether a session leads to the purchase of a product and a list of all visited products.
 
 # Visualisation
 
@@ -287,9 +287,6 @@ cl <- select(click_df, sel2)
 
 # Get rid of semicolons
 or$Estimated_Income_Code <- gsub(";", "", or$Estimated_Income_Code)
-
-#write.csv(or, "order_data_clean.csv")
-#write.csv(cl, "click_data_clean.csv")
 ```
 
 On a first look, the data provides the following information:
@@ -308,12 +305,10 @@ plot(g)
 
 # --- Counters --- #
 count_3 <- count(cl, Request_Date == "2000-04-27")[2,2]
-# count_2 <- count(cl, Request_Week == "2000-02-28")[2,2]
-# temp <- count_2 / count(or)
-# count_2_p <- percent(temp[1,1])
 ```
 
-Besides one pike at the end of April the distribution of clicks is even over the time range of the clickstream dataset. In terms of daypart overnight, morning and afternoon seems to have approximately the same number of clicks over time. 
+Within the clickstreams it can be observed that there is one day, April 27, with far more than average requests (`r count_3`). The amount of requests in the morning is far above average on this day. <br>
+The remaining requests are distributed relatively equally and also do not show any anomalies concerning daypart.
 
 ```{r summary_or, echo=FALSE}
 # --- Features --- #
@@ -333,8 +328,7 @@ temp <- count_2 / count(or)
 count_2_p <- percent(temp[1,1])
 ```
 
-
-What can be observed is that most of the orders were placed at March 1, namely `r count_1`. `r count_2` or `r count_2_p` of all orders have been placed in the week of February 28.<br>
+This graph shows that most of the orders were placed at March 1, namely `r count_1`. `r count_2` or `r count_2_p` of all orders have been placed in the week of February 28.<br>
 Further, interestingly the amount of orders of March 1 placed overnight or in the morning is quite high. It could be assumed that there was a special time limited offer in the early hours of March 1.<br><br>
 Overall, only `r count(or, or$Gender)[3,2]` customers specified their gender as "male" and `r count(or, or$Gender)[2,2]` as "female". However, men seem to spend more money on average as the boxplot indicates.
 
@@ -374,9 +368,6 @@ plot_usmap(data = order_map, values = "x", lines = "black") +
   theme(legend.position = "right")
 
 ```
-
-
-
 
 Besides the fact, that the clickstream data and the order data cover different time ranges we compared both datasets. Therefore, we calculate the number of clicks per product from the clickstream dataset and the number of purchases from the order dataset. We compared the distribution of both via a Lorenz curve. Although the result might be compromised by the time gap the Lorenz curve still shows interesting insights about the distribution of clicks and purchases per product. 
 
@@ -432,8 +423,7 @@ p1
 
 ```
 
-The curve illustrates, that the distribution among clicks and purchases are uneven. A handful of products revive most of the clicks but account only a small order amount. On the other hand, products with a high purchase quantity account only small numbers of clicks. It might be, that products, which lead customers to your webshop are not the products these customer purchase.
-
+The curve illustrates, that the distribution among clicks and purchases are _uneven_. A handful of products revive most of the clicks but account only a small order amount. On the other hand, products with a high purchase quantity account only small numbers of clicks. It might be that products which lead customers to your webshop are not the products these customers purchase.
 
 # Summary Statistics
 
@@ -503,14 +493,13 @@ names(Session_top5)<- c("Referrer","Number_of_Referrers","Product","Clicks_on_Pr
 Session_top5 <-as.data.frame(t(Session_top5))
 names(Session_top5)<- c("Top 1","Top 2","Top 3","Top 4","Top 5")
 
-
 kable(Session_top5)
 ```
 
-This table shows the clickstream datasets. Together it contains `r nrow(click_df)` click observations. We identified the top five refereeing sites which are show above. Most referres are counted for the gazelle.com website with 93730 refers. This is a very clear first place and it also contains most of the clickstream data. </br>
-Among the products, the clicks are a lot more equally distributed. The most favorite product is the Cellulite Trimming Gel with 321 clicks. Compared to the overall number of observations this seems to be very little, but in these clickstream observations all intermediate steps are contained as well, resulting in less actual products being clicked. </br>
-The favorite hour of the day for clicking on this webshop is 2 am. This is an interesting insight, as it might help improve the site to match customers that browse the webshop at night. The other hours are all in the morning, between 7 and 11 am. </br>
-From the days, obviously the weekend is most common with being among the top three. Interestingly the Friday is not one of the top five clicked days.
+This table shows the clickstream datasets. It contains `r nrow(click_df)` click observations. We identified the top five referreing sites which are shown above. Most are counted for the "gazelle.com" website with 93730 refers. This is a very clear first place and it also contains most of the clickstream data. </br>
+Among the products, the clicks are a lot more equally distributed. The most favorite product is the Cellulite Trimming Gel with 321 clicks. Compared to the overall number of observations this seems to be very little but in clickstream observations all intermediate steps are contained as well, resulting in less actual products being clicked. </br>
+The favorite hour of the day for clicking on this webshop is 2 AM. This is an interesting insight, as it might help improve the site to match customers that browse the webshop at night. The other hours are mainly in the morning between 7 and 11 AM. </br>
+Regarding weekdays, obviously the weekend is most common with being among the top three. Interestingly, Friday is not one of the top five clicked days.
 
 ## Session Table
 
@@ -530,11 +519,11 @@ summary_stats$summary_stats <- c("Request_count","Session_duration_mins","Visite
 kable(summary_stats) 
 ```
 
-The session dataset consists of `r nrow(ave_Session_df)`  session observations. As can be seen in the median for the request count, at least 50 % of the sessions do not consist of more than one observation. Logically, the shortest session duration is zero, as this metric can only be calculated by looking at the first and the last request time. Accordingly, most sessions also do not look at more than one product and at more than one assortment.
+The session dataset consists of `r nrow(ave_Session_df)` session observations. As can be seen in the median for the request count, at least 50 % of the sessions do not consist of more than one observation. Logically, the shortest session duration is zero, as this metric can only be calculated by looking at the first and the last request time. Accordingly, most sessions also do not look at more than one product and at more than one assortment.
 
 ## Order tables
 
-The first table shows, similar to the clickstream data, the top 5 elements of selected categories.
+The first table shows, similar to the clickstream data, the top five elements of selected categories.
 
 ```{r Ordertables, echo=FALSE}
 
@@ -607,11 +596,10 @@ kable(Order_top5)
 
 ```
 
-As can be seen in the table, not all products are associated with a product name. For this reason, the top product identifiers are listed to provide this information for later interpretation. Another interesting aspect is that some customers purchase many times. Other customers purchase many items at once. The second aggregation includes all preceding purchases, which means that for example the customer with the identifier 30208 ordered 30 times, but only one item each resulting in the 30 items in the purchased products per customer row. </br>
-The most popular brand is AME by a large margin, followed by Silk Reflections and ELT.</br>
-The top sale hours are, in contrast to the click hours, rather in the afternoon. But as can be seen, all values are close together meaning that the difference between the hours is not that large. Looking at the most popular days for purchasing, the Wednesday is clearly on top. Here, the difference to the clickstreams is clearer, because the weekend comes almost in last place for purchasing. </br>
-
-The following table is based on a subset of the order data, all orders that are marked as a return.
+As indicated in the table, not all products are associated with a product name. For this purpose, the top product identifiers are listed to provide this information for later interpretation. Further, while some customers purchase several times single items, others purchase many items at once. The second aggregation includes all preceding purchases which means that, for example, the customer with the identifier 30208 ordered 30 times but only one item at a time. This results in 30 items in the "purchased products per customer" row. </br>
+The by far most popular brand is `AME`, followed by `Silk Reflections` and `ELT`.</br>
+The top sale hours are, in contrast to the click hours, rather in the afternoon. But as is apparent, all values are close to each other - meaning that the difference between the hours is not high. Looking at most popular days for purchase, Wednesday is clearly on top. Here, the difference to the clickstreams is more noticable because the weekend comes almost in last place for purchase.</br>
+The following table is based on a subset of the order data: All orders that are marked as a return.
 
 ```{r ReturnSummary, echo=FALSE, warning=FALSE}
 
@@ -647,9 +635,8 @@ kable(summary_Return)
 
 ```
 
-The table "Summary_Return" is based on `r nrow(ave_Return)` return observations. As can be seen, there are not a lot of observations for this category of orders, thus this summary table is a little less meaningful than the others above. </br>
-The following table is based on all orders that have a ordered quantity larger than zero to make the summary statistics for the whole dataset more representative of the actual orders.
-
+The table "Summary_Return" is based on `r nrow(ave_Return)` return observations. Clearly, there are not a lot of observations for this category of orders, thus this summary table is a little less meaningful than the others above. </br>
+The following table is based on all orders that have a ordered quantity larger than zero to improve the representativeness of summary statistics for the actual orders.
 
 ```{r OrderSummary, echo=FALSE, warning=FALSE}
 
@@ -689,8 +676,7 @@ kable(summary_Order)
 
 ```
 
-The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. Here can be seen that most people order the product at least twice, as shown by the order quantity median. Most people also use a promotion, which means that promotions have a large impact on purchases. The negative minimum in the row Order Amount looks suspicious. Research in the data revealed that the orders: order-Id 12314 and order-Id 10930 used a special combination of products and the promotion code FRIEND to generate a negative order amount.  However, the credit card payment amount indicates that the coups did not succeed. Also, the datasets cannot tell if the negative Order Amount were created willingly or through accident.
-
+The table "Summary_Order" is based on `r nrow(ave_Order)` order observations. What can be retrieved is that most people order the product at least twice as shown by the order quantity median. Most people also use a promotion which means that promotions have a large impact on purchases. The negative minimum in the row Order Amount looks suspicious. Research in the data revealed that the orders: order-Id 12314 and order-Id 10930 used a special combination of products and the promotion code FRIEND to generate a negative order amount.  However, the credit card payment amount indicates that the coups did not succeed. Also, the datasets cannot tell if the negative order amount was created willingly or by accident.
 
 # Prediction
 
