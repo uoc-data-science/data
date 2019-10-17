@@ -1,0 +1,161 @@
+
+```{r importLibs, echo=FALSE, warning=FALSE}
+# load libraries
+library(tidyverse)
+library(dplyr)
+library(stringi)
+library(stringr)
+library(hms)
+library(knitr)
+library(naniar)
+```
+
+
+```{r setknitr , echo=FALSE, warning=FALSE}
+require("knitr")
+# Set root directory
+#knitr::opts_knit$set(root.dir = "C:/Github/data")
+#Philipp root
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\Meine Dokumente\\StudiumDocs\\Master\\2019 SS\\Programming Data Science\\data")
+#knitr::opts_knit$set(root.dir = "C:\\Users\\Philipp\\Documents\\StudDocs\\Master\\SS2019\\Programming Data Science\\data")
+#lh_root
+knitr::opts_knit$set(root.dir = "C:\\Users\\Laure\\Documents\\git_Repositories\\phyk_data")
+
+```
+
+```{r movedatasets , echo=FALSE, warning=FALSE}
+# move datasets to raw_data
+rootDir <- knitr::opts_knit$get("root.dir")
+origin_clickstream <- paste(rootDir, "clickstream", sep="/")
+origin_experiment <- paste(rootDir,"experiment", sep="/")
+origin_orders <- paste(rootDir,"orders", sep="/")
+
+des_root <- paste(rootDir, "00_raw_data", sep="/")
+des_under <- paste(rootDir, "01_data_understanding", sep="/")
+
+# move datasets
+# clickstream1
+unzip(paste(origin_clickstream,"clickstream_data.zip",sep="/"),files= "clickstream_data.csv",list = FALSE, exdir = des_root)
+# clickstream2
+file.copy(paste(origin_clickstream,"clickstream_data_part_2.csv",sep="/"),des_root)
+# experiment 
+file.copy(paste(origin_experiment,"experimental_results.csv", sep = "/"),des_root)
+#order
+file.copy(paste(origin_orders,"order_data.csv",sep = "/"),des_root)
+
+#move .txts
+#clickstream_columns.txt
+file.copy(paste(origin_clickstream,"clickstream_columns.txt", sep = "/"),des_under)
+
+#order_columns.txt
+file.copy(paste(origin_orders,"order_columns.txt",sep = "/"),des_under)
+
+# false mean files already in place
+```
+
+```{r furtherPrep , echo=FALSE, warning=FALSE}
+# define data paths
+require("knitr")
+
+
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
+headersPath2 <- paste(rootDir, "01_data_understanding/clickstream_columns.txt", sep="/")
+
+# dataPath <- paste(rootDir, "02_data_preparation/order_data_clean.csv", sep="/")
+# dataPath2 <- paste(rootDir, "02_data_preparation/click_data_clean.csv", sep="/")
+
+dataPath <- paste(rootDir, "00_raw_data/order_data.csv", sep="/")
+dataPath2 <- paste(rootDir, "00_raw_data/clickstream_data.csv", sep="/")
+dataPath3 <- paste(rootDir, "00_raw_data/clickstream_data_part_2.csv", sep="/")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r dataImport, echo=FALSE,warning=FALSE}
+# prepare column name list
+headersFile = file(headersPath, "r")
+headersFile2 = file(headersPath2, "r")
+#headerNames <- list()
+#http://r.789695.n4.nabble.com/How-to-read-plain-text-documents-into-a-vector-td901794.html
+obj_list <- readLines(headersFile)
+obj_list2 <- readLines(headersFile2)
+
+#To convert to a vector, do the following:
+result <- stri_extract_first(obj_list, regex="[A-z ,]+")
+result2 <- stri_extract_first(obj_list2, regex="[A-z ,]+")
+dtype <- stri_extract_last(obj_list, regex="[A-z ,]+")
+result <- gsub(" ", "_", result)
+result2 <- gsub(" ", "_", result2)
+
+# initially
+# order_df <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"))
+# click_df <- read_csv(dataPath2, col_names = result2, na=c("", "?", "NULL", "NA", "Nan"))
+
+# order_df <- read_csv(dataPath, na=c("", "?", "NULL", "NA", "Nan"))
+# click_df <- read_csv(dataPath2, na=c("", "?", "NULL", "NA", "Nan"))
+
+order_df <- read_csv(dataPath, col_names = result, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+# NL: Schafft Laptop nicht 
+click_df <- read_csv(dataPath2, col_names = result2, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+click_df2 <- read_csv(dataPath3, col_names = result2, na=c("", "?", "NULL", "NA", "Nan"), guess_max = 3400)
+click_df <- rbind(click_df,click_df2)
+
+# Parse Order Time
+order_df$Order_Time <- parse_time(order_df$"Order_Line_Date_Time","%H\\:%M\\:%S")
+
+
+# Parse Click Time
+click_df$Request_Date_Time <- paste(click_df$Request_Date,click_df2$Request_Date_Time)
+click_df$Request_Date_Time <- parse_datetime(click_df$Request_Date_Time,format="%Y-%m-%d %H\\:%M\\:%S")
+```
+
+```{r compare_dataimport_RPy, eval=FALSE, include=FALSE}
+
+rootDir <- knitr::opts_knit$get("root.dir")
+headersPath <- paste(rootDir, "01_data_understanding/order_columns.txt", sep="/")
+
+
+
+#clickstream dataset compare
+loc_click_r <- paste(rootDir, "00_raw_data/click_r.csv", sep="/")
+write.csv(click_df, file = loc_click_r, row.names =FALSE, na = "")
+
+# py csv
+py_df = read.csv(file = "../00_raw_data/clickstream_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
+
+# r csv
+r_df = read.csv(file = "../00_raw_data/click_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
+
+#head(r_df)
+#head(py_df)
+# show difference between python and r dataset
+diff_r <-r_df[!(r_df%in%py_df)]
+head(diff_r)
+diff_p <-py_df[!(py_df%in%r_df)]
+head(diff_p)
+
+
+#order dataset compare 
+loc_order_r <- paste(rootDir, "00_raw_data/order_r.csv", sep="/")
+write.csv(order_df, file = loc_order_r, row.names =FALSE, na = "")
+
+# py csv
+py_df = read.csv(file = "../00_raw_data/order_py.csv",na=c("", "?", "NULL", "NA", "Nan"), sep = ",",)
+
+# r csv
+r_df = read.csv(file = "../00_raw_data/order_r.csv",na=c("", "?", "NULL", "NA", "Nan"),sep = "," )
+
+#head(r_df)
+#head(py_df)
+# show difference between python and r dataset
+diff_r <-r_df[!(r_df%in%py_df)]
+head(diff_r)
+diff_p <-py_df[!(py_df%in%r_df)]
+head(diff_p)
+
+
+```
+

@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.idea
+*.csv
+*.pyc
+*.pkl
+*.xlsx
+01_data_understanding
+00_raw_data/order.rda
+00_raw_data/click.rda
