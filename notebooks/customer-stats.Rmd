@@ -1,0 +1,81 @@
+---
+title: "R Notebook"
+output: html_document
+--- 
+
+## Loading the data 
+```{r include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(stringr)
+```
+We first read in the orders data set and then only keep one row per each unique customer.
+```{r}
+orders = read.csv("../data/interim/orders/orders_cleaned.csv")
+distinctCustomers <- distinct(orders, Customer_ID, .keep_all = TRUE)
+```
+## What are the most important channels through which customers hear about us?
+Filter those rows  which contain no information about how people hear about us.
+```{r}
+distinctCustomers = distinctCustomers %>% filter(HowDidYouHearAboutUs != "?")
+```
+And plot it!
+```{r}
+ggplot(data=distinctCustomers, mapping = aes(x=HowDidYouHearAboutUs, fill=HowDidYouHearAboutUs)) + 
+  geom_bar(show.legend = FALSE) +
+  labs(title = "How Do People Hear About Us?", x = "How did you hear about us", y = "Amount of Customers")
+```
+
+## What are the most popular brands for men and women?
+### 1. Women
+We first select the columns which are important for us and get the name of the brand from the "Product_Level_2_Path" column.
+```{r}
+orders = orders %>% select(Customer_ID, Order_Line_Session_ID, Order_ID, Customer_ID, Age, Gender, Product_Level_2_Path, Order_Status, Order_Line_Quantity)
+orders$Brand = unlist(lapply(orders$Product_Level_2_Path, FUN = function(path){return(str_match(path, "\\/.*\\/.*\\/(.*)")[,2])}))
+```
+Now we get the names of the most famous women brands.
+```{r}
+mostPopularFemaleBrands = orders %>% 
+  filter(Gender == "Female") %>%
+  filter(!is.na(Brand)) %>%
+  group_by(Brand) %>%
+  summarise(Order_Amount = sum(Order_Line_Quantity)) %>%
+  arrange(desc(Order_Amount)) %>%
+  head(10)
+
+mostPopularFemaleBrands
+```
+Plot the frequency:
+```{r}
+ggplot(mostPopularFemaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) + 
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Most Popoular Female Brands", x = "Brand", y = "Number of Orders")
+```
+
+### 2. Men
+```{r}
+mostPopularMaleBrands = orders %>%
+  filter(Gender == "Male") %>%
+  filter(!is.na(Brand)) %>%
+  group_by(Brand) %>%
+  summarise(Order_Amount = sum(Order_Line_Quantity)) %>%
+  arrange(desc(Order_Amount)) %>%
+  head(10)
+
+mostPopularMaleBrands
+```
+
+```{r}
+ggplot(mostPopularMaleBrands, mapping = aes(x = reorder(Brand, Order_Amount), y = Order_Amount, fill = Brand)) + 
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(title = "Most Popoular Female Brands", x = "Brand", y = "Number of Orders")
+```
+
+
+
+
+
+
