@@ -1,0 +1,10 @@
+\.idea/
+clickstream/clickstream_data.csv
+0 Data/
+.DS_Store
+.Rproj.user
+data.Rproj
+
+.RData
+.Rhistory
+.DS_Store
