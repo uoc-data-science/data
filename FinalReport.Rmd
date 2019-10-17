@@ -1,0 +1,440 @@
+---
+title: "Report on the \"Ebuy\"-data "
+author: "Stefan Lustfeld and and Nicki Graczyk"
+date: "July 2019"
+bibliograpyh: literature.bib
+output: 
+  bookdown::html_document2:
+    toc: yes
+    toc_float: true
+    theme: flatly
+---
+
+<style type="text/css">
+
+body{
+font-size: 16px;
+  font-family: "Arial";
+}
+td {
+font-size: 16px;
+  font-family: "Arial";
+}
+h1.title {
+  font-size: 40px;
+    font-family: "Arial";
+  color: DarkBlue;
+}
+h1 {
+  font-size: 28px;
+    font-family: "Arial";
+  color: DarkBlue;
+}
+h2 {
+    font-size: 24px;
+      font-family: "Arial";
+  color: DarkBlue;
+}
+h3 {
+  font-size: 20px;
+  font-family: "Arial";
+  color: DarkBlue;
+}
+code.r{
+    font-size: 16px;
+      font-family: "Arial";
+}
+pre {
+    font-size: 16px;
+      font-family: "Arial";
+}
+
+caption {
+    font-size: 16px;
+      font-family: "Arial";
+      color: Black;
+}
+</style>
+
+```{r importLibraries, echo=FALSE, warning=FALSE, message=FALSE}
+  library(tidyverse)
+  library(ggplot2)
+  library(ggthemes)
+  library(plyr)
+  library(dplyr)
+  library(knitr)
+  library(kableExtra)
+  library(sqldf)
+  library(tidyr)
+  library(usmap)
+  library(reshape2)
+  library(stringr)
+```
+
+$~$
+
+# Introduction
+
+Hereby we hand over our analysis of the data that we had received by our customer "Ebuy Inc". This report consists of several tables and plots, each of them being explained according to their meaning, and therefore should be comprehensible for both data scientists as well as non-specialists.
+
+$~$
+
+## Requieries
+
+In order to run this report properly, the __following preconditions__ have to be accomplished:
+
+* The folder _"DSP-data"_ including all it's subfolders
+* The following databases:
+    * _"order.csv"_ and it's column-description _"order_columns.txt"_ in _"DSP-data/01-raw-data/orders"_
+    * _"clickstream_data.csv"_ (or corresponding zip-file) and it's column-description _"clickstream_columns.txt"_ in _"DSP-data/01-raw-data/clickstream"_
+    * _"experimental_results.csv"_ in _"DSP-data/01-raw-data/experiment"_
+    * Optionally: _"clickstream_data_part_2.csv"_  in _"DSP-data/01-raw-data/clickstream"_
+* The following R-libraries:
+    * _dplyr_
+    * _ggplot2_
+    * _kableExtra_
+    * _knitr_
+    * _plyr_
+    * _reshape2_
+    * _sqldf_
+    * _stringr_
+    * _tidyr_
+    * _tidyverse_
+    * _usmap_
+
+
+This report is not dependend on the particular database-files assigned up to this point, meaning that they may be replaced by more up-to-date or more comprehensive ones. 
+However, the database-files that are applied need to correspond to the delivered column descriptions, and the column names as described in them must not be changed.
+
+$~$
+
+## Assumptions
+
+In some parts of this report, it has been necessary to make contentual assumptions. The following example will give an idea of this:
+
+The database classifies the shops goods into the three categories _Men_, _Women_ and _Children_. However, there are also _Null_-Values, indicating that the corresponding good has not been allocated to one of these categories. Altough this could have various reasons (categorizing them has been missed, they are unisex-goods and so on), we have summed them up as being in _No Category_. 
+
+Any of these assumptions have been specifically marked as such.
+
+$~$
+
+# Data import {#dataimport}
+
+```{r dataImport, echo=FALSE, warning=FALSE, message=FALSE}
+source('03-scripts/1-Import and Clean Data(Stefan).R')
+#nur solange import auskommentiert, Werte werden sonst nicht gesetzt:
+#ratiobadvalues <- 90
+#ratiosamevalues <- 97
+#ratiosamevaluesandnull <- 90
+```
+
+This report is based on 
+
+`r if(file.exists("01-raw-data/orders/order_data.csv")){"*  _order_data.csv_"}` with `r nrow(read.csv("01-raw-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` entries
+`r if(file.exists("01-raw-data/clickstream/clickstream_data.csv") | file.exists("01-raw-data/clickstream/clickstream_data.zip")){"*  _clickstream_data.csv_"}` with `r n_row_orig_clickstream` entries
+`r if(file.exists("01-raw-data/clickstream/clickstream_data_part_2.csv")){"*  _clickstream_data_part_2.csv_"}` with `r nrow(read.csv("01-raw-data/clickstream/clickstream_data_part_2.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` entries
+
+`r if(file.exists("01-raw-data/clickstream/clickstream_data_part_2.csv")){"Both clickstream-files have then been merged to the file clickstream_data.csv_"}`.
+
+In an automated process, we have removed `r ncol(read.csv("01-raw-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE)) - ncol(read.csv("02-clean-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` out of `r ncol(read.csv("01-raw-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` columns from the _order_data.csv_-file due to lack of meaningfulness. For the same reason and in the same manner, we have removed`r n_col_orig_clickstream - ncol(read.csv("02-clean-data/clickstream/clickstream_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` out of `r n_col_orig_clickstream` columns in the _clickstream_data.csv_-file.
+
+We assumed such a lack of meaningfulness whenever a column met one of the following conditions:
+
+  * At least `r ratiobadvalues`% values of the column equalled either _NULL_, _?_ or _NA_ 
+  * More than `r ratiosamevalues`% values of the column were the same (almost always due to _NULL_-values) 
+  * At least `r ratiosamevaluesandnull`% values of the column were equal while the second most common value was _NULL_ 
+
+Taken together, the final dataset consists of
+  * _orders_data.csv_ with `r nrow(read.csv("02-clean-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` rows and `r ncol(read.csv("02-clean-data/orders/order_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` columns
+  * _clickstream_data.csv_ with `r nrow(read.csv("02-clean-data/clickstream/clickstream_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` rows and `r ncol(read.csv("02-clean-data/clickstream/clickstream_data.csv", header=TRUE, sep=",", stringsAsFactors=FALSE))` columns
+
+Any further restrictions on these datasets (for example leaving out rows where no gender was set if the respecting analysis referred to gender) have been specifically marked as such.
+
+$~$
+
+# Descriptive statistics {#descrstat}
+
+$~$
+
+## Tables
+
+```{r orderTableScripts, echo=FALSE, warning=FALSE, message=FALSE}
+source('03-scripts/general_data_about_orders.R')
+source('03-scripts/general_data_about_customers.R')
+
+```
+
+### Customer-based statistics
+
+
+
+```{r tab1, echo=FALSE, fig.cap="Ratio of gender and family status of customers"}
+tab <- kable(fam_stat_table, caption="___Basic data about customers___")
+tab <- column_spec(tab, 1, bold = TRUE)
+kable_styling(tab, bootstrap_options = c("striped", "hover"))
+```
+
+Table \@ref(tab:tab1) shows some basic data about the customers. For these results, we have considered $n=$ `r n_nonduplicated` unique customers.
+
+Generally, and when not differentiating genders about two out of three customers are married and half of them are parents. In average, both female and male customers are about `r avg_age_all` years old, while the high standard deviations as stated in the table indicate that there are customers from all age classes. The youngest customers are `r min_age_men` (male) and `r min_age_women` (female), while the oldest customers are `r max_age_men` (male) and even `r max_age_women` (female) years old.
+
+When distinguishing genders, it is most striking that the very large majority -more than `r round(ratio_women)`%- of the customers is female. Besides, female customers are more likely to be married and to have children than male customers.
+
+$~$
+
+
+```{r tab2, echo=FALSE, fig.cap="Income of customers"}
+tab <- kable(avg_order_amount_income_table, caption="___Income of customers and it's possible effect on order amount___")
+tab <- column_spec(tab, 1, bold = TRUE)
+kable_styling(tab, bootstrap_options = c("striped", "hover"))
+```
+In table \@ref(tab:tab2), we have analysed the income of customers in order to find out if the shop appears to be more attractive to specific income brackets and if a higher income results in a higher order amount. $n=$ `r n_paid_per_income` customers gave evaluable answers to this question. 
+
+The results show that generally none of the income brackets are negligble, and that there is no clear pattern that would impose oneself at first sight. However, when disregarding the outlier value of `r max(avg_order_amount_income_table$'Male (USD)')`, it seems that customers with a higher income have a tendency to spend more money. 
+
+$~$
+
+
+```{r tab3, echo=FALSE, fig.cap="Usage of coupons"}
+tab <- kable(ratio_coupons_table, caption="___Usage of coupons and it's possible effect on order amount___")
+tab <- column_spec(tab, 1, bold = TRUE)
+kable_styling(tab, bootstrap_options = c("striped", "hover"))
+```
+Table \@ref(tab:tab3) reveals the percental usage of coupons by $n=$ `r n_usage_of_coupons` customers. In average, these coupons granted a discount of `r avg_coupon_value`USD, which is because the very most of them were tightened to a value of 10 USD.
+
+The most remarkable finding is, that `r round(usage_all, digits = 2)`% of all orders are placed in combination with a coupon, which is in our mind a very high ratio. It leads to the assumption that the existence of coupons is an important strategy in encouraging customers to buy, and that both male and female (slightly more) customers are attracted by them.
+
+At the same time it becomes obvious that in average, the invoiced amount of an order where a coupon was used is much lower compared to the one without coupon use.
+
+$~$
+
+### Product-based statistics
+
+
+```{r tab4, echo=FALSE, fig.cap="Popularity of product categories"}
+tab <- kable(ratio_audience_table, row.names
+= FALSE, caption="___Most requested product categories___")
+tab <- column_spec(tab, 1, bold = TRUE)
+kable_styling(tab, bootstrap_options = c("striped", "hover"))
+```
+
+In table \@ref(tab:tab1) we had already shown that the very large amount of customers is female. Table \@ref(tab:tab4) shows that this is conform with the product gender categories: If products that are not allocated to one of the three categories _Male_, _Female_ or _Child_ (most probably unisex-products) are considered as well, `r rat1`% of all ordered products belong to the _Female_-sector, and only `r rat2 + rat4`% of the sold products are accounted to products for _Men_ and _Children_
+
+```{r tab5, echo=FALSE, fig.cap="Popularity of brands"}
+tab <- kable(ratio_brands_table, caption="___\"Top Ten\" of the brands offered by the store___")
+tab <- column_spec(tab, 1, bold = TRUE)
+kable_styling(tab, bootstrap_options = c("striped", "hover"))
+```
+Table \@ref(tab:tab5) gives an overview of the "Top Ten" Brands, regarding the orders taken from the data. While the shop has sold `r n_brands_total` different brands in total, we can see that `r round(percentage_other_brands, digits = 2)`% of all ordered products are made by these "Top Ten" manufacturers. Furthermore, products allocated to the categories _Men_ and _Children_ are in both cases sold by respectively two brands. While we have to keep in mind that this might also mean that the shop doesn't offer products for these categories by other brands (which is not examinable by the data that we have), it is still valuable to know that these brands are among the "Top Ten" brands.
+
+$~$
+
+### Implications
+
+So far, we have shown that a very large majority of customers is female, 38 years old, two out of three of them are married and it is about one half of them who have at least one children. Regarding the most basic product categories of _Women_, _Men_, _Children_ and uncategorized products we have seen that the demand of products extends the impression that the shops most targeted audience are women.
+
+We have also shown that the usage of coupons is very common, which generally encourages offering such coupons, but comes along with about half the invoice amount of those orders where no coupon was used.
+
+Further, we have seen that only about `r round(percentage_other_brands, digits = 2)`% of all sales related products that were not categorized as part of what we have figured out as the "Top Ten" brands.
+
+From that we conclude that
+
+  * If the store had to undergo changes due to a troubled business situation, it should concentrate on what can be figured out as the core competencies by undergoing one of the following steps (increasing intense):
+
+    * Drop brands that are not part of the aforenamed "Top Ten" brands, as they are barely requested. The results suggest the assumption that this would have a very low effect on sells, but it would thin out administrative workload.
+
+    * Drop products that are categorized as for _Children_, as the results show that this is by far the least often requested category. Looking at the data makes it likely that this would have a greater (negative) effect on sells, but on the other hand further reducing business workload.
+
+    * As a most striking step, the shop could limit it's products to those for _Women_, which is by far the most attractive product category.
+
+  * As far as the offering of coupons is concerned, we have seen that this is a good idea. Anyway, we suggest trying not to set a constant discount per coupon, but to leave it percental of the invoice amount. By that, customers might be encouraged to buy more products in order to reach a higher discount.
+
+$~$
+
+## Figures
+
+### Figures regarding customers
+
+
+``` {r plot1, fig.cap="Age of customers", echo=FALSE, warning=FALSE, message=FALSE}
+source('03-scripts/age_of_customers.R')
+ggplot() + geom_line(linetype = "dashed")+
+  geom_line(aes(x=a$'Age',y=(a$'AmountAll'/n_all), color='All (solid line)'), group = 1, size=1.5, linetype = "solid") +
+  geom_line(aes(x=a$'Age',y=(a$'AmountMen'/n_men), color='Men (dashed)'), group = 1, size=1.01, linetype = "longdash") +
+  geom_line(aes(x=a$'Age',y=(a$'AmountWomen'/n_women), color='Women (dotted)'), group = 1, size=1.01, linetype = "dotted") +
+  scale_color_manual(values = c(
+    'All (solid line)' = 'black',
+    'Men (dashed)' = 'gray20',
+    'Women (dotted)' = 'gray40')) +
+  ylab('Ratio of Customers')+xlab('Age')+
+  labs(subtitle=paste("Out of", nrow(unique_customers), "unique customers who stated their gender")) 
+```
+
+Figure \@ref(fig:plot1) presents the age of $n=$ `r n_all` customers. It becomes visible that there is no essential difference for both genders in the way they are attracted by the store, and that the store mostly attracts men and women between the mid-twenties and the mid-fourties.
+
+
+$~$
+
+
+``` {r plot2, fig.cap="Geographical distribution of sales", echo=FALSE, warning=FALSE, message=FALSE}
+source('03-scripts/origin_of_customers.R')
+plot_usmap(data = b, values = "percentage", lines = "black") + 
+  scale_fill_continuous(
+    low = "grey", high = "black", name = "Percentage of all sales", label = scales::comma
+  ) +
+  labs(subtitle=paste("Out of", nrow(cleanorders), "sales")) +
+  theme(legend.position = "right")
+```
+The map on Figure \@ref(fig:plot2) illustrates the origin of customers.
+
+Basically it shows that there are customers from every state, but distinctly increased sales numbers by customers from California and New York, which are less obviously, but still recognizably followed by Texas and Pennsylvania.
+
+$~$
+
+``` {r plot3, fig.cap="Website visit referers", echo=FALSE, warning=FALSE, message=FALSE}
+source('03-scripts/where_from_referred.R')
+ggplot(referrers, aes(x = "", y = PrevRatio, fill = Referrers)) +
+  geom_bar(width = 1, stat = "identity", color = "black") +
+  labs(subtitle= paste("Percental, Out of", n, "site visits"), caption = "Referrers with less than 1% prevalence are added up to \"Others\"") +
+  coord_polar("y", start = 0)+
+  scale_fill_grey(start = 0, end = 1)+
+  theme_void()
+```
+
+In \@ref(fig:plot3) we have analysed how internet users get to the shops webpage. While about one quarter gets to it by directly visiting it (_Direct Visits_, from our point of view this is a hint that they most probably means that they know the shop already), over one half visited the page after being referred by _gazelle.com_. Further, but much less weighty players are _fashionmall.com_ and _yahoo.com_, while all others deceeded a value of 1% and are therefore added up to _Others_ in our figure.
+
+$~$
+
+``` {r plot4, fig.cap="Daytime of visits per day of the week", echo=FALSE, warning=FALSE, message=FALSE}
+source('03-scripts/usage_per_day.R')
+ggplot(data = daily, aes(group=1, scale_fill_grey(start = 0, end = 1))) + 
+  geom_line(aes(x = daily$Hour, y = AmountMonday, color='Monday'), size=1, linetype = "dotted") +
+  geom_line(aes(x = daily$Hour, y = AmountTuesday, color='Tuesday'), size=1, linetype = "dotted") +
+  geom_line(aes(x = daily$Hour, y = AmountWednesday, color='Wednesday'), size=1, linetype = "dotted") +
+  geom_line(aes(x = daily$Hour, y = AmountThursday, color='Thursday'), size=1, linetype = "solid") +
+  geom_line(aes(x = daily$Hour, y = AmountFriday, color='Friday'), size=1, linetype = "solid") +
+  geom_line(aes(x = daily$Hour, y = AmountSaturday, color='Saturday'), size=1, linetype = "dotted") +
+  geom_line(aes(x = daily$Hour, y = AmountSunday, color='Sunday'), size=1, linetype = "dotted") +
+  scale_color_manual(values = c(
+  'Monday' = 'gray40',
+  'Tuesday' = 'gray40',
+  'Wednesday' = 'gray40',
+  'Thursday' = 'black',
+  'Friday' = 'black',
+  'Saturday' = 'gray40',
+  'Sunday' = 'gray40')) +
+  labs(subtitle= paste("Out of", nrow(cleanclickstream), "site visits")) +
+  theme(axis.text.x = element_text(angle=70, vjust=1, hjust = 1))+
+  xlab('Daytime') +
+  ylab('Visitors')
+```
+
+Figure \@ref(fig:plot4) shows the daytimes in which visitors come to the site. For reasons that we could only make speculations about, there is a distinct at about 2 o'clock am on every day of the week except Thursday and Friday. This finding should be considered with caution, as we think of it more as either fault data or the consequence of bot-activities.
+The remaining data appears much more valid to us.
+
+$~$
+
+### Figures regarding products
+
+``` {r plot5, fig.cap="Most popular products", echo=FALSE, warning=FALSE, message=FALSE}
+source('03-scripts/most_popular_products.R')
+ggplot(popular_products, aes(x=popular_products$ProductName, y=popular_products$AmountPurchases, label= 1:m)) +
+  geom_bar(stat="identity") +
+  coord_flip()+
+  labs(subtitle=paste("Out of", nrow(cleanorders), "sales")) +
+  xlab("Product Name") +
+  ylab("Absolute purchases") +
+  theme(legend.position = "right")
+```
+
+Figure \@ref(fig:plot5) sums up the twenty best-liked of all offered products.
+
+$~$
+
+``` {r plot6, fig.cap="Ratio of visits and sells per Product", echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(a, aes(x=ProductName, y=Value, fill = Legend))+
+   geom_bar(stat = "identity", position = "dodge")+
+     labs(subtitle= paste("Percental, showing the", nrow(a)/2 , "most viewed products")) +
+   xlab("Product Name") +
+   ylab("Percentage from all visits") +
+  scale_fill_manual(values=c("grey20", "grey50"))+
+  theme(axis.text.x = element_text(angle=70, vjust=1, hjust = 1))
+
+```
+
+Generally, there is a large difference in products that are visited and those that are bought, as Figure \@ref(fig:plot6) shows. Sorting the twenty most visited products, it evides that many clicks are no guarantee for many purchases. Nevertheless, the results are interesting in two ways:
+
+  * The product that is referred to as _"ORO-TricotPH"_ has significantly more visits than any other product of the store. We don't know the background of the product, but it appears to us that there might be some advertising going on - with quite good success, even if the visits do not come along with accordingly many sales.
+  
+  * The product that is referred to as _"EVP-THCStkLGtr"_ is remarkable as well: Unlike any other product, about one quarter of all visits leads to a sale.
+  
+  Combining these two aspects - deploying the advertising-strategies that lead to many visits as mentioned in the first example with those products that have an above-average ratio of visit and sale might be an idea to increase sales in general.
+
+
+$~$
+
+# Experiment on Recommender systems {#experiment}
+
+`r source('03-scripts/analyse_experiment.R')`
+
+Ebuy has performed an experiment in order to compare three different kinds of recommender systems:
+
+  * Ranking-based
+  * Random-based
+  * Profit-oriented 
+
+The experiments raw-data covered `r n_experiment` measured points for the three kinds, from which we used `r n_del_experiment` entries in order to cut out _NA_-values.
+
+To find out which recommender system comes along with the highest value for the shop, we have ascertained a confidence intervall for each system and for the three most common confidence levels:
+
+  *   Table \@ref(tab:tab6) shows the results for a confidence level of `r ci_level_1`
+  *   Table \@ref(tab:tab7) shows the results for a confidence level of `r ci_level_2`
+  *   Table \@ref(tab:tab8) shows the results for a confidence level of `r ci_level_3`
+
+
+```{r tab6, echo=FALSE, fig.cap="Value of Recommender systems, confidence level 1"}
+tab <- kable(experiment_data_table_1, caption="___Value of Recommender systems, confidence level 0,975___")
+tab <- column_spec(tab, 1, bold = TRUE)
+kable_styling(tab, bootstrap_options = c("striped", "hover"))
+```
+
+
+
+```{r tab7, echo=FALSE, fig.cap="Value of Recommender systems, confidence level 2"}
+tab <- kable(experiment_data_table_2, caption="___Value of Recommender systems, confidence level 0,95___")
+tab <- column_spec(tab, 1, bold = TRUE)
+kable_styling(tab, bootstrap_options = c("striped", "hover"))
+```
+
+
+
+```{r tab8, echo=FALSE, fig.cap="Value of Recommender systems, confidence level 3"}
+tab <- kable(experiment_data_table_3, caption="___Value of Recommender systems, confidence level 0,9___")
+tab <- column_spec(tab, 1, bold = TRUE)
+kable_styling(tab, bootstrap_options = c("striped", "hover"))
+```
+
+
+For every of the applied confidence levels, it evidents that the _profit-oriented_ recommender system comes along with the highest value for the shop, and is therefore encouraged to be implemented.
+
+$~$
+
+# Summary
+
+In the present report, we have analysed the provided data of "Ebuy" from different perspectives. All in all, the results can be summed up as follows:
+
+  * Generally, the data was quite substantive. Apart from occasionally missing or implausible that had to be dropped for the analysis, it was noticeable that as mentioned in the chapter \@ref(introduction), several columns were of no added value for the data set. In future data sets, these columns could be dropped in favor of other aspects
+  
+  * In chapter \@ref(descrstat), we analysed several attributes regarding customers, products and the behavior of customers. Knowing these aspects can likely be of good use in the future in order to support marketing / advertising decisions, but also to make strategic decisions for example during economically hard times.
+  
+  * In chapter \@ref(experiment), we have interpreted the experiment that Ebuy had performed regarding recommender systems. The results looked quite promising, and we were able to explicitly encourage the implementation of one of the examined systems.
+  
+  $~$
+
+# Limitations
+
+Any statistical analysis has to be considered under the acceptance of limitations. Regarding this report, there are several aspects that need to be kept in mind:
+
+  * The data collected by "Ebuy" contained personal data, including data of aspects that people might be unwillingly to give true answers. One example is data about the income of customers. While in any survey the possibility of deliberately wrong answers has to be accepted, the effects of such answers might be reduced by a sample size as large as possible
+  
+  * Due to doubts whether the _orders_- and _clickstream_-datasets share a unique key, combining these data sets has had to be done with caution. Therefore, we only applied that kind of join to get an idea of the ratio of a web page visit of a certain product and how often it is bought, as correct unique linking was not a requirement for this.
